@@ -1,8 +1,6 @@
 # 01.2 Tensor Implementation Tensor 实现
 
 
-对应代码：见 [本章代码索引](/code/chapter01_tensor_loader)
-
 ## 这一页要解决什么
 
 把 `Tensor` 接口落到可用的 C++ 实现上，先支持 CPU 内存和基础对象生命周期管理。

@@ -1,8 +1,6 @@
 # 01.3 Custom Binary Format 自定义二进制格式
 
 
-对应代码：见 [本章代码索引](/code/chapter01_tensor_loader)
-
 ## 这一页要解决什么
 
 设计一个简单、可解析、可扩展的模型文件格式，用来存放 tensor 元信息和原始权重数据。

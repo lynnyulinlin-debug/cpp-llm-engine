@@ -1,8 +1,6 @@
 # 01.4 Python Converter Python 转换脚本
 
 
-对应代码：见 [本章代码索引](/code/chapter01_tensor_loader)
-
 ## 这一页要解决什么
 
 把 Hugging Face 上的模型权重转换成本章定义的二进制格式。

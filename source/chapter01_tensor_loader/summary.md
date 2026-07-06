@@ -42,14 +42,12 @@
 
 进入 `chapter02_tensor_ops`，在已经可用的 `Tensor` 基础上增加 `reshape` 和 `slice` 这种 view 语义。
 
-## 8. English anchors
+## 8. 回看源码
 
-- `Problem`: safely load weights into memory
-- `Why it matters`: later chapters depend on a stable input model
-- `Background`: the input model must be stable first
-- `Derivation`: define objects before defining file loading
-- `Verification`: tensor names and shapes can be printed and checked
-- `Next step`: view-based tensor operations
+- 先看 [`tensor.h`](/code/chapter01_tensor_loader) 和 [`model_loader.h`](/code/chapter01_tensor_loader)
+- 再看 [`tensor.cpp`](/code/chapter01_tensor_loader) 和 [`model_loader.cpp`](/code/chapter01_tensor_loader)
+- 最后看 [`chapter01_tensor_loader_test.cpp`](/code/chapter01_tensor_loader)
+- 如果要复盘整章，回到 [`chapter01 导读`](/chapter01_tensor_loader/intro)
 
 ## 9. 收口结论
 

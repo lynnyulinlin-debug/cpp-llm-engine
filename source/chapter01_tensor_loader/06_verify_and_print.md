@@ -1,8 +1,6 @@
 # 01.6 Load Verification and Printing 加载验证与打印
 
 
-对应代码：见 [本章代码索引](/code/chapter01_tensor_loader)
-
 ## 这一页要解决什么
 
 加载模型并打印所有 tensor 的名称和形状，用最小可见结果确认链路正确。

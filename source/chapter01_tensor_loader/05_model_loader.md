@@ -1,8 +1,6 @@
 # 01.5 ModelLoader 模型加载器
 
 
-对应代码：见 [本章代码索引](/code/chapter01_tensor_loader)
-
 ## 这一页要解决什么
 
 实现 C++ `ModelLoader`，把自定义格式文件解析成程序内部的 `Tensor` 集合。

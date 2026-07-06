@@ -1,8 +1,6 @@
 # 01.1 Tensor Interface Design Tensor 接口设计
 
 
-对应代码：见 [本章代码索引](/code/chapter01_tensor_loader)
-
 ## 这一页要解决什么
 
 定义后续所有算子和模型加载都会使用的 `Tensor` 基础接口。
