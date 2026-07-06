@@ -1,8 +1,6 @@
 # 07.5 Optimization Tips 优化建议
 
 
-对应代码：见 [本章代码索引](/code/chapter07_benchmark)
-
 ## 这一页要解决什么
 
 列出常见的可选优化方向，例如 CUDA Graph、memory pool 和 async copy，帮助后续定位性能提升空间。

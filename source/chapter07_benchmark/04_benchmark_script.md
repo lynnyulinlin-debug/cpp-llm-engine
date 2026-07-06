@@ -1,8 +1,6 @@
 # 07.4 Benchmark Script Benchmark 脚本
 
 
-对应代码：见 [本章代码索引](/code/chapter07_benchmark)
-
 ## 这一页要解决什么
 
 编写 `benchmark.sh`，自动运行 benchmark 并记录硬件与运行信息。

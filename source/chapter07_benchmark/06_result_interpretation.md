@@ -1,8 +1,6 @@
 # 07.6 Result Interpretation 结果解读与决策模板
 
 
-对应代码：见 [本章代码索引](/code/chapter07_benchmark)
-
 ## 1. 这一页要解决什么
 
 把 benchmark 跑出来的数字翻译成工程结论，回答“这个优化到底值不值得保留”。

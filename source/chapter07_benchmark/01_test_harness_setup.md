@@ -1,11 +1,15 @@
 # 07.1 Test Harness Basics 测试 harness 基础
 
 
-对应代码：见 [本章代码索引](/code/chapter07_benchmark)
-
 ## 这一页要解决什么
 
 引入一个统一的测试 harness，并用它来编写算子和模块的单元测试。
+
+## 阅读入口
+
+- 前置阅读：[`chapter07 导读`](/chapter07_benchmark/intro)、[`chapter05_generation`](/chapter05_generation/intro)
+- 源码直达：[`chapter07_benchmark 代码入口`](/code/chapter07_benchmark)
+- 相关阅读：[`07.2 End-to-End Correctness Testing`](/chapter07_benchmark/02_e2e_correctness)、[`07.3 Benchmark Metrics`](/chapter07_benchmark/03_benchmark_metrics)
 
 ## 读完你应该能做什么
 

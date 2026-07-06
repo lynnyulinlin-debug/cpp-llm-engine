@@ -80,16 +80,3 @@ benchmark 负责给出可比较的结果，profiling 负责解释这些结果从
 
 如果希望继续优化，可在此基础上增加更多平台变体、A/B 对比模式，或者把内存使用和 kernel launch 开销单独记录出来。
 
-## 8. English anchors
-
-- `Problem`: verify correctness and performance
-- `Why it matters`: benchmarks become decision evidence
-- `Background`: stable runtime first, measurement later
-- `Derivation`: separate correctness tests from performance comparisons
-- `Verification`: unit tests, end-to-end tests, benchmark scripts
-- `Next step`: profiling and A/B comparison
-
-## 9. 收口结论
-
-如果你能把 benchmark 结果按条件、基线和参考实现拆开看，这一章就完成了它作为验证收口章的职责。  
-它的价值不是提供某一个绝对分数，而是把“值不值得继续优化”这件事变成可比较、可追踪、可复查的工程判断。

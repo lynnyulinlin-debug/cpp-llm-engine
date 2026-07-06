@@ -1,8 +1,6 @@
 # 07.3 Benchmark Metrics Benchmark 指标
 
 
-对应代码：见 [本章代码索引](/code/chapter07_benchmark)
-
 ## 这一页要解决什么
 
 定义统一的性能指标，衡量模型的 prefill 延迟、逐 token 延迟和吞吐能力。  

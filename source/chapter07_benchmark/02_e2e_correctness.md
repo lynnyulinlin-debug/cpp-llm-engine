@@ -1,8 +1,6 @@
 # 07.2 End-to-End Correctness Testing 端到端正确性测试
 
 
-对应代码：见 [本章代码索引](/code/chapter07_benchmark)
-
 ## 这一页要解决什么
 
 通过端到端测试，把当前推理结果和 PyTorch golden logits 对照起来，确认整条链路正确。
