@@ -1,11 +1,16 @@
 # 03.3 CPU Reference Implementation CPU 参考实现
 
-对应代码：见 [本章代码索引](/code/chapter03_matmul)
 
 ## 1. 这一页要解决什么
 
 先实现一个正确的 CPU 版本 `MatMul`，作为后续 cuBLAS 版本的对照基线。  
 这一页的目标不是最快，而是最容易读懂、最容易验证。
+
+## 阅读入口
+
+- 前置阅读：[`Operator Base`](/chapter03_matmul/01_operator_base)、[`MatMulOp 设计`](/chapter03_matmul/02_matmul_design)
+- 源码直达：[`chapter03_matmul 代码入口`](/code/chapter03_matmul)
+- 相关阅读：[`cuBLAS 实现`](/chapter03_matmul/04_cublas_implement)、[`PyTorch 对照测试`](/chapter03_matmul/05_test_with_pytorch)
 
 ## 2. 读完你应该能做什么
 

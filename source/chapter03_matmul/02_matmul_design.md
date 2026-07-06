@@ -1,8 +1,6 @@
 # 03.2 MatMulOp Design `MatMulOp` 设计
 
 
-对应代码：见 [本章代码索引](/code/chapter03_matmul)
-
 ## 1. 这一页要解决什么
 
 这一页要把 `MatMulOp` 的边界先定下来。读完后，读者应该能说清楚三件事：
@@ -12,6 +10,12 @@
 - CPU reference 和 cuBLAS 为什么是同一个接口下的两种实现
 
 矩阵乘法是后面很多模块的公共底座。如果这一层设计不清楚，attention 和 FFN 的问题会和布局问题混在一起，排错会很慢。
+
+## 阅读入口
+
+- 前置阅读：[`Operator Base`](/chapter03_matmul/01_operator_base)、[`CPU Reference`](/chapter03_matmul/03_cpu_reference)
+- 源码直达：[`chapter03_matmul 代码入口`](/code/chapter03_matmul)
+- 相关阅读：[`cuBLAS 实现`](/chapter03_matmul/04_cublas_implement)、[`PyTorch 对照测试`](/chapter03_matmul/05_test_with_pytorch)
 
 ## 2. 为什么先讨论设计
 

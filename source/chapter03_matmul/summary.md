@@ -59,22 +59,19 @@
 
 如果你对为什么参考实现要先写朴素循环还不够踏实，可以先补读 `06_complexity_intuition.md`，它专门解释这个设计选择。
 
-## 8. English anchors
+## 8. 回看源码
 
-- `Problem`: make matrix multiplication a reusable operator boundary
-- `Why it matters`: attention and FFN depend on a stable math interface
-- `Background`: weights and tensor views need a clean math layer
-- `Derivation`: interface first, reference path first, backend later
-- `Verification`: CPU reference, cuBLAS path, and PyTorch comparison
-- `Next step`: decoder structure on top of matmul
+- 主实现：[`chapter03_matmul 代码入口`](/code/chapter03_matmul)
+- 正确性基线：[`chapter03_matmul 代码入口`](/code/chapter03_matmul)
+- 验证入口：[`chapter03_matmul 代码入口`](/code/chapter03_matmul)
+
+## 8. 回看源码
+
+- 主实现：[`operator.cpp`](/code/chapter03_matmul)、[`matmul_op.cpp`](/code/chapter03_matmul)
+- 正确性基线：[`matrix.cpp`](/code/chapter03_matmul)
+- 验证入口：[`chapter03_matmul_test.cpp`](/code/chapter03_matmul)
 
 ## 9. 收口结论
 
 这一章的收口结论是：`MatMul` 已经从普通运算变成可复用、可验证、可加速的算子层边界。  
 下一章不再重新定义矩阵乘法，而是在这个边界上把 attention、FFN 和 residual 组合成真正的 decoder 结构。
-
-## 10. 相关阅读
-
-- 前置依赖：本章依赖 `chapter01` 的权重加载和 `chapter02` 的 Tensor view 语义，以及 foundation 的 C++ / CMake 基础。
-- 后续使用：`chapter04_attention` 的 Q/K/V 投影、`chapter05_generation` 的 runtime，都会直接复用这一章的算子边界。
-- 代码索引：见 [chapter03_matmul 导读](/chapter03_matmul/intro) 和 [本章代码索引](/code/chapter03_matmul)。

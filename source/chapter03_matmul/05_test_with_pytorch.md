@@ -1,11 +1,15 @@
 # 03.5 PyTorch Comparison Testing PyTorch 对照测试
 
 
-对应代码：见 [本章代码索引](/code/chapter03_matmul)
-
 ## 这一页要解决什么
 
 随机生成矩阵，与 PyTorch 的结果对照，验证 `MatMul` 的数值正确性。
+
+## 阅读入口
+
+- 前置阅读：[`CPU Reference`](/chapter03_matmul/03_cpu_reference)、[`cuBLAS 实现`](/chapter03_matmul/04_cublas_implement)
+- 源码直达：[`chapter03_matmul 代码入口`](/code/chapter03_matmul)
+- 相关阅读：[`复杂度直觉`](/chapter03_matmul/06_complexity_intuition)、[`本章小结`](/chapter03_matmul/summary)
 
 ## 读完你应该能做什么
 

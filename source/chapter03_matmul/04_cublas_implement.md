@@ -1,11 +1,15 @@
 # 03.4 cuBLAS Implementation cuBLAS 实现
 
 
-对应代码：见 [本章代码索引](/code/chapter03_matmul)
-
 ## 这一页要解决什么
 
 用 `cublasGemmEx` 实现高效矩阵乘法，并正确处理转置标志与内存布局。
+
+## 阅读入口
+
+- 前置阅读：[`MatMulOp 设计`](/chapter03_matmul/02_matmul_design)、[`CPU Reference`](/chapter03_matmul/03_cpu_reference)
+- 源码直达：[`chapter03_matmul 代码入口`](/code/chapter03_matmul)
+- 相关阅读：[`PyTorch 对照测试`](/chapter03_matmul/05_test_with_pytorch)、[`复杂度直觉`](/chapter03_matmul/06_complexity_intuition)
 
 ## 读完你应该能做什么
 

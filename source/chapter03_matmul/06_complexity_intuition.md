@@ -1,8 +1,6 @@
 # 03.6 Complexity Intuition 复杂度直觉
 
 
-对应代码：见 [本章代码索引](/code/chapter03_matmul)
-
 ## 这一页要解决什么
 
 帮助读者理解为什么 `MatMul` 的参考实现应该先写成朴素循环，而不是一开始就追求复杂优化。

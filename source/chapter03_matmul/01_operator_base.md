@@ -1,11 +1,15 @@
 # 03.1 Operator Base 算子基类
 
 
-对应代码：见 [本章代码索引](/code/chapter03_matmul)
-
 ## 1. 这一页要解决什么
 
 定义所有前向算子都能继承的基础接口，让 `MatMul`、`LayerNorm`、`FFN` 这类模块能用同一种方式接入主流程。
+
+## 阅读入口
+
+- 前置阅读：[`chapter03 导读`](/chapter03_matmul/intro)、[`MatMulOp 设计`](/chapter03_matmul/02_matmul_design)
+- 源码直达：[`chapter03_matmul 代码入口`](/code/chapter03_matmul)
+- 相关阅读：[`CPU Reference`](/chapter03_matmul/03_cpu_reference)、[`cuBLAS 实现`](/chapter03_matmul/04_cublas_implement)
 
 ## 2. 读完你应该能做什么
 
