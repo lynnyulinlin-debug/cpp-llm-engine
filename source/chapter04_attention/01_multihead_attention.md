@@ -1,11 +1,15 @@
 # 04.1 Multi-head Attention 多头注意力
 
 
-对应代码：见 [本章代码索引](/code/chapter04_attention)
-
 ## 这一页要解决什么
 
 实现多头注意力的前向计算，并理解 Q/K/V、score、softmax 和输出合并的完整数据流。
+
+## 阅读入口
+
+- 前置阅读：[`chapter04 导读`](/chapter04_attention/intro)、[`MatMulOp 设计`](/chapter03_matmul/02_matmul_design)
+- 源码直达：[`chapter04_attention 代码入口`](/code/chapter04_attention)
+- 相关阅读：[`04.2 LayerNorm 与激活`](/chapter04_attention/02_layernorm_and_activation)、[`04.4 DecoderLayer`](/chapter04_attention/04_decoder_layer)
 
 ## 读完你应该能做什么
 

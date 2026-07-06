@@ -1,11 +1,15 @@
 # 04.3 Feed Forward Network 前馈网络
 
 
-对应代码：见 [本章代码索引](/code/chapter04_attention)
-
 ## 这一页要解决什么
 
 实现 FFN 模块，用两层线性层和一个激活函数构成 Transformer block 的前馈部分。
+
+## 阅读入口
+
+- 前置阅读：[`chapter04 导读`](/chapter04_attention/intro)、[`04.2 LayerNorm 与激活`](/chapter04_attention/02_layernorm_and_activation)
+- 源码直达：[`chapter04_attention 代码入口`](/code/chapter04_attention)
+- 相关阅读：[`04.4 DecoderLayer`](/chapter04_attention/04_decoder_layer)、[`04.5 首层权重加载`](/chapter04_attention/05_load_first_layer)
 
 ## 读完你应该能做什么
 

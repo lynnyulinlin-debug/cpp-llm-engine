@@ -17,6 +17,12 @@
 - 第一层权重和 shape contract 已经能参与验证
 - 本章验证的对象是“单层结构 + 首层权重接入”，不是完整生成链路
 
+## 阅读入口
+
+- 前置阅读：[`chapter04 导读`](/chapter04_attention/intro)、[`04.4 DecoderLayer`](/chapter04_attention/04_decoder_layer)
+- 源码直达：[`chapter04_attention 代码入口`](/code/chapter04_attention)
+- 相关阅读：[`chapter05_generation`](/chapter05_generation/intro)、[`chapter06_quantization`](/chapter06_quantization/intro)
+
 ## 2. 为什么它重要
 
 如果这一章没有先验证中间 shape 和前向流程，后面的多层组装和生成逻辑会非常难排错。
@@ -85,22 +91,7 @@
 
 一句话概括就是：`chapter04` 解决“decoder layer 是否站得住”，`chapter05` 解决“这些 decoder layer 如何进入生成 runtime”。
 
-## 9. English anchors
-
-- `Problem`: make a single decoder layer runnable and checkable
-- `Why it matters`: generation runtime needs a stable structural base
-- `Background`: structure comes after stable operators
-- `Derivation`: attention, residual, and FFN form one fixed layer
-- `Verification`: shape checks and first-layer weight wiring
-- `Next step`: generation runtime and token-by-token decoding
-
 ## 10. 收口结论
 
 这一章的收口结论是：单层 decoder 已经闭合，Transformer 的核心结构可以稳定工作。  
 下一章不再补 decoder 的基本组件，而是把这个稳定结构放进生成 runtime，开始处理 prompt、token、cache 和 sampler 这些运行时问题。
-
-## 11. 相关阅读
-
-- 前置依赖：本章复用了 `chapter03_matmul` 的算子边界，以及 foundation 的设计和数据布局基础。
-- 后续使用：`chapter05_generation` 会继续复用这一章的 `DecoderLayer`，`chapter06_quantization` 也会在同一结构上替换权重表示。
-- 代码索引：见 [chapter03_matmul 导读](/chapter03_matmul/intro) 和 [本章代码索引](/code/chapter04_attention)。

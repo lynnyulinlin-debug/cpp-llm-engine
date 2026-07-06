@@ -1,11 +1,15 @@
 # 04.5 First Layer Weight Wiring 首层权重加载与验证
 
 
-对应代码：见 [本章代码索引](/code/chapter04_attention)
-
 ## 这一页要解决什么
 
 从 `chapter01` 的模型加载结果中提取第一层权重，并验证前向传播的张量形状是否正确。
+
+## 阅读入口
+
+- 前置阅读：[`04.4 DecoderLayer`](/chapter04_attention/04_decoder_layer)、[`chapter01_tensor_loader`](/chapter01_tensor_loader/intro)
+- 源码直达：[`chapter04_attention 代码入口`](/code/chapter04_attention)
+- 相关阅读：[`04.7 本章小结`](/chapter04_attention/summary)、[`chapter05_generation`](/chapter05_generation/intro)
 
 ## 读完你应该能做什么
 

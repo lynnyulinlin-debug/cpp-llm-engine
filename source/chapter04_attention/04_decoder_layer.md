@@ -1,10 +1,15 @@
 # 04.4 DecoderLayer 解码器层
 
-对应代码：见 [本章代码索引](/code/chapter04_attention)
 
 ## 这一页要解决什么
 
 把 Pre-LN、Attention、Residual 和 FFN 组合成一个完整的 Transformer decoder layer。
+
+## 阅读入口
+
+- 前置阅读：[`04.1 Multi-head Attention`](/chapter04_attention/01_multihead_attention)、[`04.3 Feed Forward Network`](/chapter04_attention/03_feedforward)
+- 源码直达：[`chapter04_attention 代码入口`](/code/chapter04_attention)
+- 相关阅读：[`04.5 首层权重加载`](/chapter04_attention/05_load_first_layer)、[`04.7 本章小结`](/chapter04_attention/summary)
 
 ## 读完你应该能做什么
 

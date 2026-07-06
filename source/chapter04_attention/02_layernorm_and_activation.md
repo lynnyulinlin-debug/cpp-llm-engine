@@ -1,11 +1,15 @@
 # 04.2 LayerNorm and Activation LayerNorm 与激活函数
 
 
-对应代码：见 [本章代码索引](/code/chapter04_attention)
-
 ## 这一页要解决什么
 
 实现 Transformer 中常用的 LayerNorm 和激活函数，为后续 FFN 和 DecoderLayer 提供基础模块。
+
+## 阅读入口
+
+- 前置阅读：[`chapter04 导读`](/chapter04_attention/intro)、[`04.1 Multi-head Attention`](/chapter04_attention/01_multihead_attention)
+- 源码直达：[`chapter04_attention 代码入口`](/code/chapter04_attention)
+- 相关阅读：[`04.3 Feed Forward Network`](/chapter04_attention/03_feedforward)、[`04.4 DecoderLayer`](/chapter04_attention/04_decoder_layer)
 
 ## 读完你应该能做什么
 
