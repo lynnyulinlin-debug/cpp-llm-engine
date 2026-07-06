@@ -16,6 +16,12 @@
 - 解释为什么必须在这一章解决，而不是后面再说
 - 解释后续章节为什么依赖这一章
 
+## 阅读入口
+
+- 前置阅读：这一章开始前建议先看什么
+- 源码直达：这一章最关键的 1 到 3 个源码文件
+- 相关阅读：这一章读完后自然接到哪里
+
 ## 背景是什么？
 
 先给初学者一个足够短但足够有用的背景。
@@ -82,12 +88,9 @@
 
 说明教程中的自然下一步。
 
-## English anchors
+## 本章源码怎么回看？
 
-If you want to help non-Chinese readers, keep this section very short and stable:
-
-- Problem
-- Why it matters
-- Minimal design
-- Verification
-- Next step
+- 这一章回看源码时先看什么
+- 哪个文件是主实现
+- 哪个文件是测试入口
+- 哪个文件是配套脚本
