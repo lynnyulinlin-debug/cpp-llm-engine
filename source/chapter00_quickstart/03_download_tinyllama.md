@@ -1,7 +1,10 @@
 # 00.3 Download TinyLlama 下载 TinyLlama 模型
 
+## 阅读入口
 
-对应代码：见 [本章代码索引](/code/chapter00_quickstart)
+- 前置阅读：[`00.2 Clone and Build`](/chapter00_quickstart/02_clone_and_build_llamacpp)
+- 源码直达：[`main_quick.cpp`](/code/chapter00_quickstart)、[`run.sh`](/code/chapter00_quickstart)
+- 相关阅读：[`00.4 First Inference`](/chapter00_quickstart/04_first_inference)、[`00.5 Troubleshooting`](/chapter00_quickstart/05_troubleshooting)
 
 ## 这一页要解决什么
 

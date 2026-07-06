@@ -39,14 +39,11 @@
 
 进入 `chapter01_tensor_loader`，把权重安全地读进程序，并把输入对象模型先定下来。
 
-## 8. English anchors
+## 8. 回看源码
 
-- `Problem`: establish a runnable inference baseline
-- `Why it matters`: later chapters need a proven starting point
-- `Background`: environment and model download must be stable first
-- `Derivation`: first output before structure work
-- `Verification`: successful local inference
-- `Next step`: tensor loading and object model
+- 先看 [`main_quick.cpp`](/code/chapter00_quickstart) 和 [`run.sh`](/code/chapter00_quickstart)
+- 再看 [`00.2 Clone and Build`](/chapter00_quickstart/02_clone_and_build_llamacpp) 和 [`00.4 First Inference`](/chapter00_quickstart/04_first_inference)
+- 如果要复盘整章，回到 [`chapter00 导读`](/chapter00_quickstart/intro)
 
 ## 9. 收口结论
 

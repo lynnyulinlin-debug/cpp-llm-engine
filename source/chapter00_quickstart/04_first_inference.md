@@ -1,7 +1,10 @@
 # 00.4 First Inference 第一次推理
 
+## 阅读入口
 
-对应代码：见 [本章代码索引](/code/chapter00_quickstart)
+- 前置阅读：[`00.2 Clone and Build`](/chapter00_quickstart/02_clone_and_build_llamacpp)、[`00.3 Download TinyLlama`](/chapter00_quickstart/03_download_tinyllama)
+- 源码直达：[`main_quick.cpp`](/code/chapter00_quickstart)、[`run.sh`](/code/chapter00_quickstart)
+- 相关阅读：[`00.5 Troubleshooting`](/chapter00_quickstart/05_troubleshooting)、[`00.7 本章小结`](/chapter00_quickstart/summary)
 
 ## 这一页要解决什么
 

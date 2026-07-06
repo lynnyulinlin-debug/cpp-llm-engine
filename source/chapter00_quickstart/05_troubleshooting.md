@@ -1,7 +1,10 @@
 # 00.5 Troubleshooting 常见问题排查
 
+## 阅读入口
 
-对应代码：见 [本章代码索引](/code/chapter00_quickstart)
+- 前置阅读：[`00.1 Environment Setup`](/chapter00_quickstart/01_environment_setup)、[`00.2 Clone and Build`](/chapter00_quickstart/02_clone_and_build_llamacpp)、[`00.4 First Inference`](/chapter00_quickstart/04_first_inference)
+- 源码直达：[`main_quick.cpp`](/code/chapter00_quickstart)、[`run.sh`](/code/chapter00_quickstart)
+- 相关阅读：[`00.7 本章小结`](/chapter00_quickstart/summary)
 
 ## 这一页要解决什么
 

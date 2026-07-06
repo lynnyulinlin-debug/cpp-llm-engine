@@ -19,20 +19,26 @@ flowchart LR
 
 | 先看什么 | 这一章给什么 | 为什么重要 | 对应小节 |
 | --- | --- | --- | --- |
-| 为什么先跑通基线 | 第一次真实推理结果 | 先确认教程能落地 | [`00.2`](#2-本章要解决什么) / [`00.3`](#3-背景是什么) |
-| 这一章做哪些检查 | 环境、编译、模型下载、首次输出 | 先把起跑线固定住 | [`00.4`](#4-最小设计是什么) / [`00.5`](#5-中间推导是什么) / [`00.8`](#8-怎么验证) |
-| 这一章产出什么 | 可运行 smoke test | 后续章节都依赖这条基线 | [`00.6`](#6-本章会产出什么) / [`00.10`](#10-本章解决了什么) |
-| 代码入口 | `站内代码索引` | 先把文档和代码连起来 | [`代码索引`](/code/chapter00_quickstart) |
-| 下一步接到哪里 | `chapter01_tensor_loader` | 从起跑线进入主线 | [`00.11`](#11-下一步是什么) |
+| 为什么先跑通基线 | 第一次真实推理结果 | 先确认教程能落地 | [`00.3`](#3-本章要解决什么) / [`00.4`](#4-背景是什么) |
+| 这一章做哪些检查 | 环境、编译、模型下载、首次输出 | 先把起跑线固定住 | [`00.5`](#5-最小设计是什么) / [`00.6`](#6-中间推导是什么) / [`00.9`](#9-怎么验证) |
+| 这一章产出什么 | 可运行 smoke test | 后续章节都依赖这条基线 | [`00.7`](#7-本章会产出什么) / [`00.11`](#11-本章解决了什么) |
+| 源码直达 | `main_quick.cpp` / `run.sh` | 先看最小可运行链路 | [`main_quick.cpp`](/code/chapter00_quickstart) / [`run.sh`](/code/chapter00_quickstart) |
+| 下一步接到哪里 | `chapter01_tensor_loader` | 从起跑线进入主线 | [`00.12`](#12-下一步是什么) |
 
-## 2. 本章要解决什么
+## 2. 阅读入口
+
+- 前置阅读：[`foundation`](/foundation/README)
+- 源码直达：[`main_quick.cpp`](/code/chapter00_quickstart)、[`run.sh`](/code/chapter00_quickstart)、[`CMakeLists.txt`](/code/chapter00_quickstart)
+- 相关阅读：[`00.1 Environment Setup`](/chapter00_quickstart/01_environment_setup)、[`00.4 First Inference`](/chapter00_quickstart/04_first_inference)、[`00.7 本章小结`](/chapter00_quickstart/summary)
+
+## 3. 本章要解决什么
 
 - 确认本机具备基本的编译和运行条件
 - 能编译 `llama.cpp` 的 CPU 版本，或按需切换到 CUDA 版本
 - 下载 TinyLlama 并完成一次最小推理
 - 看懂第一次推理成功时应该出现什么结果
 
-## 3. 背景是什么
+## 4. 背景是什么
 
 如果读者一上来就进入主线的 `Tensor`、`MatMul` 和 `Attention`，很容易先卡在“代码到底能不能跑起来”这件事上。  
 所以在进入结构和算子之前，最好先验证一件最基本的事：本地环境能否完成一次真实推理。
@@ -40,7 +46,7 @@ flowchart LR
 这一章的背景不是“讲推理模型怎么工作”，而是“先确认教程所依赖的最小运行环境是成立的”。  
 只要这一步通了，后面的章节就不再只是纸面设计，而是可以逐章验证的实现路径。
 
-## 4. 最小设计是什么
+## 5. 最小设计是什么
 
 这一章只保留最小但真实的一条路径：
 
@@ -52,7 +58,7 @@ flowchart LR
 
 这意味着它不追求覆盖所有运行场景，而是先把“教程真的能跑起来”这件事固定住。
 
-## 5. 中间推导是什么
+## 6. 中间推导是什么
 
 如果从“怎样最快进入主线”倒推，通常会得到几个约束：
 
@@ -64,13 +70,13 @@ flowchart LR
 所以这一章的关键不是“把命令跑一遍”，而是把主线的起跑线固定住：  
 先确认 `llama.cpp` 能跑，再进入后续自己的 `Tensor`、`ModelLoader` 和算子实现。
 
-## 6. 本章会产出什么
+## 7. 本章会产出什么
 
 - 一个可运行的本地推理基线
 - 一个可复现的 smoke test
 - 一个遇到问题时可回退到 CPU 路径的方案
 
-## 7. 实现路径是什么
+## 8. 实现路径是什么
 
 1. 环境准备
 2. 克隆并编译 `llama.cpp`
@@ -78,32 +84,24 @@ flowchart LR
 4. 运行首次推理
 5. 常见问题排查
 
-## 8. 怎么验证
+## 9. 怎么验证
 
 - 确认可以成功编译
 - 确认可以下载并加载模型
 - 确认第一次推理有可观察输出
 - 确认失败时能回退到更容易排查的 CPU 路径
 
-## 9. 常见问题是什么
+## 10. 常见问题是什么
 
 - 依赖没有装全，导致编译失败
 - 模型下载路径不对，导致首次推理卡住
 - 终端环境不一致，导致命令在本机和教程里表现不同
 - 把环境问题误判成代码问题
 
-## 10. 本章解决了什么
+## 11. 本章解决了什么
 
 这一章把第一条真实推理链路跑通了，并把教程的起跑线固定在一个可复现的状态上。
 
-## 11. 下一步是什么
+## 12. 下一步是什么
 
 进入 `chapter01_tensor_loader`，开始把模型权重安全地读进程序，并把输入语义固定下来。
-
-## 12. English anchors
-
-- `Problem`: run a real inference baseline locally
-- `Why it matters`: the tutorial needs a runnable starting point
-- `Minimal design`: environment, build, model download, first output
-- `Verification`: successful first inference and fallback path
-- `Next step`: weight loading and tensor abstraction

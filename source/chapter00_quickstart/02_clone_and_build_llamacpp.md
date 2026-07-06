@@ -1,7 +1,10 @@
 # 00.2 Clone and Build `llama.cpp` 克隆并编译 `llama.cpp`
 
+## 阅读入口
 
-对应代码：见 [本章代码索引](/code/chapter00_quickstart)
+- 前置阅读：[`00.1 Environment Setup`](/chapter00_quickstart/01_environment_setup)
+- 源码直达：[`main_quick.cpp`](/code/chapter00_quickstart)、[`run.sh`](/code/chapter00_quickstart)
+- 相关阅读：[`00.3 Download TinyLlama`](/chapter00_quickstart/03_download_tinyllama)、[`00.4 First Inference`](/chapter00_quickstart/04_first_inference)
 
 ## 这一页要解决什么
 
