@@ -1,0 +1,118 @@
+#pragma once
+
+#include <cstddef>
+#include <cstdint>
+#include <cstring>
+#include <memory>
+#include <string>
+#include <type_traits>
+#include <utility>
+#include <vector>
+
+namespace chapter01 {
+
+enum class DType : std::uint8_t {
+    Unknown = 0,
+    Float32 = 1,
+    Int8 = 2,
+};
+
+enum class Device : std::uint8_t {
+    CPU = 0,
+};
+
+std::size_t dtype_size(DType dtype);
+
+class Tensor {
+public:
+    using Storage = std::vector<std::byte>;
+    using StoragePtr = std::shared_ptr<Storage>;
+
+    Tensor();
+    Tensor(std::string name, std::vector<std::int64_t> shape, DType dtype, Device device = Device::CPU);
+
+    static Tensor from_raw_bytes(std::string name,
+                                 std::vector<std::int64_t> shape,
+                                 DType dtype,
+                                 std::vector<std::byte> bytes,
+                                 Device device = Device::CPU);
+
+    template <typename T>
+    static Tensor from_vector(std::string name,
+                              std::vector<std::int64_t> shape,
+                              const std::vector<T>& values,
+                              Device device = Device::CPU) {
+        Tensor tensor(std::move(name), std::move(shape), deduce_dtype<T>(), device);
+        tensor.set_vector(values);
+        return tensor;
+    }
+
+    const std::string& name() const;
+    void set_name(std::string name);
+
+    const std::vector<std::int64_t>& shape() const;
+    void set_shape(std::vector<std::int64_t> shape);
+
+    DType dtype() const;
+    void set_dtype(DType dtype);
+
+    Device device() const;
+    void set_device(Device device);
+
+    std::size_t numel() const;
+    std::size_t bytes() const;
+
+    const std::byte* raw_data() const;
+    std::byte* raw_data();
+
+    const StoragePtr& storage() const;
+    void set_storage(StoragePtr storage, std::size_t offset_bytes = 0);
+    std::size_t offset_bytes() const;
+    void set_offset_bytes(std::size_t offset_bytes);
+
+    template <typename T>
+    std::vector<T> to_vector() const {
+        std::vector<T> values(numel());
+        if (values.empty()) {
+            return values;
+        }
+        const auto* src = raw_data();
+        std::memcpy(values.data(), src, values.size() * sizeof(T));
+        return values;
+    }
+
+    template <typename T>
+    void set_vector(const std::vector<T>& values) {
+        set_dtype(deduce_dtype<T>());
+        auto storage_bytes = values.size() * sizeof(T);
+        auto storage = std::make_shared<Storage>(storage_bytes);
+        if (storage_bytes > 0) {
+            std::memcpy(storage->data(), values.data(), storage_bytes);
+        }
+        set_storage(std::move(storage), 0);
+    }
+
+    template <typename T>
+    static constexpr DType deduce_dtype();
+
+private:
+    std::string name_;
+    std::vector<std::int64_t> shape_;
+    DType dtype_{DType::Unknown};
+    Device device_{Device::CPU};
+    StoragePtr storage_;
+    std::size_t offset_bytes_{0};
+};
+
+template <typename T>
+constexpr DType Tensor::deduce_dtype() {
+    if constexpr (std::is_same_v<T, float>) {
+        return DType::Float32;
+    } else if constexpr (std::is_same_v<T, std::int8_t> || std::is_same_v<T, std::uint8_t>) {
+        return DType::Int8;
+    } else {
+        return DType::Unknown;
+    }
+}
+
+}  // namespace chapter01
