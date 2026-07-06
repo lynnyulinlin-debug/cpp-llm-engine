@@ -1,0 +1,78 @@
+# 06.7 Chapter Wrap-up 本章解决了什么
+
+这章回答的是：量化链路是否已经能工作，并且是否还能保住可接受精度？
+
+如果实现正确，推理链路已经可以处理 INT8 量化权重，并在必要时通过反量化恢复到可计算的浮点路径。
+
+## 1. 本章解决了什么
+
+- INT8 量化链路已经能工作
+- 反量化路径已经清晰可验证
+- 量化与精度验证已经同时落地
+
+## 2. 为什么它重要
+
+这里真正要回答的不只是“量化链路能不能工作”，还包括“它省下来的资源成本是否值得换取这部分数值近似”。
+
+## 3. 背景回顾
+
+`chapter05` 已经提供了稳定的 generation runtime。  
+这一章是在这条稳定 runtime 上判断量化是否值得继续做。
+
+## 4. 中间推导回顾
+
+从“怎样用更低成本继续跑同一条链路”倒推，最自然的结果就是先从权重开始，再把反量化和算子路径一起纳入 runtime。
+
+## 5. 你现在应该能做什么
+
+- 看懂量化权重如何进入推理引擎
+- 说明反量化在 runtime 中的位置
+- 用精度对照判断量化实现是否可接受
+
+## 6. 边界说明
+
+这一章不负责把所有低比特方案都做完。
+
+它只负责把量化变成一条可解释、可验证、可继续优化的部署路径。
+
+在实践里，"值得继续"通常会同时看三条基线：1）精度损失是否低于任务容忍阈值，比如小于 1% 的准确率下降；2）内存或带宽节省是否达到目标，比如模型大小明显减半；3）推理速度提升是否满足部署需求。三条基线共同决定量化路径是否进入下一阶段优化。
+
+## 7. 下一步是什么
+
+进入 `chapter07_benchmark`，把正确性验证和性能测量体系补完整。
+
+## 8. English anchors
+
+- `Problem`: keep the runtime usable while reducing memory and bandwidth cost
+- `Why it matters`: deployment decisions need a measured accuracy tradeoff
+- `Background`: stable runtime first, then representation changes
+- `Derivation`: quantize weights first, then verify accuracy
+- `Verification`: quantized path, dequantization, and accuracy checks
+- `Next step`: benchmark-driven correctness and performance closure
+
+## 9. Advanced Notes
+
+想继续深入的读者，可以继续思考下面这些问题：
+
+- per-channel 和 groupwise quantization 会怎样影响精度？
+- INT8、INT4 和 FP8 这几条路径在工程上有什么实际差异？
+- 什么时候量化和反量化可以融合进相邻算子？
+- calibration 数据应该怎样影响最终部署决策？
+
+## 10. 收口结论
+
+这一章留下的是一个“是否值得继续”的判断起点：先确认量化带来的成本下降和误差边界，再决定后续 benchmark 应该重点测什么、该不该继续细化量化粒度。  
+只有这个条件成立，`chapter07` 的测试和 benchmark 才不是空测，而是对一条已经可用的链路做回归和性能验证。
+
+## 11. English anchors
+
+- `Problem`: keep the runtime usable while reducing memory and bandwidth cost
+- `Why it matters`: deployment decisions need a measured accuracy tradeoff
+- `Verification`: quantized path, dequantization, and accuracy checks
+- `Next step`: benchmark-driven correctness and performance closure
+
+## 12. 相关阅读
+
+- 前置依赖：本章建立在 `chapter05_generation` 的稳定 runtime 之上，也会继续用到 `chapter03_matmul` 的算子边界。
+- 后续使用：`chapter07_benchmark` 会在这条链路上做统一的正确性和性能测量。
+- 代码索引：见 [chapter03_matmul 导读](/chapter03_matmul/intro) 和 [本章代码索引](/code/chapter06_quantization)。
