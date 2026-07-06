@@ -239,6 +239,49 @@ V2 的重点是：
 
 当前在线站点适配已经完成物理分层：全部教程内容统一放在 `source/`，`docs/` 继续承担站点入口和在线映射层。
 
+## 9. 文档同步规则
+
+为了避免 `README`、使用文档和维护文档各写各的，当前同步规则固定如下：
+
+### 9.1 章节目录使用镜像脚本
+
+- `scripts/migrate_chapter_to_source.sh` 负责章节目录镜像
+- `docs/chapterXX_*`、`docs/foundation`、`docs/guides`、`docs/reference`、`docs/maintenance`、`docs/appendix` 都应通过脚本映射到 `source/` 下的对应目录
+- 章节目录不要手工在 `docs/` 里复制一份后再长期维护
+
+### 9.2 共享入口文档使用同步脚本
+
+- `scripts/sync_shared_sections.py` 负责中文共享入口同步
+- 当前它维护两组映射：
+  - `README.md` -> `docs/README.md`
+  - `USAGE.md` -> `docs/guide.md`
+- 这些页里凡是属于共享章节的内容，先改源文件，再运行同步脚本
+- 站点页中的链接要使用站点路由写法，避免把仓库相对路径原样带进 VitePress
+
+### 9.3 英文入口单独处理
+
+- 英文类文档使用单独脚本，不和中文同步规则混用
+- `scripts/sync_english_sections.py` 负责 `docs/en/README.md` -> `docs/README.en.md`
+- 英文入口页可以保留自己的措辞，但章节顺序、路由和覆盖状态要保持可检查
+- 如果后续还要扩展更多英文页，优先继续追加英文脚本的映射表，而不是回退到纯手工维护
+
+### 9.4 站点层内容保持手工维护
+
+- `docs/index.md`
+- `docs/code/`
+- `docs/.vitepress/config.mts`
+
+这些内容和正文同步不是一类问题，应该单独维护或单独生成，不要混进章节镜像脚本。
+
+### 9.5 验证顺序
+
+每次修改完同步规则后，按这个顺序检查：
+
+1. 运行对应同步脚本
+2. 检查是否有 dead link 或路径漂移
+3. 执行 `npm run docs:build`
+4. 如果构建失败，先查站点路由和相对链接，再查正文内容
+
 如果后续还要继续调整章节内容或新增章节，优先使用仓库根目录下的 `scripts/migrate_chapter_to_source.sh` 保持迁移和映射方式一致。
 
 ### 8.1 安装依赖
