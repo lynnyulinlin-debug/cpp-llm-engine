@@ -1,11 +1,15 @@
 # 06.5 Quantized Linear 量化 Linear
 
 
-对应代码：见 [本章代码索引](/code/chapter06_quantization)
-
 ## 这一页要解决什么
 
 把反量化逻辑与 Linear 层结合，支持量化权重推理。
+
+## 阅读入口
+
+- 前置阅读：[`06.4 DequantizeOp`](/chapter06_quantization/04_dequantize_op)、[`06.3 Load Quantized Weights`](/chapter06_quantization/03_load_quantized_weights)
+- 源码直达：[`chapter06_quantization 代码入口`](/code/chapter06_quantization)
+- 相关阅读：[`06.6 Accuracy Validation`](/chapter06_quantization/06_accuracy_validation)、[`chapter07_benchmark`](/chapter07_benchmark/intro)
 
 ## 读完你应该能做什么
 

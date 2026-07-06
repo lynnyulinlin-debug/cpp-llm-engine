@@ -10,6 +10,12 @@
 - 反量化路径已经清晰可验证
 - 量化与精度验证已经同时落地
 
+## 阅读入口
+
+- 前置阅读：[`chapter06 导读`](/chapter06_quantization/intro)、[`06.5 Quantized Linear`](/chapter06_quantization/05_linear_with_quant)
+- 源码直达：[`chapter06_quantization 代码入口`](/code/chapter06_quantization)
+- 相关阅读：[`chapter07_benchmark`](/chapter07_benchmark/intro)
+
 ## 2. 为什么它重要
 
 这里真正要回答的不只是“量化链路能不能工作”，还包括“它省下来的资源成本是否值得换取这部分数值近似”。
@@ -41,15 +47,6 @@
 
 进入 `chapter07_benchmark`，把正确性验证和性能测量体系补完整。
 
-## 8. English anchors
-
-- `Problem`: keep the runtime usable while reducing memory and bandwidth cost
-- `Why it matters`: deployment decisions need a measured accuracy tradeoff
-- `Background`: stable runtime first, then representation changes
-- `Derivation`: quantize weights first, then verify accuracy
-- `Verification`: quantized path, dequantization, and accuracy checks
-- `Next step`: benchmark-driven correctness and performance closure
-
 ## 9. Advanced Notes
 
 想继续深入的读者，可以继续思考下面这些问题：
@@ -63,16 +60,3 @@
 
 这一章留下的是一个“是否值得继续”的判断起点：先确认量化带来的成本下降和误差边界，再决定后续 benchmark 应该重点测什么、该不该继续细化量化粒度。  
 只有这个条件成立，`chapter07` 的测试和 benchmark 才不是空测，而是对一条已经可用的链路做回归和性能验证。
-
-## 11. English anchors
-
-- `Problem`: keep the runtime usable while reducing memory and bandwidth cost
-- `Why it matters`: deployment decisions need a measured accuracy tradeoff
-- `Verification`: quantized path, dequantization, and accuracy checks
-- `Next step`: benchmark-driven correctness and performance closure
-
-## 12. 相关阅读
-
-- 前置依赖：本章建立在 `chapter05_generation` 的稳定 runtime 之上，也会继续用到 `chapter03_matmul` 的算子边界。
-- 后续使用：`chapter07_benchmark` 会在这条链路上做统一的正确性和性能测量。
-- 代码索引：见 [chapter03_matmul 导读](/chapter03_matmul/intro) 和 [本章代码索引](/code/chapter06_quantization)。

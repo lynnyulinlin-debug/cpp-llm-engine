@@ -1,10 +1,15 @@
 # 06.4 DequantizeOp 反量化算子
 
-对应代码：见 [本章代码索引](/code/chapter06_quantization)
 
 ## 这一页要解决什么
 
 实现 `DequantizeOp`，把 INT8 数据反量化回 FP16 或同类浮点表示，供后续计算使用。
+
+## 阅读入口
+
+- 前置阅读：[`06.2 Extend Tensor`](/chapter06_quantization/02_extend_tensor)、[`06.3 Load Quantized Weights`](/chapter06_quantization/03_load_quantized_weights)
+- 源码直达：[`chapter06_quantization 代码入口`](/code/chapter06_quantization)
+- 相关阅读：[`06.5 Quantized Linear`](/chapter06_quantization/05_linear_with_quant)、[`06.6 Accuracy Validation`](/chapter06_quantization/06_accuracy_validation)
 
 ## 读完你应该能做什么
 

@@ -1,11 +1,15 @@
 # 06.3 Load Quantized Weights 加载量化权重
 
 
-对应代码：见 [本章代码索引](/code/chapter06_quantization)
-
 ## 这一页要解决什么
 
 修改 `ModelLoader`，让它可以读取量化权重文件或 GGUF 中的量化数据。
+
+## 阅读入口
+
+- 前置阅读：[`06.1 Quantization Basics`](/chapter06_quantization/01_quantization_basics)、[`06.2 Extend Tensor`](/chapter06_quantization/02_extend_tensor)
+- 源码直达：[`chapter06_quantization 代码入口`](/code/chapter06_quantization)
+- 相关阅读：[`06.4 DequantizeOp`](/chapter06_quantization/04_dequantize_op)、[`06.5 Quantized Linear`](/chapter06_quantization/05_linear_with_quant)
 
 ## 读完你应该能做什么
 

@@ -1,14 +1,18 @@
 # 06.6 Accuracy Validation 精度验证
 
 
-对应代码：见 [本章代码索引](/code/chapter06_quantization)
-
 ## 这一页要解决什么
 
 这一页要回答一个很关键的问题：量化模型和 FP16 模型之间的差异，是否还在可接受范围内？
 
 量化的价值不是“更小”本身，而是“在可接受精度下更高效”。  
 没有精度验证，就无法判断当前方案是否真的适合部署。
+
+## 阅读入口
+
+- 前置阅读：[`06.5 Quantized Linear`](/chapter06_quantization/05_linear_with_quant)、[`06.4 DequantizeOp`](/chapter06_quantization/04_dequantize_op)
+- 源码直达：[`chapter06_quantization 代码入口`](/code/chapter06_quantization)
+- 相关阅读：[`06.7 本章小结`](/chapter06_quantization/summary)、[`chapter07_benchmark`](/chapter07_benchmark/intro)
 
 ## 为什么必须做对照
 

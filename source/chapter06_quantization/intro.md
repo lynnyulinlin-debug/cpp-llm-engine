@@ -31,10 +31,16 @@ flowchart LR
 | 为什么量化放在这里 | 稳定 runtime 上的表示变化 | 先有基线再谈压缩 | [`06.2`](#2-背景是什么) / [`06.4`](#4-中间推导是什么) |
 | 量化先改什么 | 权重、Tensor dtype、Loader、算子路径 | 不是只改文件格式 | [`06.3`](#3-最小设计是什么) / [`06.5`](#5-本章会产出什么) |
 | 怎么判断值不值得 | 精度对照和资源成本 | 部署判断必须可解释 | [`06.8`](#8-验证方式) / [`06.9`](#9-图示与表格建议) |
-| 代码入口 | `站内代码索引` | 先把文档和代码连起来 | [`代码索引`](/code/chapter06_quantization) |
+| 源码直达 | `chapter06_quantization` | 先看核心实现 | [`代码入口`](/code/chapter06_quantization) |
 | 下一步接到哪里 | `chapter07_benchmark` | 正确性和性能收口 | [`06.11`](#11-下一步是什么) |
 
-## 2. 背景是什么
+## 2. 阅读入口
+
+- 前置阅读：[`chapter05_generation`](/chapter05_generation/intro)、[`chapter05 小结`](/chapter05_generation/summary)
+- 源码直达：[`chapter06_quantization 代码入口`](/code/chapter06_quantization)
+- 相关阅读：[`06.1 Quantization Basics`](/chapter06_quantization/01_quantization_basics)、[`06.3 Load Quantized Weights`](/chapter06_quantization/03_load_quantized_weights)、[`06.4 DequantizeOp`](/chapter06_quantization/04_dequantize_op)、[`06.6 Accuracy Validation`](/chapter06_quantization/06_accuracy_validation)
+
+## 3. 背景是什么
 
 当模型越来越大时，真正先撞到的往往不是算力，而是内存和带宽。  
 权重越大，加载越慢；数据搬运越多，runtime 越容易被带宽限制住。对部署场景来说，这些问题通常比“能不能算对”更早暴露。
@@ -45,7 +51,7 @@ flowchart LR
 这一章放在 `chapter05_generation` 之后，是因为要先有一条稳定 runtime，量化才有讨论价值。  
 如果 runtime 本身还不稳定，量化后的误差和原始实现的错误会混在一起，根本分不清问题出在哪里。
 
-## 3. 最小设计是什么
+## 4. 最小设计是什么
 
 最小设计不是一开始就做全套低比特方案，而是先建立一条可解释的最小链路：
 
@@ -53,7 +59,7 @@ flowchart LR
 - 必要时反量化回可计算表示
 - 再进入 Linear 和后续算子
 
-## 4. 中间推导是什么
+## 5. 中间推导是什么
 
 如果从“怎样用更低成本继续跑同一条链路”倒推，会得到几个约束：
 
@@ -69,7 +75,7 @@ flowchart LR
 这也是为什么这一章要强调 calibration、scale 粒度和融合边界：  
 它们决定的不是“能不能加载”，而是“这条链路值不值得部署”。
 
-## 5. 本章会产出什么
+## 6. 本章会产出什么
 
 - 扩展 `Tensor` 支持 INT8 dtype
 - 让 `ModelLoader` 读取量化权重
@@ -77,7 +83,7 @@ flowchart LR
 - 在 Linear 路径中集成 dequantize
 - 比较量化模型与 FP16 模型的精度差异
 
-## 6. 实现路径是什么
+## 7. 实现路径是什么
 
 1. 量化基础
 2. Tensor 扩展
@@ -88,7 +94,7 @@ flowchart LR
 7. 误差来源与部署判断
 8. calibration 和融合边界
 
-## 7. 你现在应该能做什么
+## 8. 你现在应该能做什么
 
 - 解释为什么量化能省内存和带宽
 - 说明 INT8 权重如何进入推理链路
@@ -107,7 +113,7 @@ flowchart LR
 - `DequantizeOp` 可以作为显式层保留，方便验证
 - 只有在语义和误差边界都清楚后，才考虑把转换融合进 Linear 或相邻算子
 
-## 8. 验证方式
+## 9. 验证方式
 
 - 先确认 INT8 权重能被正常加载
 - 再确认反量化后的数值能进入 Linear 计算
@@ -115,7 +121,7 @@ flowchart LR
 
 如果验证结果只是“能跑”，但不能说明误差来源和成本收益，那么这一章就还不算真正完成。
 
-## 9. 图示与表格建议
+## 10. 图示与表格建议
 
 - 画一张 float -> int8 -> dequant 的数值映射图
 - 画一张量化权重在 loader、Tensor、Linear 之间流转的架构图
@@ -124,25 +130,11 @@ flowchart LR
 - 用表格对比“省了什么”和“损失了什么”
 - 画一张“加载 -> calibration -> quantize -> dequantize -> 计算”的流程图
 
-## 10. 本章解决了什么
+## 11. 本章解决了什么
 
 这一章把量化从“格式转换”变成了一条可解释、可验证、可继续优化的部署路径。  
 如果这个判断站不住，量化章节就只是一个数据格式练习。
 
-## 11. 下一步是什么
+## 12. 下一步是什么
 
 进入 `chapter07_benchmark`，把正确性验证和性能测量体系补完整。
-
-## 12. English anchors
-
-- `Problem`: reduce memory and bandwidth cost while keeping the runtime usable
-- `Why it matters`: deployment decisions need a measurable tradeoff
-- `Minimal design`: quantized weights, dequantization, and existing runtime
-- `Verification`: quantized path and FP16 comparison
-- `Next step`: benchmark-driven correctness and performance closure
-
-## 13. 相关阅读
-
-- 前置依赖：建议先读 [chapter05_generation 导读](/chapter05_generation/intro) 和 [chapter05_generation 小结](/chapter05_generation/summary)，因为本章是在稳定 runtime 上替换权重表示。
-- 后续使用：`chapter07_benchmark` 会直接接着这条量化路径做正确性和性能测量。
-- 路径说明：如果想先看 03–06 的整体路径，可以直接参考 [chapter03_matmul 导读](/chapter03_matmul/intro)，它已经汇总了从算子到量化的阅读顺序。

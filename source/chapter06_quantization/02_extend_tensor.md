@@ -1,11 +1,15 @@
 # 06.2 Extend Tensor 扩展 Tensor
 
 
-对应代码：见 [本章代码索引](/code/chapter06_quantization)
-
 ## 这一页要解决什么
 
 让 `Tensor` 支持 INT8 dtype，为量化权重和量化计算打基础。
+
+## 阅读入口
+
+- 前置阅读：[`06.1 Quantization Basics`](/chapter06_quantization/01_quantization_basics)、[`chapter05_generation`](/chapter05_generation/intro)
+- 源码直达：[`chapter06_quantization 代码入口`](/code/chapter06_quantization)
+- 相关阅读：[`06.3 Load Quantized Weights`](/chapter06_quantization/03_load_quantized_weights)、[`06.4 DequantizeOp`](/chapter06_quantization/04_dequantize_op)
 
 ## 读完你应该能做什么
 

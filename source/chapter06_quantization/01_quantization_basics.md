@@ -1,11 +1,15 @@
 # 06.1 Quantization Basics 量化基础
 
 
-对应代码：见 [本章代码索引](/code/chapter06_quantization)
-
 ## 这一页要解决什么
 
 理解量化的基本原理、数值映射和误差来源，为后续 INT8 推理路径做准备。
+
+## 阅读入口
+
+- 前置阅读：[`chapter06 导读`](/chapter06_quantization/intro)、[`chapter05_generation`](/chapter05_generation/intro)
+- 源码直达：[`chapter06_quantization 代码入口`](/code/chapter06_quantization)
+- 相关阅读：[`06.2 Extend Tensor`](/chapter06_quantization/02_extend_tensor)、[`06.3 Load Quantized Weights`](/chapter06_quantization/03_load_quantized_weights)
 
 ## 读完你应该能做什么
 
