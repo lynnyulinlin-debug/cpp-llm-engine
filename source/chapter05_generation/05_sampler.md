@@ -1,12 +1,16 @@
 # 05.5 Sampler 采样器
 
 
-对应代码：见 [本章代码索引](/code/chapter05_generation)
-
 ## 1. 这一页要解决什么
 
 实现常用采样策略，把模型输出的 logits 转成实际 token。  
 这一步是生成链路的最后一层决策，不是模型本身的一部分。
+
+## 阅读入口
+
+- 前置阅读：[`05.4 KV Cache`](/chapter05_generation/04_kv_cache)、[`05.3 Naive Generation`](/chapter05_generation/03_naive_generation)
+- 源码直达：[`chapter05_generation 代码入口`](/code/chapter05_generation)
+- 相关阅读：[`05.6 端到端生成测试`](/chapter05_generation/06_end_to_end_generation)、[`05.7 本章小结`](/chapter05_generation/summary)
 
 ## 2. 为什么这一步重要
 

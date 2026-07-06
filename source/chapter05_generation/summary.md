@@ -17,6 +17,12 @@
 - `prefill / decode` 的状态机已经显式化
 - `Request`、`KV Cache` 和 `Scheduler` 已经成为可观察边界
 
+## 阅读入口
+
+- 前置阅读：[`chapter05 导读`](/chapter05_generation/intro)、[`05.4 KV Cache`](/chapter05_generation/04_kv_cache)
+- 源码直达：[`chapter05_generation 代码入口`](/code/chapter05_generation)
+- 相关阅读：[`chapter06_quantization`](/chapter06_quantization/intro)、[`chapter07_benchmark`](/chapter07_benchmark/intro)
+
 ## 2. 为什么它重要
 
 - `chapter04` 给出的是 decoder 结构
@@ -108,15 +114,6 @@ Chapter06 的起点不是重做 runtime，而是保留 `chapter05` 已经建立�
 - 更明确的 backpressure 处理
 - 更复杂的请求状态管理
 
-## 8. English anchors
-
-- `Problem`: complete generation runtime
-- `Why it matters`: runtime state becomes visible
-- `Background`: generation becomes a state machine
-- `Derivation`: `prefill / decode` + request/cache/scheduler boundaries
-- `Verification`: token-by-token generation and end-to-end check
-- `Next step`: quantized inference path
-
 ## 9. 收口结论
 
 如果你能把请求状态、cache 生命周期和调度边界讲清楚，这一章就完成了它作为 runtime 转折点的职责。
@@ -136,9 +133,3 @@ Chapter06 的起点不是重做 runtime，而是保留 `chapter05` 已经建立�
 | 容错 | 无 | 请求重试 / 超时 |
 
 05 章建立的是核心路径，后续章节和扩展都在这条路径上叠加。
-
-## 11. 相关阅读
-
-- 前置依赖：本章依赖 `chapter04_attention` 已经闭合的 DecoderLayer 结构，以及 `chapter03_matmul` 的算子边界。
-- 后续使用：`chapter06_quantization` 会在这条 runtime 上替换权重表示，`chapter07_benchmark` 会在同一条链路上做统一测量。
-- 代码索引：见 [chapter03_matmul 导读](/chapter03_matmul/intro) 和 [本章代码索引](/code/chapter05_generation)。

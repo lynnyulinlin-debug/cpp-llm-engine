@@ -1,11 +1,15 @@
 # 05.1 Embedding and Positional Encoding Embedding 与位置编码
 
 
-对应代码：见 [本章代码索引](/code/chapter05_generation)
-
 ## 这一页要解决什么
 
 把 token 变成 decoder 可以直接消费的向量输入，并把顺序信息注入进去。
+
+## 阅读入口
+
+- 前置阅读：[`chapter05 导读`](/chapter05_generation/intro)、[`chapter04_attention`](/chapter04_attention/intro)
+- 源码直达：[`chapter05_generation 代码入口`](/code/chapter05_generation)
+- 相关阅读：[`05.2 N 层 Transformer 组装`](/chapter05_generation/02_transformer_assembly)、[`05.3 Naive Generation`](/chapter05_generation/03_naive_generation)
 
 ## 2. 背景是什么
 

@@ -1,11 +1,15 @@
 # 05.6 End-to-End Generation Testing 端到端生成测试
 
 
-对应代码：见 [本章代码索引](/code/chapter05_generation)
-
 ## 这一页要解决什么
 
 完成一次端到端生成测试：输入 prompt，输出固定数量的 token，确认生成链路完整可用。
+
+## 阅读入口
+
+- 前置阅读：[`05.4 KV Cache`](/chapter05_generation/04_kv_cache)、[`05.5 Sampler`](/chapter05_generation/05_sampler)
+- 源码直达：[`chapter05_generation 代码入口`](/code/chapter05_generation)
+- 相关阅读：[`05.7 本章小结`](/chapter05_generation/summary)、[`chapter06_quantization`](/chapter06_quantization/intro)
 
 ## 2. 背景是什么
 

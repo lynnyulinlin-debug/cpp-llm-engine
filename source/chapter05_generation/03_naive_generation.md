@@ -1,12 +1,16 @@
 # 05.3 Naive Generation 朴素生成
 
 
-对应代码：见 [本章代码索引](/code/chapter05_generation)
-
 ## 1. 这一页要解决什么
 
 这一页要把“能生成”先做出来，而且是用最朴素、最容易理解的方式做出来。  
 也就是说，先不要 KV Cache，不要复杂调度，不要流式输出，只先确认整个生成闭环是真能跑通的。
+
+## 阅读入口
+
+- 前置阅读：[`05.2 N 层 Transformer 组装`](/chapter05_generation/02_transformer_assembly)、[`chapter04_attention`](/chapter04_attention/intro)
+- 源码直达：[`chapter05_generation 代码入口`](/code/chapter05_generation)
+- 相关阅读：[`05.4 KV Cache`](/chapter05_generation/04_kv_cache)、[`05.5 Sampler`](/chapter05_generation/05_sampler)
 
 ## 2. 为什么要先做朴素生成
 

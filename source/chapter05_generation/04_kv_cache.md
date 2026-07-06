@@ -1,11 +1,16 @@
 # 05.4 KV Cache 缓存
 
-对应代码：见 [本章代码索引](/code/chapter05_generation)
 
 ## 1. 这一页要解决什么
 
 这一页要把 KV Cache 设计成生成 runtime 里的显式状态，而不是一段藏在前向函数内部的临时逻辑。  
 它的直接目标是减少增量推理中的重复计算。
+
+## 阅读入口
+
+- 前置阅读：[`05.3 Naive Generation`](/chapter05_generation/03_naive_generation)、[`05.2 N 层 Transformer 组装`](/chapter05_generation/02_transformer_assembly)
+- 源码直达：[`chapter05_generation 代码入口`](/code/chapter05_generation)
+- 相关阅读：[`05.5 Sampler`](/chapter05_generation/05_sampler)、[`05.6 端到端生成测试`](/chapter05_generation/06_end_to_end_generation)
 
 ## 2. 为什么这一步重要
 

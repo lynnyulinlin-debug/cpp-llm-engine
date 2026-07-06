@@ -1,12 +1,16 @@
 # 05.2 N-layer Transformer Assembly N 层 Transformer 组装
 
 
-对应代码：见 [本章代码索引](/code/chapter05_generation)
-
 ## 1. 这一页要解决什么
 
 把前面做好的单层 Decoder 组合成一个 N 层 Transformer，并让 forward 主流程稳定跑通。  
 这一页的重点不是新算子，而是把“单层正确”变成“多层可堆叠”。
+
+## 阅读入口
+
+- 前置阅读：[`05.1 Embedding 与位置编码`](/chapter05_generation/01_embedding_and_position)、[`chapter04_attention`](/chapter04_attention/intro)
+- 源码直达：[`chapter05_generation 代码入口`](/code/chapter05_generation)
+- 相关阅读：[`05.3 Naive Generation`](/chapter05_generation/03_naive_generation)、[`05.4 KV Cache`](/chapter05_generation/04_kv_cache)
 
 ## 2. 为什么这一步重要
 
