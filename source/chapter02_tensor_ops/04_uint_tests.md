@@ -1,8 +1,6 @@
 # 02.4 Unit Tests 单元测试
 
 
-对应代码：见 [本章代码索引](/code/chapter02_tensor_ops)
-
 ## 这一页要解决什么
 
 用简单单元测试验证 `reshape` 和 `slice` 的 view 语义是否正确。

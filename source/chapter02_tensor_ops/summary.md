@@ -38,14 +38,11 @@
 
 进入 `chapter03_matmul`，开始把 `Tensor` 用到真正的数值计算中。
 
-## 8. English anchors
+## 8. 回看源码
 
-- `Problem`: preserve shared storage while changing views
-- `Why it matters`: later operators and caches depend on view semantics
-- `Background`: data storage and data view are different concerns
-- `Derivation`: shared storage plus view objects
-- `Verification`: reshape, slice, and offset tests
-- `Next step`: matrix multiplication as a reusable operator
+- 先看 [`tensor.h`](/code/chapter02_tensor_ops) 和 [`tensor.cpp`](/code/chapter02_tensor_ops)
+- 再看 [`main_tensor_ops.cpp`](/code/chapter02_tensor_ops)
+- 最后看 [`chapter02_tensor_ops_test.cpp`](/code/chapter02_tensor_ops)
 
 ## 9. 收口结论
 

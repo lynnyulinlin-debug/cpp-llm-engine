@@ -1,8 +1,6 @@
 # 02.1 Shared Underlying Storage 共享底层存储
 
 
-对应代码：见 [本章代码索引](/code/chapter02_tensor_ops)
-
 ## 这一页要解决什么
 
 让多个 `Tensor` 对象可以共享同一份底层数据，而不是每次视图变化都复制内存。

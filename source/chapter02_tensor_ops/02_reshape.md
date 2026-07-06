@@ -1,8 +1,6 @@
 # 02.2 Reshape 重塑
 
 
-对应代码：见 [本章代码索引](/code/chapter02_tensor_ops)
-
 ## 这一页要解决什么
 
 实现只改变形状、不复制数据的 `reshape` 操作。
