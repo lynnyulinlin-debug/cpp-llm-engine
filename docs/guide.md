@@ -13,26 +13,47 @@ flowchart TD
     F --> G[需要工程判断时看 chapter05 / chapter07]
 ```
 
-## 三条先记住
+## 三个入口怎么分工
 
-- `foundation` 是预备区，先补基础。
-- `chapter00_quickstart` 是起跑线，先跑通第一次推理。
-- `chapter01` 到 `chapter07` 是主线正文。
+- `foundation`：补主线前的基础认知
+- `chapter00_quickstart`：尽快跑通第一个可执行基线
+- `USAGE.md`：告诉你从哪条路径开始读、怎么继续读
 
-## 推荐顺序
+`USAGE.md` 负责路线图，`chapter00_quickstart` 负责起跑线。前者告诉你先看什么、后看什么；后者带你把第一条真实推理链路跑通。
 
-1. 先看 [教程主入口](/README)
-2. 再看本页，确认自己从哪一章开始
-3. 如果基础不稳，先回到 `foundation`
-4. 如果想先看到结果，先看 `chapter00_quickstart`
-5. 如果要做工程判断，再看 `chapter05_generation` 和 `chapter07_benchmark`
-6. 如果你需要英文导航，先看 [English entry](/en/README)
+如果你不确定自己该从哪里开始，先看这里：
 
-## 运行入口
+- 先读 `USAGE.md`，确定阅读路径
+- 再按需要进入 `foundation`
+- 最后进入 `chapter00_quickstart` 和后续主线章节
 
-- 本地构建和预览：见根目录 `README.md`
-- 术语统一：见 [术语表](/reference/glossary)
-- 维护规则：见 [维护文档](/maintenance/tutorial_maintenance)
+## 从这里开始
+
+1. 先看 [docs/README.md](/README) 了解教程总图
+2. 如果你更习惯英文导航，可以看 [docs/README.en.md](/en/README)
+3. 需要 C++、构建工具或 CUDA 背景时，先看 `foundation`
+4. 想先跑出第一个可执行基线时，先看 `chapter00_quickstart`
+5. 然后按照 `chapter01` 到 `chapter07` 的主线往下读
+
+## 如何运行代码
+
+优先使用各章节目录下的脚本：
+
+- `bash code/chapter00_quickstart/run.sh`
+- `bash code/chapter02_tensor_ops/scripts/run.sh`
+- `bash code/chapter03_matmul/scripts/run.sh`
+- `bash code/chapter04_attention/scripts/run.sh`
+- `bash code/chapter05_generation/scripts/run.sh`
+- `bash code/chapter06_quantization/scripts/run.sh`
+- `bash code/chapter07_benchmark/scripts/run.sh`
+
+对于 `chapter01_tensor_loader`，使用本地 CMake 构建：
+
+```bash
+cmake -S code/chapter01_tensor_loader -B code/chapter01_tensor_loader/build
+cmake --build code/chapter01_tensor_loader/build
+ctest --test-dir code/chapter01_tensor_loader/build --output-on-failure
+```
 
 ## 环境选择
 
@@ -48,11 +69,10 @@ flowchart TD
 - `chapter03_matmul/04_cublas_implement.md`：第一处具体 GPU 实现
 - 软件环境说明：看 [CUDA 安装与配置](/guides/setup_cuda)
 
-## 一眼看路径
+## 阅读路径
 
-| 你的状态 | 建议入口 | 目的 |
-| --- | --- | --- |
-| 基础不稳 | `foundation` | 先补 C++、构建、CUDA、调试测试 |
-| 想先看到结果 | `chapter00_quickstart` | 先跑通第一次真实推理 |
-| 想理解 runtime | `chapter05_generation` | 看生成状态机、KV Cache 和调度 |
-| 想看证据链 | `chapter07_benchmark` | 看正确性和性能怎么收口 |
+- 入门路径：`foundation` -> `chapter00` -> `chapter01` -> `chapter02` -> `chapter03` -> `chapter04` -> `chapter05` -> `chapter06` -> `chapter07`
+- 工程路径：`chapter00` -> `chapter01` -> `chapter02` -> `chapter03` -> `chapter04` -> `chapter05` -> `chapter07`
+- 性能路径：`chapter02` -> `chapter03` -> `chapter04` -> `chapter05` -> `chapter07`
+- 部署路径：`chapter06` -> `chapter07`
+

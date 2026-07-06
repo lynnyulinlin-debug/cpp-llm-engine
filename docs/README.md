@@ -6,26 +6,16 @@ _A Practical Tutorial for Building a C++ LLM Inference Engine_
 
 ## 这套教程的定位
 
-这不是“讲概念最多”的资料集，而是一条可顺着读、顺着跑、顺着改的工程路径。
+这不是“讲概念最多”的资料集，而是一条可顺着读、顺着跑、顺着改的工程路径。它面向的是想从零看懂 C++ 推理引擎、并把“能跑”继续推进到“能解释、能验证、能扩展”的读者。
 
 - 从 `foundation` 补基础底座
 - 从 `chapter00_quickstart` 跑通真实基线
 - 从 `Tensor`、`MatMul`、`Attention` 走到 `Generation`
 - 再用 `Quantization` 和 `Benchmark` 收口
-- `foundation` 统一使用 `Fxx` 编号，`guides` / `reference` / `maintenance` 分别承担开发参考、设计参考和维护文档
-
-```mermaid
-flowchart LR
-    F[Fxx foundation] --> C0[chapter00_quickstart]
-    C0 --> C1[chapter01_tensor_loader]
-    C1 --> C2[chapter02_tensor_ops]
-    C2 --> C3[chapter03_matmul]
-    C3 --> C4[chapter04_attention]
-    C4 --> C5[chapter05_generation]
-    C5 --> C6[chapter06_quantization]
-    C6 --> C7[chapter07_benchmark]
-    C7 --> G[guides / reference / maintenance]
-```
+- 以 `foundation`、主线章节、`guides` / `reference` / `maintenance` 三层结构组织内容
+- 用章节导读、代码索引和收口页把“读文档”和“看代码”连起来
+- 保持中文优先，同时保留英文入口和逐步扩展能力
+- 允许 CPU-first 学习路径先跑通，再在需要时接入 CUDA / GPU 后端
 
 ## 本教程的特色
 
@@ -40,14 +30,14 @@ flowchart LR
 
 ## 和常见推理引擎的对照
 
-| 对象 | 强项 | 适合拿来学什么 | 本教程对应章节 |
-| --- | --- | --- | --- |
-| `llama.cpp` | 小、轻、可移植，适合先跑起来 | 最小本地基线、权重加载、首次推理 | `chapter00_quickstart`、`chapter01_tensor_loader` |
-| `vLLM` | 高吞吐 serving、调度和 KV cache | batching、scheduler、cache 管理 | `chapter05_generation`、`chapter07_benchmark` |
-| `SGLang` | 结构化 serving 和应用编排 | 多步流程组织、上层 workflow | `chapter05_generation`、`chapter07_benchmark` |
-| `TensorRT-LLM` | GPU engine、runtime 分层和部署优化 | engine build、kernel、量化部署 | `chapter03_matmul`、`chapter04_attention`、`chapter06_quantization`、`chapter07_benchmark` |
-| `Ollama` | 本地交付、打包、易用性 | 如何把推理能力包装成产品 | `chapter00_quickstart`、`chapter05_generation` |
-| `Gemma` | 具体模型家族参考 | 兼容性、验证对象、模型行为 | `chapter01_tensor_loader`、`chapter04_attention`、`chapter06_quantization`、`chapter07_benchmark` |
+| 对象 | 强项 | 硬件平台适配进展 | 适合拿来学什么 | 本教程对应章节 |
+| --- | --- | --- | --- | --- |
+| `llama.cpp` | 小、轻、可移植，适合先跑起来 | CPU 优先；CUDA 路径可选 | 最小本地基线、权重加载、首次推理 | `chapter00_quickstart`、`chapter01_tensor_loader` |
+| `vLLM` | 高吞吐 serving、调度和 KV cache | 以 NVIDIA GPU 为主，CPU 不是主路径 | batching、scheduler、cache 管理 | `chapter05_generation`、`chapter07_benchmark` |
+| `SGLang` | 结构化 serving 和应用编排 | 以 GPU serving 场景为主 | 多步流程组织、上层 workflow | `chapter05_generation`、`chapter07_benchmark` |
+| `TensorRT-LLM` | GPU engine、runtime 分层和部署优化 | NVIDIA GPU 优先；CUDA 生态绑定最强 | engine build、kernel、量化部署 | `chapter03_matmul`、`chapter04_attention`、`chapter06_quantization`、`chapter07_benchmark` |
+| `Ollama` | 本地交付、打包、易用性 | CPU 本地交付友好；GPU 适配依赖后端实现 | 如何把推理能力包装成产品 | `chapter00_quickstart`、`chapter05_generation` |
+| `Gemma` | 具体模型家族参考 | 模型本身与平台无关；执行取决于所选引擎 | 兼容性、验证对象、模型行为 | `chapter01_tensor_loader`、`chapter04_attention`、`chapter06_quantization`、`chapter07_benchmark` |
 
 ```mermaid
 flowchart LR
@@ -81,20 +71,20 @@ flowchart TD
 
 ## 章节总览
 
-| 顺序 | 模块 | 入口 | 主要内容 |
+| 顺序 | 模块 | 主要内容 | 英文覆盖状态 |
 | --- | --- | --- | --- |
-| 0 | `foundation` | [foundation/README.md](/foundation/README) | C++、构建、CUDA、调试与测试基础 |
-| 1 | `chapter00_quickstart` | [chapter00_quickstart/intro.md](/chapter00_quickstart/intro) | 先跑通第一次真实推理 |
-| 2 | `chapter01_tensor_loader` | [chapter01_tensor_loader/intro.md](/chapter01_tensor_loader/intro) | 权重加载与 `Tensor` 抽象 |
-| 3 | `chapter02_tensor_ops` | [chapter02_tensor_ops/intro.md](/chapter02_tensor_ops/intro) | 视图语义、共享存储、`reshape`、`slice` |
-| 4 | `chapter03_matmul` | [chapter03_matmul/intro.md](/chapter03_matmul/intro) | `MatMul` 算子、后端拆分、参考实现 |
-| 5 | `chapter04_attention` | [chapter04_attention/intro.md](/chapter04_attention/intro) | attention、FFN、decoder layer |
-| 6 | `chapter05_generation` | [chapter05_generation/intro.md](/chapter05_generation/intro) | token-by-token generation、KV cache、sampler |
-| 7 | `chapter06_quantization` | [chapter06_quantization/intro.md](/chapter06_quantization/intro) | 量化推理路径和精度权衡 |
-| 8 | `chapter07_benchmark` | [chapter07_benchmark/intro.md](/chapter07_benchmark/intro) | 正确性验证、性能比较、证据收口 |
-| 9 | `guides` | [guides/README.md](/guides/README) | 开发参考、构建、环境、迁移 |
-| 10 | `reference` | [reference/README.md](/reference/README) | 设计参考、术语、生态对照 |
-| 11 | `maintenance` | [maintenance/README.md](/maintenance/README) | 教程维护、写作规范、模板 |
+| 0 | [`foundation`](/foundation/README) | C++、构建、CUDA、调试与测试基础 | 英文正文已覆盖 |
+| 1 | [`chapter00_quickstart`](/chapter00_quickstart/intro) | 先跑通第一次真实推理 | 英文导读 / 收口已覆盖 |
+| 2 | [`chapter01_tensor_loader`](/chapter01_tensor_loader/intro) | 权重加载与 `Tensor` 抽象 | 英文导读 / 收口已覆盖 |
+| 3 | [`chapter02_tensor_ops`](/chapter02_tensor_ops/intro) | 视图语义、共享存储、`reshape`、`slice` | 英文导读 / 收口已覆盖 |
+| 4 | [`chapter03_matmul`](/chapter03_matmul/intro) | `MatMul` 算子、后端拆分、参考实现 | 英文导读 / 收口已覆盖 |
+| 5 | [`chapter04_attention`](/chapter04_attention/intro) | attention、FFN、decoder layer | 英文导读 / 收口已覆盖 |
+| 6 | [`chapter05_generation`](/chapter05_generation/intro) | token-by-token generation、KV cache、sampler | 英文导读 / 收口已覆盖 |
+| 7 | [`chapter06_quantization`](/chapter06_quantization/intro) | 量化推理路径和精度权衡 | 英文导读 / 收口已覆盖 |
+| 8 | [`chapter07_benchmark`](/chapter07_benchmark/intro) | 正确性验证、性能比较、证据收口 | 英文导读 / 收口已覆盖 |
+| 9 | [`guides`](/guides/README) | 开发参考、构建、环境、迁移 | 英文入口已覆盖 |
+| 10 | [`reference`](/reference/README) | 设计参考、术语、生态对照 | 部分完成 |
+| 11 | [`maintenance`](/maintenance/README) | 教程维护、写作规范、模板 | 部分完成 |
 
 ## 适合谁
 
@@ -104,9 +94,9 @@ flowchart TD
 
 ## 读法建议
 
-1. 先看 [使用文档](guide.md)
-2. 再看本页，确认主线和对照层
-3. 基础薄弱就先看 [foundation/README.md](/foundation/README)
+1. 先看 [USAGE.md](/guide)
+2. 再看 [docs/README.md](/README)
+3. 基础薄弱就先看 [source/foundation/README.md](/foundation/README)
 4. 想先跑结果就从 `chapter00_quickstart` 开始
 5. 想做工程判断就重点看 `chapter05_generation` 和 `chapter07_benchmark`
 
@@ -143,12 +133,12 @@ npm install --registry=https://registry.npmjs.org
 
 ## 相关入口
 
-- [阅读指南](guide.md)
-- [英文入口](/en/README)
-- [开发参考](guides/README.md)
-- [设计参考](reference/README.md)
-- [维护文档](maintenance/README.md)
-
+- [docs/README.md](/README)：站点中文主入口
+- [docs/README.en.md](/en/README)：站点英文入口
+- [docs/guide.md](/guide)：阅读指南
+- [source/guides/README.md](/guides/README)：开发参考入口
+- [source/reference/README.md](/reference/README)：设计参考入口
+- [source/maintenance/README.md](/maintenance/README)：维护文档入口
 ## English coverage status
 
 | Page | Status | Route |
