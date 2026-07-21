@@ -1,12 +1,20 @@
-# chapter01_tensor_loader 阅读入口
+# chapter01_tensor_loader 代码索引
 
-## 直接源码
+## 输入语义
 
-- `tensor.h`
-- `tensor.cpp`
-- `model_loader.h`
-- `model_loader.cpp`
-- `chapter01_tensor_loader_test.cpp`
+- `code/chapter01_tensor_loader/src/tensor.h`
+- `code/chapter01_tensor_loader/src/tensor.cpp`
+- `code/chapter01_tensor_loader/src/model_loader.h`
+- `code/chapter01_tensor_loader/src/model_loader.cpp`
+
+## 验证与示例
+
+- `code/chapter01_tensor_loader/tests/chapter01_tensor_loader_test.cpp`
+
+## 对应文档
+
+- [chapter01 导读](../chapter01_tensor_loader/intro)
+- [chapter01 小结](../chapter01_tensor_loader/summary)
 
 ## 说明
 

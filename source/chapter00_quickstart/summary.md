@@ -10,6 +10,14 @@
 - 环境、编译链路和模型下载已经连通
 - 教程起跑线已经固定下来
 
+## 生态回看
+
+回看这一章时，最值得对照的是本地基线和本地交付层。你会更清楚自己学到的是“先跑通”还是“怎么把能力打包出去”。
+
+- 先看 [生态对照总览](/reference/ecosystem/README)
+- 对照 [llama.cpp](/reference/ecosystem/llama_cpp) 回看最小本地推理基线
+- 对照 [Ollama](/reference/ecosystem/ollama) 回看本地包装和交付思路
+
 ## 2. 为什么它重要
 
 如果没有这一步，后面的 `Tensor`、`ModelLoader` 和算子章节都只能停留在纸面推导。

@@ -31,6 +31,14 @@ flowchart LR
 - 源码直达：[`main_quick.cpp`](/code/chapter00_quickstart)、[`run.sh`](/code/chapter00_quickstart)、[`CMakeLists.txt`](/code/chapter00_quickstart)
 - 相关阅读：[`00.1 Environment Setup`](/chapter00_quickstart/01_environment_setup)、[`00.4 First Inference`](/chapter00_quickstart/04_first_inference)、[`00.7 本章小结`](/chapter00_quickstart/summary)
 
+## 生态对照
+
+这一章最接近真实生态里的本地基线和本地交付层。先看这些参考，再回来看为什么这里要先追求“跑通第一条链路”。
+
+- 先看 [生态对照总览](/reference/ecosystem/README)
+- 对照 [llama.cpp](/reference/ecosystem/llama_cpp) 看最小本地推理基线怎样把模型先跑起来
+- 对照 [Ollama](/reference/ecosystem/ollama) 看本地交付层怎样把推理能力包装给最终用户
+
 ## 3. 本章要解决什么
 
 - 确认本机具备基本的编译和运行条件

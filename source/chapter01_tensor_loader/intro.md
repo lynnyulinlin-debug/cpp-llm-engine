@@ -2,15 +2,31 @@
 
 这一章先回答一个基础问题：模型权重怎样安全地进入程序，并被统一表示成 `Tensor` 和 `ModelLoader` 这套对象模型？同时也会说明“数据加载”和“权重加载”的关系：前者是更一般的输入读取问题，后者是本章要解决的具体场景。
 
-如果你只是想先理解“怎么用”，可以先看本章的源码入口 [`tensor.h`](/code/chapter01_tensor_loader)、[`model_loader.cpp`](/code/chapter01_tensor_loader)，再回到这里看概念和推导。
+如果你只是想先理解“怎么用”，可以先看本章的代码入口 [`chapter01_tensor_loader 代码入口`](/code/chapter01_tensor_loader)，再回到这里看概念和推导。
 
 本章会实现一个可用的 `Tensor` 抽象，并把模型权重从自定义格式加载到程序中。
+
+如果把这章看成一条实际链路，它的顺序应该是：
+
+1. 先定义 `Tensor` 该表达什么
+2. 再把表达方式落到对象实现里
+3. 再把模型权重翻译成一个足够简单的文件格式
+4. 再用 Python 把训练侧权重写进去
+5. 最后由 `ModelLoader` 把文件还原成运行时对象
+
+也就是说，这一章不是先写一个读文件工具，而是先把“输入语义”定住，再让格式和脚本去适配它。
 
 这一章是主线的起点。后面的 `tensor ops`、`matmul`、`attention` 和 `generation` 都建立在这里定义的 `Tensor` 与加载链路之上。
 
 这一章会碰到的 C++ 概念主要是：类与对象、构造与析构、`shared_ptr`、`vector`、`string`、`unordered_map`，以及头文件和源码分离。
 
 这里最关键的理解是：这一章不只是“把文件读进来”，而是在建立一个可信输入入口。权重一旦进入程序，后面的所有章节都默认它的 shape、dtype、device 和 ownership 已经被正确表达。
+
+如果这一层做薄了，后面最容易冒出来的问题通常不是算子逻辑，而是：
+
+- 文件读进来了，但对象语义不完整
+- shape 对了，但 dtype 或 device 没有真正被表达
+- loader 跟文件布局绑太死，后面一换格式就要重写
 
 ```mermaid
 flowchart LR
@@ -27,14 +43,22 @@ flowchart LR
 | 为什么先做 loader | 可信输入入口 | 后面所有章都依赖它 | [`01.3`](#3-背景是什么) / [`01.5`](#5-中间推导是什么) |
 | Tensor 先表达什么 | shape、dtype、device、ownership | 输入语义先固定 | [`01.5`](#5-中间推导是什么) / [`01.6`](#6-本章会产出什么) |
 | 怎么验证加载正确 | 名称和形状打印、最小闭环 | 先确认对象模型成立 | [`01.9`](#9-怎么验证) / [`01.10`](#10-本章解决了什么) |
-| 源码直达 | `tensor.*` / `model_loader.*` | 先看对象模型和加载逻辑 | [`tensor.h`](/code/chapter01_tensor_loader) / [`model_loader.cpp`](/code/chapter01_tensor_loader) |
+| 源码直达 | `tensor.*` / `model_loader.*` | 先看对象模型和加载逻辑 | [`chapter01_tensor_loader 代码入口`](/code/chapter01_tensor_loader) |
 | 下一步接到哪里 | `chapter02_tensor_ops` | view 语义建立在这层基础上 | [`01.11`](#11-下一步是什么) |
 
 ## 2. 阅读入口
 
 - 前置阅读：[`chapter00_quickstart`](/chapter00_quickstart/intro)、[`foundation`](/foundation/README)
-- 源码直达：[`tensor.h`](/code/chapter01_tensor_loader)、[`tensor.cpp`](/code/chapter01_tensor_loader)、[`model_loader.h`](/code/chapter01_tensor_loader)、[`model_loader.cpp`](/code/chapter01_tensor_loader)、[`chapter01_tensor_loader_test.cpp`](/code/chapter01_tensor_loader)
+- 源码直达：[`chapter01_tensor_loader 代码入口`](/code/chapter01_tensor_loader)、[`tensor.h`](/code/chapter01_tensor_loader)、[`tensor.cpp`](/code/chapter01_tensor_loader)、[`model_loader.h`](/code/chapter01_tensor_loader)、[`model_loader.cpp`](/code/chapter01_tensor_loader)、[`chapter01_tensor_loader_test.cpp`](/code/chapter01_tensor_loader)
 - 相关阅读：[`01.1 Tensor Interface`](/chapter01_tensor_loader/01_tensor_interface)、[`01.5 ModelLoader`](/chapter01_tensor_loader/05_model_loader)、[`01.7 本章小结`](/chapter01_tensor_loader/summary)
+
+## 生态对照
+
+这一章最适合拿 `llama.cpp` 和 `Gemma` 一起看：前者给你最小本地基线，后者给你具体模型家族如何落到 loader 和张量对象上的参照。
+
+- 先看 [生态对照总览](/reference/ecosystem/README)
+- 对照 [llama.cpp](/reference/ecosystem/llama_cpp) 看权重加载如何接上本地推理基线
+- 对照 [Gemma](/reference/ecosystem/gemma) 看具体模型家族怎样影响 loader、shape 和验证
 
 ## 3. 背景是什么
 
@@ -45,6 +69,8 @@ flowchart LR
 这不是额外负担，而是为了让你在读 `Tensor` 和 `ModelLoader` 时，不会把“数据结构选择”和“对象设计”同时当成障碍。
 
 如果把这一章写深，重点不只是 loader 的文件格式，而是要说明为什么模型权重必须先被统一装进一个清晰的对象模型里：这样后面的算子、view 语义和 runtime 才能把“数据从哪里来”这件事从计算逻辑中分离出去。
+
+换句话说，这一章真正要建立的是“输入层规则”。只要输入层规则稳定，后面的章就不用每次都重新解释权重怎么来的、对象怎么持有、数据怎么进入程序。
 
 ## 4. 最小设计是什么
 
@@ -70,12 +96,27 @@ flowchart LR
 这个推导的关键转折点在于：**先定义对象，再定义读取方式**。  
 也就是说，我们不是先有文件格式再去适配对象，而是先把程序里需要怎样表示权重说清楚，再把外部文件映射进来。
 
+因此，这章的实际实现顺序也应该按这个方向走：
+
+- 先写 `Tensor` 接口，再补实现
+- 再设计文件格式，确保它能表达 tensor table 和原始数据
+- 再写 Python converter，把训练侧权重翻译成统一格式
+- 最后写 `ModelLoader` 和打印验证，把整条链路闭起来
+
+如果顺序反过来，`ModelLoader` 很容易被写成一个“能读什么都读”的杂项入口，后续章节会不断回头修输入层。
+
 ## 6. 本章会产出什么
 
 - 一个能承载权重数据的 `Tensor`
 - 一个可扩展的模型文件格式思路
 - 一个能把文件内容转成内存对象的 `ModelLoader`
 - 一个最小可验证的权重读取闭环
+
+更具体一点说，这一章应该让你能够从一个真实文件走到三个确定结果：
+
+- 你知道文件里有什么
+- 你知道 loader 读到了什么
+- 你知道最后打印出来的 tensor 名称和形状为什么可信
 
 ## 7. 实现路径是什么
 
@@ -87,6 +128,8 @@ flowchart LR
 6. 打印并验证加载结果
 7. 确认 loader 和 Tensor 的职责边界
 
+这条路径的好处是把“对象定义、文件结构、转换脚本、运行时读取、最终验证”拆成了五层。每一层都能单独检查，不会一开始就把所有复杂度揉在一起。
+
 ## 8. 常见问题是什么
 
 - 以为 loader 只负责读字节，不负责表达语义
@@ -94,23 +137,36 @@ flowchart LR
 - 以为模型文件格式可以随便变，只要能反序列化就行
 - 以为 ownership 和 lifetime 是后面的优化问题，而不是加载阶段的基础约束
 
+再往下看，最常见的坑其实是：
+
+- Python converter 和 C++ loader 对同一个字段的理解不一致
+- 文件格式为了“方便”省掉版本号，后面一改就崩
+- `Tensor` 的元信息和底层存储没有分层，导致 view 语义很难补
+
 ## 9. 怎么验证
 
 - Tensor 能表达 shape、dtype、device 和数据指针
 - 模型权重能从文件进入程序
 - 程序能打印出加载到的 tensor 名称和形状
 
+如果按最小顺序检查，一般会先看文件头和 tensor table，再看每个 tensor 的名称和 shape，最后确认打印结果和原始文件一致。
+
 ## 10. 本章解决了什么
 
 这一章把“模型状态如何进入程序”这道门固定住了。  
 后面的 view 语义、算子输入和生成 runtime，都会在这套对象模型上继续往下走。
 
+它真正建立的不是某个具体文件格式，而是一条稳定的输入约定：以后只要权重进入程序，就应该先落到这套 `Tensor` / `ModelLoader` 语义里，再由后续章节继续消费。
+
 ## 11. 下一步是什么
 
 进入 `chapter02_tensor_ops`，在已经可用的 `Tensor` 基础上增加 `reshape` 和 `slice` 这种 view 语义。
 
+换句话说，`chapter01` 先解决“数据从哪里来”，`chapter02` 再解决“同一份数据怎么被不同方式观察”。
+
 ## 12. 回看源码
 
+- 先看 [`chapter01_tensor_loader 代码入口`](/code/chapter01_tensor_loader)
 - 先看 [`tensor.h`](/code/chapter01_tensor_loader) 和 [`model_loader.h`](/code/chapter01_tensor_loader)
 - 再看 [`tensor.cpp`](/code/chapter01_tensor_loader) 和 [`model_loader.cpp`](/code/chapter01_tensor_loader)
 - 最后看 [`chapter01_tensor_loader_test.cpp`](/code/chapter01_tensor_loader)
