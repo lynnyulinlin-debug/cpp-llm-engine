@@ -1,12 +1,20 @@
-# chapter02_tensor_ops 阅读入口
+# chapter02_tensor_ops 代码索引
 
-## 直接源码
+## 视图语义
 
-- `tensor.h`
-- `tensor.cpp`
-- `main_tensor_ops.cpp`
-- `chapter02_tensor_ops_test.cpp`
-- `run.sh`
+- `code/chapter02_tensor_ops/include/chapter02_tensor_ops/tensor.h`
+- `code/chapter02_tensor_ops/src/tensor.cpp`
+
+## 验证与示例
+
+- `code/chapter02_tensor_ops/examples/main_tensor_ops.cpp`
+- `code/chapter02_tensor_ops/tests/chapter02_tensor_ops_test.cpp`
+- `code/chapter02_tensor_ops/scripts/run.sh`
+
+## 对应文档
+
+- [chapter02 导读](../chapter02_tensor_ops/intro)
+- [chapter02 小结](../chapter02_tensor_ops/summary)
 
 ## 说明
 
