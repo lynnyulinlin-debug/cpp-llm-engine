@@ -1,6 +1,14 @@
 # Design References
 
-This section explains concepts, terminology, and ecosystem comparisons.
+This section explains concepts, terminology, ecosystem comparisons, and the engine-layer map.
+
+It is the place to go when you want to understand where the training framework, the inference framework, and this tutorial sit in the system.
+
+Think of it as the support layer for the main line:
+
+- the main line teaches the engine layer step by step
+- this section maps that engine layer back to real frameworks and real ecosystems
+- it does not become a second teaching path
 
 ## Contents
 

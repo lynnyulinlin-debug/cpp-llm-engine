@@ -6,11 +6,52 @@ This page answers a practical question:
 - What does an inference framework do?
 - Which layer does this from-scratch C++ inference tutorial study?
 
+## Engine Layer
+
+The engine layer is the execution core of inference systems. It turns a static model into a runnable runtime with clear boundaries for:
+
+- tensor representation
+- weight loading
+- operator execution
+- decoder structure
+- runtime state and KV cache
+- quantization and backend adaptation
+- testing and benchmarking
+
+You can think of Python inference frameworks as the "control tower" and the C++ inference engine as the "engine":
+
+- the control tower organizes requests and workflows
+- the engine executes the hot path, manages memory and state, and determines latency and throughput
+
+This tutorial teaches both sides together, but the main line focuses on the engine layer first.
+
 ## 1. One-sentence distinction
 
 - **Training framework**: builds the model
 - **Inference framework**: runs the model, keeps it fast, and keeps it stable
 - **This tutorial**: breaks down the main inference ideas and builds a minimal implementation that can be studied, verified, and extended
+
+## 1.1 Where each framework sits
+
+Training frameworks, inference frameworks, and this tutorial play different roles in the system.
+
+| Object | System role | Structure | Typical output |
+| --- | --- | --- | --- |
+| Training framework | Upstream production system | model definition, autograd, optimizer, training loop, distributed execution, checkpointing | trained weights, training logs, optimizer state |
+| Inference framework | Runtime service system | request entry, scheduling, cache, streaming, backend, deployment interface | deployable runtime / engine / endpoint |
+| This tutorial | Teaching and understanding middle layer | `Tensor`, loader, operator, decoder, runtime, quantization, benchmark | a readable, runnable, editable, verifiable inference path |
+
+The point of this comparison is simple:
+
+- training frameworks focus on "building the model"
+- inference frameworks focus on "serving the model"
+- this tutorial focuses on "making the middle layer understandable"
+
+So these are not competing products on the same layer. They are different stops on the same pipeline:
+
+1. the training framework produces the model
+2. this tutorial explains the key ideas from model to runtime
+3. the inference framework turns runtime into a service
 
 ## 2. Main differences
 
@@ -151,6 +192,8 @@ We compress those ideas into a more teachable path:
 - Read it first if you want to understand why training and inference look different
 - Use it to locate which layer the tutorial is actually teaching
 - Treat it as a map, not as a replacement for the main line
+
+If you want the shortest route map, start from [guide.md](/en/guide) or [README.md](/en/README), then come back here when you need the engine-layer map.
 
 ## 10. Related chapters
 
