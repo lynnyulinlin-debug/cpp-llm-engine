@@ -10,8 +10,19 @@ This is the canonical English entry for the tutorial. The Chinese main line rema
 - chapter00_quickstart: the first runnable baseline
 - guide.md: how to read the tutorial
 - guides: engineering references for build, environment, and migration
-- reference: terminology, concept mapping, and ecosystem comparison
+- reference: terminology, concept mapping, ecosystem comparison, and engine-layer analysis
 - maintenance: contributor-only maintenance rules and templates
+
+## Engine Layer
+
+The engine layer is the execution core of inference systems. It turns a static model into a runnable runtime with clear boundaries for tensor representation, weight loading, operator execution, decoder structure, runtime state, KV cache, quantization, backend adaptation, testing, and benchmarking.
+
+You can think of Python inference frameworks as the "control tower" and the C++ inference engine as the "engine":
+
+- the control tower organizes requests and workflows
+- the engine executes the hot path, manages memory and state, and determines latency and throughput
+
+This tutorial teaches both sides together, but the main line focuses on the engine layer first.
 
 ## Start here
 
@@ -20,6 +31,7 @@ This is the canonical English entry for the tutorial. The Chinese main line rema
 3. Open [chapter00_quickstart](chapter00_quickstart/intro) when you want the first runnable baseline.
 4. Use [guides/README.md](guides/README) for build or environment help.
 5. Use [reference/README.md](reference/README) when you need concept mapping or ecosystem context.
+6. Read [training vs inference frameworks](reference/framework_comparison) for the engine-layer map.
 
 ## Coverage status
 

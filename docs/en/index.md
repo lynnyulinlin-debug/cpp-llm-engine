@@ -26,6 +26,18 @@ features:
 
 This is the English landing page for the tutorial. It is intentionally lightweight: the goal is to let English readers find the project, understand the reading path, and reach the first entry points quickly.
 
+## Engine Layer
+
+The tutorial focuses on the engine layer first: the part that turns a static model into a runnable runtime with clear boundaries for tensor representation, weight loading, operator execution, decoder structure, runtime state, KV cache, quantization, backend adaptation, testing, and benchmarking.
+
+Think of Python inference frameworks as the "control tower" and the C++ inference engine as the "engine":
+
+- the control tower organizes requests and workflows
+- the engine executes the hot path, manages memory and state, and determines latency and throughput
+
+If you want the fuller explanation, open [training vs inference frameworks](/en/reference/framework_comparison).
+If you want the shortest route map, start from [guide](/en/guide).
+
 ## What you will see
 
 - The main tutorial entry

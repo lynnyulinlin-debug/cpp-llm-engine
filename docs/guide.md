@@ -2,6 +2,28 @@
 
 这个页面只回答一件事：怎么读这套教程。
 
+## 教程主线
+
+这套教程按一条推理引擎主线往前推进，不是按主题合集散着读。
+
+| 阶段 | 主要职责 |
+| --- | --- |
+| `chapter01` - `chapter03` | 输入、张量语义、算子边界 |
+| `chapter04` - `chapter05` | 结构与运行时 |
+| `chapter06` | 表示与成本 |
+| `chapter07` | 验证与证据 |
+
+`chapter07` 之后，主线转入 `reference`、`guides` 和 `maintenance`：
+
+- `reference`：概念解释、术语和生态对照
+- `guides`：构建、环境、迁移和工程方法
+- `maintenance`：站点维护、写作规范和长期收口
+
+如果你想先把“指挥台 / 发动机”这层关系讲清楚，先看 [training vs inference frameworks](/source/reference/framework_comparison.md)。
+
+如果你只想知道整套教程怎么分层，这一页就够了。
+如果你想知道具体每章讲什么，再回到 [教程主入口](/README) 和 [站点首页](/).
+
 ```mermaid
 flowchart TD
     A[先判断自己在哪] --> B{基础够不够}
@@ -34,6 +56,7 @@ flowchart TD
 3. 需要 C++、构建工具或 CUDA 背景时，先看 `foundation`
 4. 想先跑出第一个可执行基线时，先看 `chapter00_quickstart`
 5. 然后按照 `chapter01` 到 `chapter07` 的主线往下读
+6. 到 `chapter07` 收口后，再看 `reference`、`guides` 和 `maintenance`
 
 ## 如何运行代码
 
@@ -75,4 +98,4 @@ ctest --test-dir code/chapter01_tensor_loader/build --output-on-failure
 - 工程路径：`chapter00` -> `chapter01` -> `chapter02` -> `chapter03` -> `chapter04` -> `chapter05` -> `chapter07`
 - 性能路径：`chapter02` -> `chapter03` -> `chapter04` -> `chapter05` -> `chapter07`
 - 部署路径：`chapter06` -> `chapter07`
-
+- 收口路径：`chapter07` -> `reference` -> `guides` -> `maintenance`

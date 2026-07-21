@@ -2,6 +2,29 @@
 
 This page tells you how to move through the tutorial.
 
+## Main Line
+
+This tutorial moves along one inference-engine main line instead of being a loose collection of topics.
+
+| Stage | Main responsibility |
+| --- | --- |
+| `chapter01` - `chapter03` | inputs, tensor semantics, and operator boundaries |
+| `chapter04` - `chapter05` | structure and runtime |
+| `chapter06` | representation and cost |
+| `chapter07` | verification and evidence |
+
+After `chapter07`, the main line moves into `reference`, `guides`, and `maintenance`:
+
+- `reference`: concept explanations, terminology, and ecosystem comparison
+- `guides`: build, environment, migration, and engineering methods
+- `maintenance`: site maintenance, writing rules, and long-term closure
+
+If you want to understand the "control tower / engine" split first, read [training vs inference frameworks](/en/reference/framework_comparison). That page shows where Python frameworks, C++ engines, and the engine layer sit in the system.
+
+If you only want the high-level map, this page is enough.
+If you want chapter-by-chapter details, go back to [the Chinese main entry](/README) or [the English entry](/en/README).
+If you want the shortest route map, start from [the English entry](/en/README).
+
 ## Three quick rules
 
 - foundation prepares you for the main line.

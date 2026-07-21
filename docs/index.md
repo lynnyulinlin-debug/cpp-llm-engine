@@ -30,6 +30,25 @@ features:
 这是一个面向中文学习者优先的 C++ LLM 推理教程。  
 如果你想先知道怎么读，先看 [阅读指南](/guide)；如果你想直接看主线，从 [教程主入口](/README) 进入。
 
+## 教程主线
+
+这套教程按一条推理引擎主线往前推进，而不是按主题合集散着讲。
+
+| 阶段 | 主要职责 |
+| --- | --- |
+| `chapter01` - `chapter03` | 输入、张量语义、算子边界 |
+| `chapter04` - `chapter05` | 结构与运行时 |
+| `chapter06` | 表示与成本 |
+| `chapter07` | 验证与证据 |
+
+`chapter07` 之后，主线转入 `reference`、`guides` 和 `maintenance`：
+
+- `reference` 讲概念解释、术语和生态对照
+- `guides` 讲构建、环境、迁移和工程方法
+- `maintenance` 讲站点维护、写作规范和长期收口
+
+想先看“指挥台 / 发动机”的分工，可以直接进 [training vs inference frameworks](/source/reference/framework_comparison.md)。
+
 ## 你会看到什么
 
 - `foundation` 到 `chapter07_benchmark` 的主线

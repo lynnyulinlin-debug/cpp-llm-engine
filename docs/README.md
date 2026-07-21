@@ -17,6 +17,27 @@ _A Practical Tutorial for Building a C++ LLM Inference Engine_
 - 保持中文优先，同时保留英文入口和逐步扩展能力
 - 允许 CPU-first 学习路径先跑通，再在需要时接入 CUDA / GPU 后端
 
+## 教程主线
+
+这套教程不是按“主题合集”组织的，而是按一条推理引擎主线往前推进。
+
+| 阶段 | 主要职责 | 读完后你应该能理解什么 |
+| --- | --- | --- |
+| `chapter01` - `chapter03` | 输入、张量语义、算子边界 | 权重怎样进入程序，张量怎样表达视图，计算怎样变成稳定边界 |
+| `chapter04` - `chapter05` | 结构与运行时 | 单层 decoder 怎样站稳，decoder 怎样进入生成 runtime |
+| `chapter06` | 表示与成本 | 量化怎样降低资源成本，同时保住可接受精度 |
+| `chapter07` | 验证与证据 | 正确性、性能和 benchmark 结果怎样被系统地验证和比较 |
+
+`chapter07` 之后，主线不再继续扩成新的教学章节，而是转入解释层和工程层：
+
+- `reference` 负责概念解释、术语和生态对照
+- `guides` 负责构建、环境、迁移和工程方法
+- `maintenance` 负责站点维护、写作规范和长期收口
+
+如果你想先把“指挥台 / 发动机”这层关系讲清楚，先看 [training vs inference frameworks](/source/reference/framework_comparison.md)。这页会把 Python 框架、C++ 引擎、以及它们在系统里的地位和结构组成放在一张图里看。
+
+这意味着这套教程的收束方式很明确：先把一个推理引擎做出来，再把它验证清楚，最后把它放回真实生态里对照和维护。
+
 ## 本教程的特色
 
 | 维度 | 本教程 | 典型推理引擎项目 |
