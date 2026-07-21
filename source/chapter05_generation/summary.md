@@ -1,4 +1,4 @@
-# 05.7 Chapter Wrap-up 本章解决了什么
+# 05.8 Chapter Wrap-up 本章解决了什么
 
 这章回答的是：模型前向是否已经被组织成一条完整、可观察、可继续演进的生成链路？
 
@@ -11,17 +11,31 @@
 - 再用 KV Cache 支持增量推理
 - 最后通过 sampler 和端到端测试完成闭环
 
+如果把这条链路从头到尾讲一遍，你应该能回答的不只是“生成怎么做”，还包括“为什么它必须拆成这些步骤”。
+
 ## 1. 本章解决了什么
 
 - `forward` 已经被组织成生成 runtime，而不是一次性前向调用
 - `prefill / decode` 的状态机已经显式化
 - `Request`、`KV Cache` 和 `Scheduler` 已经成为可观察边界
 
+## 生态回看
+
+学完这一章后，再回看 `llama.cpp`、`vLLM` 和 `SGLang`，你会更容易看懂“最小生成链路”与“真实 serving runtime”之间的差别。
+
+- 先看 [05.7 vLLM 对照](/chapter05_generation/07_vllm_comparison)
+- 先看 [生态对照总览](/reference/ecosystem/README)
+- 对照 [llama.cpp](/reference/ecosystem/llama_cpp) 回看最小本地生成路径
+- 对照 [vLLM](/reference/ecosystem/vllm) 回看高吞吐 runtime 的调度和 cache
+- 对照 [SGLang](/reference/ecosystem/sglang) 回看更高层的应用编排
+
+更直接地说，这一章把 decoder 从“能算出结果的结构”推进成了“能持续推进的运行时”。这是从模型结构走向系统行为的关键一步。
+
 ## 阅读入口
 
 - 前置阅读：[`chapter05 导读`](/chapter05_generation/intro)、[`05.4 KV Cache`](/chapter05_generation/04_kv_cache)
 - 源码直达：[`chapter05_generation 代码入口`](/code/chapter05_generation)
-- 相关阅读：[`chapter06_quantization`](/chapter06_quantization/intro)、[`chapter07_benchmark`](/chapter07_benchmark/intro)
+- 相关阅读：[`05.7 vLLM 对照`](/chapter05_generation/07_vllm_comparison)、[`chapter06_quantization`](/chapter06_quantization/intro)、[`chapter07_benchmark`](/chapter07_benchmark/intro)
 
 ## 2. 为什么它重要
 
@@ -34,10 +48,14 @@
 生成式模型和一次性前向计算最大的区别，不在于“有没有输出”，而在于“输出是不是一 token 一 token 地长出来”。  
 只要进入生成场景，系统就会多出请求状态、缓存复用和调度推进这三个问题。
 
+因此这一章真正要补的不是 token 本身，而是 token 背后的状态：每一次推进都对应一次状态变化，观察这些变化才知道 runtime 是否健康。
+
 ## 4. 中间推导回顾
 
 从“怎样把 `forward` 变成 runtime”倒推，最自然的结果就是把生成拆成 `prefill / decode`，再把请求、cache 和调度边界显式化。  
 这一章做的事情就是把这条状态机链路先立住。
+
+如果没有这条链路，后面任何优化都只能停留在局部技巧；有了这条链路，优化才有地方落地，也有地方回归验证。
 
 ## 5. 目前这条 runtime 长什么样
 
@@ -52,6 +70,8 @@
 1. 逐 token 回调，让每一步生成都能被外部观察
 2. 状态查询，让 runtime 统计信息可以被读取
 3. 日志输出，让 prefill / decode / cache 变化都能被记录
+
+这三种手段分别对应“看结果”“看状态”“看过程”。只要这三层都能看见，runtime 的行为就不再是黑盒。
 
 例如：
 
@@ -86,9 +106,13 @@ flowchart TD
 - 说明为什么 streaming callback 有助于观察生成过程
 - 理解 scheduler stats 为什么能帮助判断多请求调度是否合理
 
+如果你已经能把这些点说清楚，说明你已经把 generation 看成一个系统，而不只是一个循环。
+
 ## 6. 边界说明
 
 这一章只建立最小可用的生成 runtime，不做完整 serving 系统。
+
+这个边界是刻意的：先把 runtime 的主链路做稳，再谈更复杂的服务能力。否则会很容易把“生成逻辑”与“部署系统”混在一起，最后两个都没做清楚。
 
 具体边界是：
 
