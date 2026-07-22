@@ -6,13 +6,19 @@
 
 这一章开始处理“如何让模型更轻、更省内存、更适合部署”的问题。它承接前面的生成 runtime，把权重表示迁移到量化版本。
 
+可以把这一章想成一个很具体的场景：上一章里，一个 prompt 已经能稳定跑完生成链路，但当模型一变大、请求一多，程序还没开始计算就先卡在加载和搬运上了。这个时候，量化解决的就不是“换一种格式”，而是“怎么把整条链路的负担降下来”。
+
 这一章会碰到的 C++ 概念主要有三类：在现有数据结构上扩展 dtype、在算子路径里加入转换步骤，以及在接口不变的前提下替换底层表示。
 
 量化不是简单地把数值变小，而是在可接受精度前提下换取更低的内存和带宽成本。它更像部署策略的一部分，而不是单纯的数据格式切换。
 
+所以你在这一章里会反复碰到同一个问题：同样是一份权重，为什么 FP16 路径看起来更直接，但量化路径必须多一层反量化？答案不是为了多做一步，而是为了让“省资源”和“还能算”同时成立。
+
 这一章接住的是 `chapter05` 已经稳定下来的生成 runtime。前一章解决“能不能生成”，这一章解决“在这条稳定 runtime 上，能不能用更省内存和带宽的方式继续生成”。
 
 如果把这一章写深，重点不只是“让 INT8 能跑”，而是把量化放进一个完整的工程判断框架里：它省了什么，牺牲了什么，误差从哪里来，哪些地方可以融合，哪些地方必须保留独立转换步骤。
+
+换句话说，这一章真正要讲的是：当模型变轻之后，系统里哪一步真的变轻了，哪一步还是要保留，哪一步最容易让结果悄悄偏掉。
 
 ```mermaid
 flowchart LR
@@ -31,6 +37,7 @@ flowchart LR
 | 为什么量化放在这里 | 稳定 runtime 上的表示变化 | 先有基线再谈压缩 | [`06.2`](#2-背景是什么) / [`06.4`](#4-中间推导是什么) |
 | 量化先改什么 | 权重、Tensor dtype、Loader、算子路径 | 不是只改文件格式 | [`06.3`](#3-最小设计是什么) / [`06.5`](#5-本章会产出什么) |
 | 怎么判断值不值得 | 精度对照和资源成本 | 部署判断必须可解释 | [`06.8`](#8-验证方式) / [`06.9`](#9-图示与表格建议) |
+| 和 `TensorRT-LLM` / `Gemma` / `vLLM` 怎么对照 | engine、模型家族、serving runtime 的三种视角 | 先看量化链路，再看生态里的落点 | [`06.7`](/chapter06_quantization/07_tensorrt_gemma_vllm_comparison) |
 | 源码直达 | `chapter06_quantization` | 先看核心实现 | [`代码入口`](/code/chapter06_quantization) |
 | 下一步接到哪里 | `chapter07_benchmark` | 正确性和性能收口 | [`06.11`](#11-下一步是什么) |
 
@@ -38,7 +45,7 @@ flowchart LR
 
 - 前置阅读：[`chapter05_generation`](/chapter05_generation/intro)、[`chapter05 小结`](/chapter05_generation/summary)
 - 源码直达：[`chapter06_quantization 代码入口`](/code/chapter06_quantization)
-- 相关阅读：[`06.1 Quantization Basics`](/chapter06_quantization/01_quantization_basics)、[`06.3 Load Quantized Weights`](/chapter06_quantization/03_load_quantized_weights)、[`06.4 DequantizeOp`](/chapter06_quantization/04_dequantize_op)、[`06.6 Accuracy Validation`](/chapter06_quantization/06_accuracy_validation)
+- 相关阅读：[`06.1 Quantization Basics`](/chapter06_quantization/01_quantization_basics)、[`06.3 Load Quantized Weights`](/chapter06_quantization/03_load_quantized_weights)、[`06.4 DequantizeOp`](/chapter06_quantization/04_dequantize_op)、[`06.6 Accuracy Validation`](/chapter06_quantization/06_accuracy_validation)、[`06.7 TensorRT-LLM / Gemma / vLLM 对照`](/chapter06_quantization/07_tensorrt_gemma_vllm_comparison)
 
 ## 3. 背景是什么
 
@@ -51,6 +58,8 @@ flowchart LR
 这一章放在 `chapter05_generation` 之后，是因为要先有一条稳定 runtime，量化才有讨论价值。  
 如果 runtime 本身还不稳定，量化后的误差和原始实现的错误会混在一起，根本分不清问题出在哪里。
 
+可以把它想成一个很具体的切换场景：你手里已经有一条 FP16 路径，单条请求跑得通，输出也正常，但模型一变大、请求一变多，程序还没开始计算就先卡在加载和搬运上了。这个时候你通常不会想重写整个 runtime，而是会想把权重换成更小的表示，让主干尽量不动。
+
 ## 4. 最小设计是什么
 
 最小设计不是一开始就做全套低比特方案，而是先建立一条可解释的最小链路：
@@ -58,6 +67,15 @@ flowchart LR
 - 量化权重进入程序
 - 必要时反量化回可计算表示
 - 再进入 Linear 和后续算子
+
+把这条链路换成一个更具体的动作，就是：
+
+1. 原来的 FP16 权重先换成 INT8 存储
+2. loader 读进来时保留 scale 和 dtype 信息
+3. 到 Linear 前再把 INT8 还原成可乘加的表示
+4. 最后拿还原后的结果和原来的 FP16 路径对照
+
+这样，读者看到的就不是“多了一个 dtype”，而是“同一份权重怎么从存储态切回计算态”。
 
 ## 5. 中间推导是什么
 
@@ -72,6 +90,10 @@ flowchart LR
 把这些约束摆出来后，设计就会收敛成一条最小链路：量化权重进入程序，必要时反量化回可计算表示，再进入 Linear 和后续算子。  
 这个推导的关键点不是“多加一个 dtype”，而是**让量化成为 runtime 的一部分，而不是文件格式的一次性转换**。
 
+所以从 FP16 切到 INT8，并不是把所有逻辑都换掉，而是把“权重怎么存”和“权重怎么算”拆开。存储阶段尽量省，计算阶段保持能算，这样 runtime 才能继续沿着原来的生成路径跑下去。
+
+这也是为什么它看起来像“多了一层转换”，实际上是在把权重从“存储态”送回“计算态”。只要这条回路清楚，读者就能理解为什么 loader、Tensor 和 Linear 都要跟着改。
+
 这也是为什么这一章要强调 calibration、scale 粒度和融合边界：  
 它们决定的不是“能不能加载”，而是“这条链路值不值得部署”。
 
@@ -82,6 +104,8 @@ flowchart LR
 - 实现 `DequantizeOp`
 - 在 Linear 路径中集成 dequantize
 - 比较量化模型与 FP16 模型的精度差异
+
+如果把这五项连起来看，你会得到一条很朴素但关键的路径：文件先变小，程序再把它还原成可算的表示，最后在同样的 runtime 里和原始版本对照。
 
 ## 7. 实现路径是什么
 
@@ -134,6 +158,8 @@ flowchart LR
 
 这一章把量化从“格式转换”变成了一条可解释、可验证、可继续优化的部署路径。  
 如果这个判断站不住，量化章节就只是一个数据格式练习。
+
+从这个角度看，这章最重要的不是“把 int8 接进去”，而是让你在看到一个量化方案时，马上能问出三个问题：它省了哪部分内存、误差从哪里来、如果出了问题该在哪一步回退。
 
 ## 12. 下一步是什么
 

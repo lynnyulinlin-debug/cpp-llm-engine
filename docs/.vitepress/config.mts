@@ -185,6 +185,7 @@ function createSidebar() {
             { text: '前馈网络', file: '03_feedforward.md' },
             { text: 'DecoderLayer', file: '04_decoder_layer.md' },
             { text: '加载第一层权重', file: '05_load_first_layer.md' },
+            { text: 'Gemma / TensorRT-LLM 对照', file: '06_gemma_tensorrt_comparison.md' },
           ]),
           chapterGroup('05', '第 05 章 生成运行时', '/chapter05_generation', [
             { text: 'Embedding 与位置编码', file: '01_embedding_and_position.md' },
@@ -193,6 +194,7 @@ function createSidebar() {
             { text: 'KV Cache', file: '04_kv_cache.md' },
             { text: 'Sampler', file: '05_sampler.md' },
             { text: '端到端生成测试', file: '06_end_to_end_generation.md' },
+            { text: 'vLLM 对照', file: '07_vllm_comparison.md' },
           ]),
           chapterGroup('06', '第 06 章 量化', '/chapter06_quantization', [
             { text: '量化基础', file: '01_quantization_basics.md' },
@@ -201,6 +203,7 @@ function createSidebar() {
             { text: '反量化算子', file: '04_dequantize_op.md' },
             { text: '量化 Linear', file: '05_linear_with_quant.md' },
             { text: '精度验证', file: '06_accuracy_validation.md' },
+            { text: 'TensorRT-LLM / Gemma / vLLM 对照', file: '07_tensorrt_gemma_vllm_comparison.md' },
           ]),
           chapterGroup('07', '第 07 章 验证与基准测试', '/chapter07_benchmark', [
             { text: '测试框架搭建', file: '01_test_harness_setup.md' },
@@ -208,6 +211,7 @@ function createSidebar() {
             { text: 'Benchmark 指标', file: '03_benchmark_metrics.md' },
             { text: 'Benchmark 脚本', file: '04_benchmark_script.md' },
             { text: '优化建议', file: '05_optimization_tips.md' },
+            { text: '主流对照', file: '07_framework_comparison.md' },
           ]),
         ],
       },
