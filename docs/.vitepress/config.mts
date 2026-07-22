@@ -192,6 +192,7 @@ function createSidebar() {
             { text: 'Transformer 组装', file: '02_transformer_assembly.md' },
             { text: '朴素生成', file: '03_naive_generation.md' },
             { text: 'KV Cache', file: '04_kv_cache.md' },
+            { text: 'Scheduler', file: '05_scheduler.md' },
             { text: 'Sampler', file: '05_sampler.md' },
             { text: '端到端生成测试', file: '06_end_to_end_generation.md' },
             { text: 'vLLM 对照', file: '07_vllm_comparison.md' },
