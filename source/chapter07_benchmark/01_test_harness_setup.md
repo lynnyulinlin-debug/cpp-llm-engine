@@ -11,7 +11,13 @@
 - 源码直达：[`chapter07_benchmark 代码入口`](/code/chapter07_benchmark)
 - 相关阅读：[`07.2 End-to-End Correctness Testing`](/chapter07_benchmark/02_e2e_correctness)、[`07.3 Benchmark Metrics`](/chapter07_benchmark/03_benchmark_metrics)
 
-## 读完你应该能做什么
+## 代码直达
+
+- [`src/test_helpers.cpp`](/code/chapter07_benchmark#test-helpers-cpp)
+- [`src/benchmark.cpp`](/code/chapter07_benchmark#benchmark-cpp)
+- [`tests/chapter07_benchmark_test.cpp`](/code/chapter07_benchmark#chapter07-benchmark-test-cpp)
+
+## 读完后应能做什么
 
 - 理解为什么需要统一的测试入口
 - 理解如何为算子和模块建立测试入口
@@ -58,7 +64,7 @@ bool test_small_shape() {
 - 测试能够覆盖关键算子
 - 测试失败时能给出明确反馈
 
-如果你能在本章里快速跑通一个失败案例，并从输出中准确定位问题，这说明测试框架已经具备工程价值。
+能够在本章里快速跑通一个失败案例，并从输出中准确定位问题，说明测试框架已经具备工程价值。
 
 ## 常见问题
 

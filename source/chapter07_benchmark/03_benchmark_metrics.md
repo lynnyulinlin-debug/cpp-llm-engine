@@ -4,13 +4,19 @@
 ## 这一页要解决什么
 
 定义统一的性能指标，衡量模型的 prefill 延迟、逐 token 延迟和吞吐能力。  
-没有统一指标，就没有办法公平比较不同实现。
+没有统一指标，就没法公平比较不同实现。
 
-## 读完你应该能做什么
+## 读完后应能做什么
 
 - 理解 latency、prefill 和 throughput 的区别
 - 理解为什么不同阶段需要不同指标
 - 理解指标如何反映系统性能
+
+## 代码直达
+
+- [`src/benchmark.cpp`](/code/chapter07_benchmark#benchmark-cpp)
+- [`src/test_helpers.cpp`](/code/chapter07_benchmark#test-helpers-cpp)
+- [`examples/main_benchmark.cpp`](/code/chapter07_benchmark#main-benchmark-cpp)
 
 ## 为什么这一步重要
 
@@ -30,9 +36,9 @@ benchmark 不是“跑个数字”，而是把系统行为变成可比较的证�
 - `Throughput` 看系统整体吞吐能力
 
 把它们混成一个数，工程意义会大幅下降。  
-更合理的做法是让每个指标回答不同问题，而不是让一个指标试图解释全部现象。
+更合理的做法是让每个指标回答不同问题，而不是让一个指标解释全部现象。
 
-从用户视角看，prefill 影响首次响应体验，token latency 影响连续输出的流畅度，throughput 则决定服务是否能扛住更多并发请求。
+从用户视角看，prefill 影响首次响应体验，token latency 影响连续输出的流畅度，throughput 决定服务能扛住多少并发请求。
 
 最小指标记录结构可以写成：
 
@@ -44,7 +50,7 @@ struct BenchmarkResult {
 };
 ```
 
-最小测量条件清单应包括：硬件型号（CPU / GPU）、batch size、sequence length、量化配置（FP16 / INT8）、CUDA 版本，以及采样策略（greedy / temperature）。这些条件应当和 `BenchmarkResult` 一起记录，否则这些指标就无法在不同环境之间复现或比较。
+最小测量条件清单应包括：硬件型号（CPU / GPU）、batch size、sequence length、量化配置（FP16 / INT8）、CUDA 版本，以及采样策略（greedy / temperature）。这些条件应当和 `BenchmarkResult` 一起记录，否则指标就无法在不同环境之间复现或比较。
 
 ## 实现建议
 

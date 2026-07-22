@@ -5,11 +5,17 @@
 
 编写 `benchmark.sh`，自动运行 benchmark 并记录硬件与运行信息。
 
-## 读完你应该能做什么
+## 读完后应能做什么
 
 - 理解为什么 benchmark 需要自动化
 - 理解应该记录哪些环境信息
 - 理解脚本如何支持重复测量
+
+## 代码直达
+
+- [`scripts/run.sh`](/code/chapter07_benchmark#run-sh)
+- [`examples/main_benchmark.cpp`](/code/chapter07_benchmark#main-benchmark-cpp)
+- [`tests/chapter07_benchmark_test.cpp`](/code/chapter07_benchmark#chapter07-benchmark-test-cpp)
 
 ## 为什么这一步重要
 

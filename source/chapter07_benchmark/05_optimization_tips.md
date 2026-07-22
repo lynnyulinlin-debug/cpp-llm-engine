@@ -5,11 +5,17 @@
 
 列出常见的可选优化方向，例如 CUDA Graph、memory pool 和 async copy，帮助后续定位性能提升空间。
 
-## 读完你应该能做什么
+## 读完后应能做什么
 
 - 理解这些优化项各自适合解决什么问题
 - 理解为什么优化建议要放在 benchmark 之后
 - 理解性能优化不等于先优化所有地方
+
+## 代码直达
+
+- [`src/benchmark.cpp`](/code/chapter07_benchmark#benchmark-cpp)
+- [`src/test_helpers.cpp`](/code/chapter07_benchmark#test-helpers-cpp)
+- [`examples/main_benchmark.cpp`](/code/chapter07_benchmark#main-benchmark-cpp)
 
 ## 为什么这一步重要
 
@@ -21,13 +27,13 @@
 - memory pool
 - async copy
 
-这些优化项的共同点是它们都能在某些工作负载下减少重复开销，但并不一定对所有场景都有效。教程里把它们放在 benchmark 之后，就是为了避免“先上优化，再找问题”。
+这些优化项都能在某些工作负载下减少重复开销，但并不一定对所有场景都有效。教程把它们放在 benchmark 之后，就是为了避免“先上优化，再找问题”。
 
-这一页更适合被写成“优化备忘录”：告诉读者有哪些常见方向、各自适合解决什么瓶颈、以及为什么必须先测量后决定，而不是把它写成一个固定答案清单。
+这一页更适合写成“优化备忘录”：告诉读者有哪些常见方向、各自适合解决什么瓶颈、以及为什么必须先测量后决定。
 
 可以把优化建议理解成一个决策表：当瓶颈在调度时看 scheduler，当瓶颈在 kernel launch 时看 CUDA Graph，当瓶颈在内存分配时看 memory pool，当瓶颈在拷贝时看 async copy。
 
-在工程实践中，建议的优化优先级通常是：先确认内存分配和释放是否为热点，memory pool 往往收益明确且实现相对简单；再考虑 kernel launch 开销，CUDA Graph 的收益取决于 batch size 和模型规模；最后考虑计算与拷贝重叠，async copy 的收益取决于 kernel 时间和拷贝时间的比值。不是每个项目都需要把这三类优化全部做完。
+在工程实践中，建议的优化优先级通常是：先看内存分配和释放是否为热点，memory pool 往往收益明确且实现相对简单；再看 kernel launch 开销，CUDA Graph 的收益取决于 batch size 和模型规模；最后看计算与拷贝重叠，async copy 的收益取决于 kernel 时间和拷贝时间的比值。不是每个项目都需要把这三类优化全部做完。
 
 ## 边界说明
 
@@ -47,7 +53,7 @@
 - 归还时把 buffer 放回池中，而不是立刻释放给系统
 - benchmark 里重点观察分配次数、峰值内存和运行抖动
 
-这类实现不需要一开始就做成完整 allocator。教程要让读者先看到“复用”这件事为什么能降低开销，而不是先被复杂内存管理细节淹没。
+这类实现不需要一开始就做成完整 allocator。教程要让读者先看到“复用”为什么能降低开销，而不是先被复杂内存管理细节淹没。
 
 和 CUDA 工具箱的关系可以再明确一点：
 
@@ -57,7 +63,7 @@
 
 它们不一定是独立“库名”，但都属于 CUDA 侧常见的性能手段。教程这里先把概念和使用场景讲清楚，后面如果真的要实现，再去对照具体 API。
 
-如果你想先把这些手段和具体 CUDA 工具对应起来，可以回看
+要把这些手段和具体 CUDA 工具对应起来，可以回看
 [`foundation/07_cuda_common_libraries`](/foundation/07_cuda_common_libraries)。
 
 ## 使用建议
