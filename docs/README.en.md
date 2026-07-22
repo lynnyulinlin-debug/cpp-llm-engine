@@ -6,6 +6,10 @@ This is the canonical English entry for the tutorial. The Chinese main line
 remains the source of truth, and the English side starts with entry pages
 first.
 
+The Chinese main line is now in a stable, closed state. Current work focuses
+on English chapter bodies, residual wording cleanup, and the continued
+completion of the reference and maintenance layers.
+
 ## Roles
 
 - foundation: background you should know before the main line
@@ -74,6 +78,21 @@ This tutorial is designed to teach both sides together, but the main line focuse
 
 - If you only need the route map, start from [guide.md](/en/guide).
 - If you need the full Chinese walkthrough, switch back to the Chinese main entry.
+
+## Daily checks
+
+If you are changing docs or links, run:
+
+```bash
+npm run docs:check-links
+```
+
+Then run:
+
+```bash
+npm run docs:build
+```
+
 ## Document Layers
 
 - Must-read for learners: `guide.md`, `chapter00_quickstart`, `foundation`

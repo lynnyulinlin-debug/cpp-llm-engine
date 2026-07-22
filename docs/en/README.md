@@ -55,3 +55,17 @@ This tutorial teaches both sides together, but the main line focuses on the engi
 
 - If you only need the route map, start from [guide.md](guide).
 - If you need the full Chinese walkthrough, switch back to the Chinese main entry.
+
+## Daily checks
+
+If you are changing docs or links, run:
+
+```bash
+npm run docs:check-links
+```
+
+Then run:
+
+```bash
+npm run docs:build
+```

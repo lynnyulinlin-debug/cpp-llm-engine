@@ -4,7 +4,7 @@ layout: home
 hero:
   name: cpp-llm-engine
   text: 用 C++ 构建 LLM 推理引擎
-  tagline: 从基础准备到可验证的 LLM 推理主线
+  tagline: 从基础准备到已收口的可验证 LLM 推理主线
   actions:
     - theme: brand
       text: 进入教程主入口
@@ -30,6 +30,8 @@ features:
 这是一个面向中文学习者优先的 C++ LLM 推理教程。  
 如果你想先知道怎么读，先看 [阅读指南](/guide)；如果你想直接看主线，从 [教程主入口](/README) 进入。
 
+中文主线已经完成收口，当前工作重点是英文正文、残余句式清理，以及参考层和维护层的持续补齐。
+
 ## 教程主线
 
 这套教程按一条推理引擎主线往前推进，而不是按主题合集散着讲。
@@ -47,7 +49,7 @@ features:
 - `guides` 讲构建、环境、迁移和工程方法
 - `maintenance` 讲站点维护、写作规范和长期收口
 
-想先看“指挥台 / 发动机”的分工，可以直接进 [training vs inference frameworks](/source/reference/framework_comparison.md)。
+想先看“指挥台 / 发动机”的分工，可以直接进 [training vs inference frameworks](/reference/framework_comparison)。
 
 ## 你会看到什么
 
@@ -61,3 +63,9 @@ features:
 - 想从零看懂推理引擎的人
 - 想理解 runtime、KV Cache、benchmark 证据链的人
 - 想把教程内容迁移到自己项目里的人
+
+## 英文覆盖状态
+
+- 英文导航和入口页：已提供
+- 章节导读和收口页：第一阶段持续覆盖中
+- 章节正文完整翻译：后续阶段推进

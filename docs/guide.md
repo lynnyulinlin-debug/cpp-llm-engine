@@ -2,6 +2,8 @@
 
 这个页面只回答一件事：怎么读这套教程。
 
+中文主线已经完成收口，当前这页继续保留阅读路径和分层规则，正文更新重点转向英文正文与残余清理。
+
 ## 教程主线
 
 这套教程按一条推理引擎主线往前推进，不是按主题合集散着读。
@@ -19,7 +21,7 @@
 - `guides`：构建、环境、迁移和工程方法
 - `maintenance`：站点维护、写作规范和长期收口
 
-如果你想先把“指挥台 / 发动机”这层关系讲清楚，先看 [training vs inference frameworks](/source/reference/framework_comparison.md)。
+如果你想先把“指挥台 / 发动机”这层关系讲清楚，先看 [training vs inference frameworks](/reference/framework_comparison)。
 
 如果你只想知道整套教程怎么分层，这一页就够了。
 如果你想知道具体每章讲什么，再回到 [教程主入口](/README) 和 [站点首页](/).
@@ -99,3 +101,17 @@ ctest --test-dir code/chapter01_tensor_loader/build --output-on-failure
 - 性能路径：`chapter02` -> `chapter03` -> `chapter04` -> `chapter05` -> `chapter07`
 - 部署路径：`chapter06` -> `chapter07`
 - 收口路径：`chapter07` -> `reference` -> `guides` -> `maintenance`
+
+## 日常检查
+
+如果你在改文档或链接，先跑：
+
+```bash
+npm run docs:check-links
+```
+
+再跑：
+
+```bash
+npm run docs:build
+```

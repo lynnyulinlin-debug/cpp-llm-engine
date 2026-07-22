@@ -2,6 +2,10 @@
 
 This page tells you how to move through the tutorial.
 
+The Chinese main line is now in a closed state. This page keeps the route map
+and reading rules up to date while the current work shifts to English chapter
+bodies and residual cleanup.
+
 ## Main Line
 
 This tutorial moves along one inference-engine main line instead of being a loose collection of topics.
@@ -51,3 +55,17 @@ If you want the shortest route map, start from [the English entry](/en/README).
 - [chapter00_quickstart](chapter00_quickstart/intro)
 - [guides/README.md](guides/README)
 - [reference/README.md](reference/README)
+
+## Daily checks
+
+If you are changing docs or links, run:
+
+```bash
+npm run docs:check-links
+```
+
+Then run:
+
+```bash
+npm run docs:build
+```
