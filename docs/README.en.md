@@ -6,9 +6,9 @@ This is the canonical English entry for the tutorial. The Chinese main line
 remains the source of truth, and the English side starts with entry pages
 first.
 
-The Chinese main line is now in a stable, closed state. Current work focuses
-on English chapter bodies, residual wording cleanup, and the continued
-completion of the reference and maintenance layers.
+The Chinese main line is now mostly complete. Current work focuses on English
+chapter bodies, residual wording cleanup, and the continued completion of the
+reference and maintenance layers.
 
 ## Roles
 
@@ -40,9 +40,9 @@ This tutorial is designed to teach both sides together, but the main line focuse
 
 ## Coverage status
 
-- English navigation and entry pages: available
-- Chapter intros and summaries: rolling out in Phase 1
-- Full chapter body translation: planned for later phases
+- English navigation and entry pages: complete
+- Chapter intros and summaries: mostly complete
+- Full chapter body translation: pending
 
 ## Start here
 

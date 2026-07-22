@@ -4,46 +4,40 @@
 
 _A Practical Tutorial for Building a C++ LLM Inference Engine_
 
-这是一个面向中文学习者优先的工程教程仓库。主教程入口在 [docs/README.md](docs/README.md)，英文入口在 [docs/README.en.md](docs/README.en.md) 和 [/en/README](/en/README)。如果先看阅读路径，先看 [USAGE.md](USAGE.md)。
+这是一个面向中文学习者优先的工程教程仓库。教程入口和阅读路径见下方各节。
 
 ## 项目简介
 
-- 中文主线优先，英文入口逐步补齐
-- 主线已经完成收口，当前重点是英文正文、残余句式清理，以及参考层和维护层补齐
-- 教程目标是把一条可顺着读、顺着跑、顺着改的 C++ LLM 推理路径讲清楚
-
-## 如何开始
-
-1. 先看 [USAGE.md](USAGE.md)
-2. 再看 [docs/README.md](docs/README.md)
-3. 想先看站点首页，可以打开 [docs/index.md](docs/index.md)
-4. 想先看中文主入口，可以打开 [docs/README.md](docs/README.md)
-5. 想看英文入口，可以打开 [docs/README.en.md](docs/README.en.md)
+- 中文优先，英文入口逐步补齐
+- 主要内容是从 `foundation` 到 `chapter07` 的 C++ LLM 推理主线，外加 `guides`、`reference`、`maintenance` 三层支撑
+- 特点是按工程问题推进，强调可跑、可验证、可回看
+- 适合想从零看懂 C++ 推理引擎，并继续把它推进到可解释、可验证、可维护的读者
 
 ## 教程地图
 
-- `foundation`：基础准备
-- `chapter00_quickstart`：第一次真实推理
-- `chapter01` - `chapter03`：输入、张量语义、算子边界
-- `chapter04` - `chapter05`：结构与运行时
-- `chapter06`：表示与成本
-- `chapter07`：验证与证据
-- `guides` / `reference` / `maintenance`：支撑层、参考层和维护层
-
-## 当前状态
-
-- 中文主线已经收口到“导读 / 机制 / 收口”三层
-- 代码直达已经统一到具体实现文件
-- `docs:check-links` 已纳入维护流程
-- 英文正文仍在推进中
+| 模块 | 定位 | 主要内容 | 状态 |
+| --- | --- | --- | --- |
+| [`foundation`](source/foundation/README.md) | 前置准备 | C++、构建、CUDA、调试、测试基础 | 完成 |
+| [`chapter00_quickstart`](source/chapter00_quickstart/intro.md) | 起跑线 | 第一次真实推理 | 完成 |
+| [`chapter01_tensor_loader`](source/chapter01_tensor_loader/intro.md) | 输入层 | 权重加载与 `Tensor` 抽象 | 基本完成 |
+| [`chapter02_tensor_ops`](source/chapter02_tensor_ops/intro.md) | 张量语义层 | 视图语义、共享存储、`reshape`、`slice` | 基本完成 |
+| [`chapter03_matmul`](source/chapter03_matmul/intro.md) | 算子边界层 | `MatMul`、后端拆分、参考实现 | 基本完成 |
+| [`chapter04_attention`](source/chapter04_attention/intro.md) | 结构层 | attention、FFN、decoder layer | 基本完成 |
+| [`chapter05_generation`](source/chapter05_generation/intro.md) | 运行时层 | token-by-token generation、KV cache、sampler、scheduler | 基本完成 |
+| [`chapter06_quantization`](source/chapter06_quantization/intro.md) | 表示与成本层 | 量化路径和精度权衡 | 基本完成 |
+| [`chapter07_benchmark`](source/chapter07_benchmark/intro.md) | 验证层 | 正确性验证、性能比较、证据收口 | 基本完成 |
+| [`guides`](source/guides/README.md) | 工程参考层 | 构建、环境、迁移和工程方法 | 完成 |
+| [`reference`](source/reference/README.md) | 解释层 | 术语、生态对照、概念映射 | 待补 |
+| [`maintenance`](source/maintenance/README.md) | 维护层 | 写作规范、模板、长期收口 | 待补 |
 
 ## 相关入口
 
-- [docs/README.md](docs/README.md)：中文主入口
-- [docs/README.en.md](docs/README.en.md)：英文入口
-- [docs/guide.md](docs/guide.md)：阅读指南
-- [source/reference/README.md](source/reference/README.md)：设计参考入口
-- [source/maintenance/README.md](source/maintenance/README.md)：维护文档入口
+- [docs/README.md](docs/README.md)
+- [docs/README.en.md](docs/README.en.md)
+- [docs/guide.md](docs/guide.md)
+- [docs/index.md](/)
+- [source/reference/README.md](source/reference/README.md)
+- [source/maintenance/README.md](source/maintenance/README.md)
 
 ## 构建与检查
 

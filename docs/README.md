@@ -8,7 +8,7 @@ _A Practical Tutorial for Building a C++ LLM Inference Engine_
 
 这不是“讲概念最多”的资料集，而是一条可顺着读、顺着跑、顺着改的工程路径。它面向的是想从零看懂 C++ 推理引擎、并把“能跑”继续推进到“能解释、能验证、能扩展”的读者。
 
-中文主线已经完成收口，当前重点转向英文正文、残余句式清理，以及参考层和维护层的持续补齐。
+中文主线已经基本完成，当前重点转向英文正文、残余句式清理，以及参考层和维护层的持续补齐。
 
 - 从 `foundation` 补基础底座
 - 从 `chapter00_quickstart` 跑通真实基线
@@ -75,14 +75,14 @@ flowchart LR
 | 顺序 | 模块 | 主要内容 | 英文覆盖状态 |
 | --- | --- | --- | --- |
 | 0 | [`foundation`](/foundation/README) | C++、构建、CUDA、调试与测试基础 | 英文正文已覆盖 |
-| 1 | [`chapter00_quickstart`](/chapter00_quickstart/intro) | 先跑通第一次真实推理 | 英文导读 / 收口已覆盖 |
-| 2 | [`chapter01_tensor_loader`](/chapter01_tensor_loader/intro) | 权重加载与 `Tensor` 抽象 | 英文导读 / 收口已覆盖 |
-| 3 | [`chapter02_tensor_ops`](/chapter02_tensor_ops/intro) | 视图语义、共享存储、`reshape`、`slice` | 英文导读 / 收口已覆盖 |
-| 4 | [`chapter03_matmul`](/chapter03_matmul/intro) | `MatMul` 算子、后端拆分、参考实现 | 英文导读 / 收口已覆盖 |
-| 5 | [`chapter04_attention`](/chapter04_attention/intro) | attention、FFN、decoder layer | 英文导读 / 收口已覆盖 |
-| 6 | [`chapter05_generation`](/chapter05_generation/intro) | token-by-token generation、KV cache、sampler | 英文导读 / 收口已覆盖 |
-| 7 | [`chapter06_quantization`](/chapter06_quantization/intro) | 量化推理路径和精度权衡 | 英文导读 / 收口已覆盖 |
-| 8 | [`chapter07_benchmark`](/chapter07_benchmark/intro) | 正确性验证、性能比较、证据收口 | 英文导读 / 收口已覆盖 |
+| 1 | [`chapter00_quickstart`](/chapter00_quickstart/intro) | 先跑通第一次真实推理 | 英文导读 / 基本完成 |
+| 2 | [`chapter01_tensor_loader`](/chapter01_tensor_loader/intro) | 权重加载与 `Tensor` 抽象 | 英文导读 / 基本完成 |
+| 3 | [`chapter02_tensor_ops`](/chapter02_tensor_ops/intro) | 视图语义、共享存储、`reshape`、`slice` | 英文导读 / 基本完成 |
+| 4 | [`chapter03_matmul`](/chapter03_matmul/intro) | `MatMul` 算子、后端拆分、参考实现 | 英文导读 / 基本完成 |
+| 5 | [`chapter04_attention`](/chapter04_attention/intro) | attention、FFN、decoder layer | 英文导读 / 基本完成 |
+| 6 | [`chapter05_generation`](/chapter05_generation/intro) | token-by-token generation、KV cache、sampler | 英文导读 / 基本完成 |
+| 7 | [`chapter06_quantization`](/chapter06_quantization/intro) | 量化推理路径和精度权衡 | 英文导读 / 基本完成 |
+| 8 | [`chapter07_benchmark`](/chapter07_benchmark/intro) | 正确性验证、性能比较、证据收口 | 英文导读 / 基本完成 |
 | 9 | [`guides`](/guides/README) | 开发参考、构建、环境、迁移 | 英文入口已覆盖 |
 | 10 | [`reference`](/reference/README) | 设计参考、术语、生态对照 | 部分完成 |
 | 11 | [`maintenance`](/maintenance/README) | 教程维护、写作规范、模板 | 部分完成 |
@@ -135,11 +135,12 @@ npm install --registry=https://registry.npmjs.org
 
 ## 相关入口
 
-- [docs/README.md](/README)：中文主入口
-- [docs/README.en.md](/en/README)：英文入口
-- [docs/guide.md](/guide)：阅读指南
-- [source/reference/README.md](/reference/README)：设计参考入口
-- [source/maintenance/README.md](/maintenance/README)：维护文档入口
+- [docs/README.md](/README)
+- [docs/README.en.md](/en/README)
+- [docs/guide.md](/guide)
+- [docs/index.md](/)
+- [source/reference/README.md](/reference/README)
+- [source/maintenance/README.md](/maintenance/README)
 
 ## English coverage status
 
