@@ -10,7 +10,7 @@ Usually because later chapters introduce more specific targets, headers, or libr
 
 ### 1.2 Why does `docs:build` still show an old error after I changed the file?
 
-The usual causes are cache, anchor mismatch, or a site-layer path issue. First check whether the markdown file is actually mapped into the site entry, then verify that the page links point to existing headings and files.
+The usual causes are cache, anchor mismatch, or a site-layer path issue. First run `npm run docs:check-links`, then check whether the markdown file is actually mapped into the site entry, and finally verify that the page links point to existing headings and files.
 
 ## 2. Runtime-related
 

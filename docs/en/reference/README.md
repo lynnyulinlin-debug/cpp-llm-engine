@@ -24,6 +24,12 @@ Think of it as the support layer for the main line:
 - Do not treat it as a second main line.
 - Use it to support the main tutorial, not replace it.
 
+## Checks
+
+- If you change docs or links, run `npm run docs:check-links` first
+- Then run `npm run docs:build`
+- If the build still fails, check routes and anchors before changing the prose
+
 ## Status
 
 The main reference pages are available in English now. The remaining pages will follow later if Phase 2 expands.
