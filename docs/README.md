@@ -41,27 +41,14 @@ _A Practical Tutorial for Building a C++ LLM Inference Engine_
 
 这意味着这套教程的收束方式很明确：先把一个推理引擎做出来，再把它验证清楚，最后把它放回真实生态里对照和维护。
 
-## 本教程的特色
-
-| 维度 | 本教程 | 典型推理引擎项目 |
-| --- | --- | --- |
-| 目标 | 讲清楚从零实现一条可验证的推理主线 | 直接交付可用 runtime / serving |
-| 读者 | 中文优先，零基础到工程入门 | 默认读者已有较强工程背景 |
-| 组织方式 | 章节化、分层、每章有导入和收口 | 更偏模块化或代码仓库结构 |
-| 验证方式 | smoke test、assert、e2e、benchmark 分层推进 | 多数只强调最终运行结果 |
-| 教学重点 | 原理、边界、实现、验证、迁移 | 性能、部署、工程集成 |
-| 外部参考 | `llama.cpp`、`vLLM`、`SGLang`、`TensorRT-LLM`、`Ollama` | 只看单个引擎自身设计 |
-
 ## 和常见推理引擎的对照
 
-| 对象 | 强项 | 硬件平台适配进展 | 适合拿来学什么 | 本教程对应章节 |
-| --- | --- | --- | --- | --- |
-| `llama.cpp` | 小、轻、可移植，适合先跑起来 | CPU 优先；CUDA 路径可选 | 最小本地基线、权重加载、首次推理 | `chapter00_quickstart`、`chapter01_tensor_loader` |
-| `vLLM` | 高吞吐 serving、调度和 KV cache | 以 NVIDIA GPU 为主，CPU 不是主路径 | batching、scheduler、cache 管理 | `chapter05_generation`、`chapter07_benchmark` |
-| `SGLang` | 结构化 serving 和应用编排 | 以 GPU serving 场景为主 | 多步流程组织、上层 workflow | `chapter05_generation`、`chapter07_benchmark` |
-| `TensorRT-LLM` | GPU engine、runtime 分层和部署优化 | NVIDIA GPU 优先；CUDA 生态绑定最强 | engine build、kernel、量化部署 | `chapter03_matmul`、`chapter04_attention`、`chapter06_quantization`、`chapter07_benchmark` |
-| `Ollama` | 本地交付、打包、易用性 | CPU 本地交付友好；GPU 适配依赖后端实现 | 如何把推理能力包装成产品 | `chapter00_quickstart`、`chapter05_generation` |
-| `Gemma` | 具体模型家族参考 | 模型本身与平台无关；执行取决于所选引擎 | 兼容性、验证对象、模型行为 | `chapter01_tensor_loader`、`chapter04_attention`、`chapter06_quantization`、`chapter07_benchmark` |
+- `llama.cpp`：本地基线，适合先跑起来，对应 `chapter00_quickstart` 和 `chapter01_tensor_loader`
+- `vLLM`：serving、调度和 KV cache，对应 `chapter05_generation` 和 `chapter07_benchmark`
+- `TensorRT-LLM`：GPU engine、runtime 和量化部署，对应 `chapter03_matmul`、`chapter04_attention`、`chapter06_quantization`
+- `Ollama`：本地交付和打包，对应 `chapter00_quickstart` 和 `chapter05_generation`
+- `Gemma`：模型家族参考和验证对象，对应 `chapter01_tensor_loader`、`chapter04_attention`、`chapter06_quantization`、`chapter07_benchmark`
+- `SGLang`：结构化 serving 和流程编排，对应 `chapter05_generation` 和 `chapter07_benchmark`
 
 ```mermaid
 flowchart LR
@@ -81,16 +68,6 @@ flowchart LR
     T -. engine / quantization .-> C6[chapter06_quantization]
     O -. 打包交付 .-> C0
     G -. 模型行为 .-> C1
-```
-
-```mermaid
-flowchart TD
-    A[本教程] --> B[先讲为什么]
-    A --> C[再讲怎么做]
-    A --> D[最后讲怎么验证]
-    E[常见推理引擎] --> F[先交付运行时]
-    E --> G[再做性能优化]
-    E --> H[更少解释层]
 ```
 
 ## 章节总览
@@ -158,12 +135,12 @@ npm install --registry=https://registry.npmjs.org
 
 ## 相关入口
 
-- [docs/README.md](/README)：站点中文主入口
-- [docs/README.en.md](/en/README)：站点英文入口
+- [docs/README.md](/README)：中文主入口
+- [docs/README.en.md](/en/README)：英文入口
 - [docs/guide.md](/guide)：阅读指南
-- [source/guides/README.md](/guides/README)：开发参考入口
 - [source/reference/README.md](/reference/README)：设计参考入口
 - [source/maintenance/README.md](/maintenance/README)：维护文档入口
+
 ## English coverage status
 
 | Page | Status | Route |
