@@ -24,7 +24,7 @@
 - 回顾这一章是怎么从问题走到方案的
 - 说明最关键的设计转折点是什么
 
-### 5. 你现在应该能做什么
+### 5. 学习后应能做什么
 
 - 列出本章完成后的可验证能力
 - 尽量写成读者视角，而不是实现视角
@@ -45,6 +45,12 @@
 - 哪个测试最能验证这章
 - 如果只想快速复习，先看哪个入口
 
+### 9. Checks
+
+- If you change docs or links in this chapter, run `npm run docs:check-links` first
+- Then run `npm run docs:build`
+- If the build still fails, check routes and anchors before changing the prose
+
 ## 示例写法
 
 ```md
@@ -64,7 +70,7 @@
 
 ...
 
-## 你现在应该能做什么
+## 学习后应能做什么
 
 ...
 
@@ -75,6 +81,12 @@
 ## 下一步是什么
 
 ...
+
+## Checks
+
+- If you change docs or links in this chapter, run `npm run docs:check-links` first
+- Then run `npm run docs:build`
+- If the build still fails, check routes and anchors before changing the prose
 ```
 
 ## 维护原则

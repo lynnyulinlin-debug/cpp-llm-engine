@@ -278,8 +278,8 @@ V2 的重点是：
 每次修改完同步规则后，按这个顺序检查：
 
 1. 运行对应同步脚本
-2. 检查是否有 dead link 或路径漂移
-3. 执行 `npm run docs:build`
+2. 先执行 `npm run docs:check-links`
+3. 再执行 `npm run docs:build`
 4. 如果构建失败，先查站点路由和相对链接，再查正文内容
 
 如果后续还要继续调整章节内容或新增章节，优先使用仓库根目录下的 `scripts/migrate_chapter_to_source.sh` 保持迁移和映射方式一致。
@@ -419,7 +419,8 @@ chapter05 这次暴露出来的正文模板规则，已经回写为可复用规�
   - 确认 `source/` 对应章节已经在 `docs/` 站点层正确映射
   - 确认在线入口、导航和章节锚点都能跳到新内容
 - 本地构建验证
-  - 至少跑一次 `npm run docs:build`
+  - 至少跑一次 `npm run docs:check-links`
+  - 再跑一次 `npm run docs:build`
   - 如果章节结构有明显变化，再补一次本地预览检查
 - dead link 检查
   - 检查章节内锚点链接是否仍然可跳转
@@ -488,6 +489,7 @@ chapter05 这次暴露出来的正文模板规则，已经回写为可复用规�
 - 是否按收口标准写清了当前章边界
 - 是否把进阶内容放进了章节尾部
 - 是否完成在线文档镜像映射
+- 是否完成 `npm run docs:check-links`
 - 是否完成本地构建验证
 - 是否完成 dead link 检查
 

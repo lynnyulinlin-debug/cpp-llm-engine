@@ -94,3 +94,9 @@
 - 哪个文件是主实现
 - 哪个文件是测试入口
 - 哪个文件是配套脚本
+
+## Checks
+
+- If you change docs or links in this chapter, run `npm run docs:check-links` first
+- Then run `npm run docs:build`
+- If the build still fails, check routes and anchors before changing the prose
