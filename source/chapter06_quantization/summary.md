@@ -1,12 +1,6 @@
 # 06.8 Chapter Wrap-up 本章解决了什么
 
-这章回答的是：量化链路是否已经能工作，并且是否还能保住可接受精度？
-
-如果实现正确，推理链路已经可以处理 INT8 量化权重，并在必要时通过反量化恢复到可计算的浮点路径。
-
-你可以把这一章想成一次迁移：一条已经跑通的生成链路没有被重做，而是把权重换成了更小的表示。你不是在改 runtime 的主干，而是在不打断主干的前提下把它变轻。
-
-更具体一点说，这个迁移过程通常是这样的：一开始你手里只有一条 FP16 路径，单条 prompt 跑得挺顺；等模型变大以后，你先看到的是加载变慢、内存上涨、带宽压力变重。于是你把权重换成 INT8，但没有直接把它丢进算子里，而是先保留 scale，再在真正计算前反量化回去。这样做的目的不是绕远路，而是让 runtime 在“更省”和“还能算”之间找到平衡。
+这章回答的是：量化链路是否已经能工作，并且是否还能保住可接受精度？到这里，INT8 权重、反量化路径和精度验证已经连成一条可解释的链路。
 
 ## 1. 本章解决了什么
 
@@ -16,7 +10,7 @@
 
 ## 生态回看
 
-学完这一章后，再回看 `TensorRT-LLM`、`Gemma` 和 `vLLM`，你会更容易看懂“量化链路”在真实生态里的三个落点。
+回看 `TensorRT-LLM`、`Gemma` 和 `vLLM` 时，有助于看懂“量化链路”在真实生态里的三个落点。
 
 - 先看 [06.7 TensorRT-LLM / Gemma / vLLM 对照](/chapter06_quantization/07_tensorrt_gemma_vllm_comparison)
 - 对照 [TensorRT-LLM](/reference/ecosystem/tensorrt_llm) 回看 engine 和部署路径
@@ -31,48 +25,50 @@
 - 源码直达：[`chapter06_quantization 代码入口`](/code/chapter06_quantization)
 - 相关阅读：[`06.7 TensorRT-LLM / Gemma / vLLM 对照`](/chapter06_quantization/07_tensorrt_gemma_vllm_comparison)、[`chapter07_benchmark`](/chapter07_benchmark/intro)
 
+## 代码直达
+
+- [`src/tensor.cpp`](/code/chapter06_quantization#tensor-cpp)
+- [`src/dequantize_op.cpp`](/code/chapter06_quantization#dequantize-op-cpp)
+- [`src/linear_layer.cpp`](/code/chapter06_quantization#linear-layer-cpp)
+- [`src/quantized_linear.cpp`](/code/chapter06_quantization#quantized-linear-cpp)
+- [`tests/chapter06_quantization_test.cpp`](/code/chapter06_quantization#chapter06-quantization-test-cpp)
+
 ## 2. 为什么它重要
 
-这里真正要回答的不只是“量化链路能不能工作”，还包括“它省下来的资源成本是否值得换取这部分数值近似”。
+这里要回答的不只是“量化链路能不能工作”，还包括“省下来的资源成本是否值得这部分数值近似”。
 
 ## 3. 背景回顾
 
-`chapter05` 已经提供了稳定的 generation runtime。  
-这一章是在这条稳定 runtime 上判断量化是否值得继续做。
-
-所以这里面对的是一个很直接的部署判断：如果换成量化后，模型更小了、带宽压力更低了，但精度掉得太多，那这条路径就不值得保留；如果精度还能接受，那就值得继续往下推进。
+`chapter05` 已经提供了稳定的 generation runtime，这一章就在这条 runtime 上判断量化是否值得继续做。
 
 ## 4. 中间推导回顾
 
-从“怎样用更低成本继续跑同一条链路”倒推，最自然的结果就是先从权重开始，再把反量化和算子路径一起纳入 runtime。
+从“怎样用更低成本继续跑同一条链路”倒推，最自然的结果就是先从权重开始，再把反量化和算子路径一起纳入 runtime。中间任何一步断了，后面的结论都不成立。
 
-这也是为什么这一章读起来像在追一条线：文件先变、加载再变、算子再变，最后才轮到验证。中间任何一步断了，后面的结论都不成立。
-
-## 5. 你现在应该能做什么
+## 5. 学习后应能做什么
 
 - 看懂量化权重如何进入推理引擎
 - 说明反量化在 runtime 中的位置
 - 用精度对照判断量化实现是否可接受
 
-如果你能把这一章讲清楚，应该能顺着一条完整链路说出：权重为什么变小了，计算前为什么要还原，以及这条还原路径为什么不是“多此一举”。
-
 ## 6. 边界说明
 
-这一章不负责把所有低比特方案都做完。
+这一章不负责把所有低比特方案都做完，只负责把量化变成一条可解释、可验证、可继续优化的部署路径。
 
-它只负责把量化变成一条可解释、可验证、可继续优化的部署路径。
+在实践里，"值得继续"通常会同时看三条基线：精度损失是否低于任务容忍阈值、内存或带宽节省是否达到目标、推理速度提升是否满足部署需求。
 
-如果你回头看这条路径，应该能把它复述成一句很具体的话：FP16 路径负责直观和稳定，INT8 路径负责省资源，反量化负责把两者接起来，最后让这条链路还能和原始版本对照。
+## 代码回看
 
-换成更直接的话说：这里不是要你相信量化一定值得，而是要你有一套办法，在看到量化方案时自己判断它值不值得。
-
-在实践里，"值得继续"通常会同时看三条基线：1）精度损失是否低于任务容忍阈值，比如小于 1% 的准确率下降；2）内存或带宽节省是否达到目标，比如模型大小明显减半；3）推理速度提升是否满足部署需求。三条基线共同决定量化路径是否进入下一阶段优化。
+- [`src/linear_layer.cpp`](/code/chapter06_quantization#linear-layer-cpp)
+- [`src/dequantize_op.cpp`](/code/chapter06_quantization#dequantize-op-cpp)
+- [`src/quantized_linear.cpp`](/code/chapter06_quantization#quantized-linear-cpp)
+- [`tests/chapter06_quantization_test.cpp`](/code/chapter06_quantization#chapter06-quantization-test-cpp)
 
 ## 7. 下一步是什么
 
 进入 `chapter07_benchmark`，把正确性验证和性能测量体系补完整。
 
-## 9. Advanced Notes
+## 8. Advanced Notes
 
 想继续深入的读者，可以继续思考下面这些问题：
 
@@ -81,7 +77,6 @@
 - 什么时候量化和反量化可以融合进相邻算子？
 - calibration 数据应该怎样影响最终部署决策？
 
-## 10. 收口结论
+## 9. 收口结论
 
-这一章留下的是一个“是否值得继续”的判断起点：先确认量化带来的成本下降和误差边界，再决定后续 benchmark 应该重点测什么、该不该继续细化量化粒度。  
-只有这个条件成立，`chapter07` 的测试和 benchmark 才不是空测，而是对一条已经可用的链路做回归和性能验证。
+这一章留下的是一个“是否值得继续”的判断起点：先确认量化带来的成本下降和误差边界，再决定后续 benchmark 应该重点测什么。只有这个条件成立，`chapter07` 的测试和 benchmark 才不是空测，而是对一条已经可用的链路做回归和性能验证。

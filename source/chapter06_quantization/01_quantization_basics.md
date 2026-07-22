@@ -11,7 +11,14 @@
 - 源码直达：[`chapter06_quantization 代码入口`](/code/chapter06_quantization)
 - 相关阅读：[`06.2 Extend Tensor`](/chapter06_quantization/02_extend_tensor)、[`06.3 Load Quantized Weights`](/chapter06_quantization/03_load_quantized_weights)
 
-## 读完你应该能做什么
+## 代码直达
+
+- [`src/tensor.cpp`](/code/chapter06_quantization#tensor-cpp)
+- [`src/dequantize_op.cpp`](/code/chapter06_quantization#dequantize-op-cpp)
+- [`src/linear_layer.cpp`](/code/chapter06_quantization#linear-layer-cpp)
+- [`tests/chapter06_quantization_test.cpp`](/code/chapter06_quantization#chapter06-quantization-test-cpp)
+
+## 读完后应能做什么
 
 - 理解为什么需要量化
 - 理解同步和非同步量化的基本概念
@@ -58,7 +65,7 @@ float x_hat = q * scale;
 - 能解释为什么会有误差
 - 能区分量化前后表示的差异
 
-如果你能给出一个具体浮点值，手算出它被量化后的整数，再手算反量化结果，这一步就算真正理解了。
+能够给出一个具体浮点值，手算出它被量化后的整数，再手算反量化结果，这一步就算真正理解了。
 
 ## 常见问题
 

@@ -12,7 +12,14 @@
 
 - 前置阅读：[`06.5 Quantized Linear`](/chapter06_quantization/05_linear_with_quant)、[`06.4 DequantizeOp`](/chapter06_quantization/04_dequantize_op)
 - 源码直达：[`chapter06_quantization 代码入口`](/code/chapter06_quantization)
-- 相关阅读：[`06.7 本章小结`](/chapter06_quantization/summary)、[`chapter07_benchmark`](/chapter07_benchmark/intro)
+- 相关阅读：[`chapter06 小结`](/chapter06_quantization/summary)、[`chapter07_benchmark`](/chapter07_benchmark/intro)
+
+## 代码直达
+
+- [`tests/chapter06_quantization_test.cpp`](/code/chapter06_quantization#chapter06-quantization-test-cpp)
+- [`src/linear_layer.cpp`](/code/chapter06_quantization#linear-layer-cpp)
+- [`src/quantized_linear.cpp`](/code/chapter06_quantization#quantized-linear-cpp)
+- [`src/tensor.cpp`](/code/chapter06_quantization#tensor-cpp)
 
 ## 为什么必须做对照
 

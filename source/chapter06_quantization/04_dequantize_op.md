@@ -11,7 +11,14 @@
 - 源码直达：[`chapter06_quantization 代码入口`](/code/chapter06_quantization)
 - 相关阅读：[`06.5 Quantized Linear`](/chapter06_quantization/05_linear_with_quant)、[`06.6 Accuracy Validation`](/chapter06_quantization/06_accuracy_validation)
 
-## 读完你应该能做什么
+## 代码直达
+
+- [`src/dequantize_op.cpp`](/code/chapter06_quantization#dequantize-op-cpp)
+- [`src/tensor.cpp`](/code/chapter06_quantization#tensor-cpp)
+- [`src/quantized_linear.cpp`](/code/chapter06_quantization#quantized-linear-cpp)
+- [`tests/chapter06_quantization_test.cpp`](/code/chapter06_quantization#chapter06-quantization-test-cpp)
+
+## 读完后应能做什么
 
 - 理解反量化的作用
 - 理解 scale 和 dtype 转换的关系

@@ -9,15 +9,22 @@
 
 ## 量化路径
 
+- <h3 id="tensor-cpp">src/tensor.cpp</h3>
 - `code/chapter06_quantization/src/tensor.cpp`
+- <h3 id="dequantize-op-cpp">src/dequantize_op.cpp</h3>
 - `code/chapter06_quantization/src/dequantize_op.cpp`
+- <h3 id="linear-layer-cpp">src/linear_layer.cpp</h3>
 - `code/chapter06_quantization/src/linear_layer.cpp`
+- <h3 id="quantized-linear-cpp">src/quantized_linear.cpp</h3>
 - `code/chapter06_quantization/src/quantized_linear.cpp`
 
 ## 示例与测试
 
+- <h3 id="main-quantization-cpp">examples/main_quantization.cpp</h3>
 - `code/chapter06_quantization/examples/main_quantization.cpp`
+- <h3 id="run-sh">scripts/run.sh</h3>
 - `code/chapter06_quantization/scripts/run.sh`
+- <h3 id="chapter06-quantization-test-cpp">tests/chapter06_quantization_test.cpp</h3>
 - `code/chapter06_quantization/tests/chapter06_quantization_test.cpp`
 
 ## 对应文档

@@ -11,7 +11,14 @@
 - 源码直达：[`chapter06_quantization 代码入口`](/code/chapter06_quantization)
 - 相关阅读：[`06.4 DequantizeOp`](/chapter06_quantization/04_dequantize_op)、[`06.5 Quantized Linear`](/chapter06_quantization/05_linear_with_quant)
 
-## 读完你应该能做什么
+## 代码直达
+
+- [`src/tensor.cpp`](/code/chapter06_quantization#tensor-cpp)
+- [`src/dequantize_op.cpp`](/code/chapter06_quantization#dequantize-op-cpp)
+- [`src/quantized_linear.cpp`](/code/chapter06_quantization#quantized-linear-cpp)
+- [`tests/chapter06_quantization_test.cpp`](/code/chapter06_quantization#chapter06-quantization-test-cpp)
+
+## 读完后应能做什么
 
 - 理解量化权重在文件中的组织方式
 - 理解 loader 如何识别量化 dtype
@@ -27,11 +34,11 @@
 - 量化 dtype 识别
 - 量化 tensor 的构建
 
-loader 这里最重要的是“区分元信息和数据”。文件里不仅有字节，还要有 dtype、shape、scale 之类的信息，loader 的职责就是把这些信息完整搬进内存对象。
+loader 这里最重要的是“区分元信息和数据”。文件里不仅有字节，还要有 dtype、shape、scale 之类的信息，loader 的职责就是把这些信息搬进内存对象。
 
-最小版本可以先支持一种量化格式，后续再扩展到更多变体，而不是一开始把所有格式都铺开。
+最小版本可以先支持一种量化格式，后续再扩展到更多变体。
 
-如果量化格式还带有分组大小、block size 或零点等参数，也要明确保存。否则后面 dequantize 时就只剩下原始字节，没有足够上下文还原数值。
+如果量化格式还带有分组大小、block size 或零点等参数，也要明确保存，否则后面 dequantize 时就只剩下原始字节，没有足够上下文还原数值。
 
 一个最小化的 `QuantMeta` 可以包含：
 
@@ -46,7 +53,7 @@ loader 这里最重要的是“区分元信息和数据”。文件里不仅有�
 - 每个分组对应的 `scales`
 - 每个分组对应的 `zero_points`
 
-这些信息在加载时必须完整保留，因为反量化是唯一能还原数值的路径。
+这些信息在加载时必须完整保留，因为反量化要依赖它们还原数值。
 
 最小 loader 伪代码可以写成：
 

@@ -11,7 +11,15 @@
 - 源码直达：[`chapter06_quantization 代码入口`](/code/chapter06_quantization)
 - 相关阅读：[`06.6 Accuracy Validation`](/chapter06_quantization/06_accuracy_validation)、[`chapter07_benchmark`](/chapter07_benchmark/intro)
 
-## 读完你应该能做什么
+## 代码直达
+
+- [`src/linear_layer.cpp`](/code/chapter06_quantization#linear-layer-cpp)
+- [`src/quantized_linear.cpp`](/code/chapter06_quantization#quantized-linear-cpp)
+- [`src/dequantize_op.cpp`](/code/chapter06_quantization#dequantize-op-cpp)
+- [`tests/chapter06_quantization_test.cpp`](/code/chapter06_quantization#chapter06-quantization-test-cpp)
+- [`examples/main_quantization.cpp`](/code/chapter06_quantization#main-quantization-cpp)
+
+## 读完后应能做什么
 
 - 理解为什么要把 dequant 融入 Linear
 - 理解量化权重推理路径如何组织

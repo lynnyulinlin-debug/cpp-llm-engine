@@ -16,6 +16,14 @@
 | 量化 Linear | 高性能 GPU engine 中的算子实现 | 量化后还能不能保持可接受误差 | 量化后还能不能继续服务高并发场景 |
 | 精度验证 | 部署前的工程判断 | 模型家族作为验证对象 | serving 场景下的回归边界 |
 
+## 代码直达
+
+- [`src/quantized_linear.cpp`](/code/chapter06_quantization#quantized-linear-cpp)
+- [`src/dequantize_op.cpp`](/code/chapter06_quantization#dequantize-op-cpp)
+- [`src/tensor.cpp`](/code/chapter06_quantization#tensor-cpp)
+- [`tests/chapter06_quantization_test.cpp`](/code/chapter06_quantization#chapter06-quantization-test-cpp)
+- [`examples/main_quantization.cpp`](/code/chapter06_quantization#main-quantization-cpp)
+
 ## 2. 为什么它重要
 
 本章已经把量化做成了一条清楚的链路：
@@ -36,7 +44,7 @@
 
 ## 3. 先看什么
 
-如果你想先建立一个最小心智模型，可以按这个顺序看：
+阅读顺序如下：
 
 1. 先看本章的量化权重和 `DequantizeOp`
 2. 再看 `TensorRT-LLM` 怎么把量化放进 engine 和部署路径
@@ -62,9 +70,9 @@
 - `Gemma` 看的是模型家族会把这条链路放大成什么问题
 - `vLLM` 看的是量化后的 runtime 还能不能继续稳定服务
 
-## 5. 你现在应该能做什么
+## 5. 学习后应能做什么
 
-学完本节后，你应该已经能把下面几件事说清楚：
+本节完成后，应当能够把下面几件事说清楚：
 
 - 为什么量化权重不能只看成“更小的文件”
 - 为什么 `DequantizeOp` 必须和 loader、Tensor dtype、Linear 一起看

@@ -11,7 +11,14 @@
 - 源码直达：[`chapter06_quantization 代码入口`](/code/chapter06_quantization)
 - 相关阅读：[`06.3 Load Quantized Weights`](/chapter06_quantization/03_load_quantized_weights)、[`06.4 DequantizeOp`](/chapter06_quantization/04_dequantize_op)
 
-## 读完你应该能做什么
+## 代码直达
+
+- [`src/tensor.cpp`](/code/chapter06_quantization#tensor-cpp)
+- [`src/dequantize_op.cpp`](/code/chapter06_quantization#dequantize-op-cpp)
+- [`src/linear_layer.cpp`](/code/chapter06_quantization#linear-layer-cpp)
+- [`tests/chapter06_quantization_test.cpp`](/code/chapter06_quantization#chapter06-quantization-test-cpp)
+
+## 读完后应能做什么
 
 - 理解为什么 Tensor 需要支持更多 dtype
 - 理解 INT8 张量在存储层面的变化
@@ -19,7 +26,7 @@
 
 ## 为什么这一步重要
 
-量化不是单独存在的。它必须落到张量表达上，才能让模型加载、算子和验证全部走通。
+量化不是单独存在的。它必须落到张量表达上，才能让模型加载、算子和验证走通。
 
 ## 这一页的核心内容
 
@@ -27,11 +34,11 @@
 - 保留元信息和存储表示
 - 让后续加载器和算子能识别量化张量
 
-扩展 dtype 时，最好把“元素类型”和“底层存储”区分开看。dtype 告诉系统如何解释数据，storage 则保存实际字节。这样后面无论是 FP32、INT8 还是其他表示，都可以沿用同一套 Tensor 框架。
+扩展 dtype 时，最好把“元素类型”和“底层存储”分开看。dtype 告诉系统如何解释数据，storage 保存实际字节。这样后面无论是 FP32、INT8 还是其他表示，都可以沿用同一套 Tensor 框架。
 
-这也意味着你不应该把量化逻辑直接塞进 Tensor 的行为里。Tensor 负责表达数据，量化和反量化应该留给专门的算子或加载逻辑处理，这样边界才清楚。
+这也意味着你不应该把量化逻辑直接塞进 Tensor 的行为里。Tensor 负责表达数据，量化和反量化交给专门的算子或加载逻辑处理，这样边界才清楚。
 
-在实现中，Tensor 可以持有 `std::vector<uint8_t>` 作为底层存储，而 `dtype` 决定从这个字节数组里按什么宽度、什么方式读取元素。例如 `dtype == DType::Float32` 时，从字节偏移 `i * 4` 读取 `float`；`dtype == DType::Int8` 时，从偏移 `i` 读取 `int8_t`。这种设计使新增 dtype 时通常只需要扩展读取逻辑，而不需要改动存储层。
+在实现中，Tensor 可以持有 `std::vector<uint8_t>` 作为底层存储，而 `dtype` 决定从这个字节数组里按什么宽度、什么方式读取元素。例如 `dtype == DType::Float32` 时，从字节偏移 `i * 4` 读取 `float`；`dtype == DType::Int8` 时，从偏移 `i` 读取 `int8_t`。这种设计让新增 dtype 时通常只需扩展读取逻辑，而不需要改动存储层。
 
 最小 dtype 扩展伪代码可以写成：
 
