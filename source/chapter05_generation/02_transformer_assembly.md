@@ -3,8 +3,7 @@
 
 ## 1. 这一页要解决什么
 
-把前面做好的单层 Decoder 组合成一个 N 层 Transformer，并让 forward 主流程稳定跑通。  
-这一页的重点不是新算子，而是把“单层正确”变成“多层可堆叠”。
+把前面做好的单层 Decoder 组合成一个 N 层 Transformer，并让 forward 主流程稳定跑通。重点不是新算子，而是把“单层正确”变成“多层可堆叠”。
 
 ## 阅读入口
 
@@ -12,22 +11,23 @@
 - 源码直达：[`chapter05_generation 代码入口`](/code/chapter05_generation)
 - 相关阅读：[`05.3 Naive Generation`](/chapter05_generation/03_naive_generation)、[`05.4 KV Cache`](/chapter05_generation/04_kv_cache)
 
+## 代码直达
+
+- [`src/transformer.cpp`](/code/chapter05_generation#transformer-cpp)
+- [`src/decoder_layer.cpp`](/code/chapter05_generation#decoder-layer-cpp)
+- [`src/runtime.cpp`](/code/chapter05_generation#runtime-cpp)
+- [`src/scheduler.cpp`](/code/chapter05_generation#scheduler-cpp)
+- [`tests/runtime_smoke_test.cpp`](/code/chapter05_generation#runtime-smoke-test-cpp)
+
 ## 2. 为什么这一步重要
 
-单层正确只是基础，真正的生成模型需要多层堆叠。  
-这里是从“模块”走向“模型”的关键一步。
+单层正确只是基础，真正的生成模型需要多层堆叠。这里是从“模块”走向“模型”的关键一步。
 
 如果这一页写得太像配置清单，读者会只知道“要有几层”，却不容易理解“为什么层与层之间能直接复用同一条 hidden state”。
 
 ## 3. 最小设计是什么
 
-最小组装只需要两件事：
-
-- 层与层之间传递同一种 hidden state
-- 用固定层数把单层 forward 循环起来
-
-只要每层输入输出 shape 一致，组装逻辑就主要变成循环和容器管理。  
-这意味着组装层的职责不是重新定义模型结构，而是把已经正确的单层稳定地串起来。
+最小组装只需要两件事：层与层之间传递同一种 hidden state，用固定层数把单层 forward 循环起来。只要每层输入输出 shape 一致，组装逻辑就主要变成循环和容器管理。
 
 ### 每层独立权重
 
@@ -39,13 +39,7 @@ for (std::size_t i = 0; i < num_layers; ++i) {
 }
 ```
 
-这意味着：
-
-- 第 0 层的 `Wq` 和第 1 层的 `Wq` 不是同一组参数
-- 每层学习的是不同层次的表示
-- 总参数量大致等于单层参数量乘以层数
-
-这和 ALBERT 那种跨层共享权重不是一回事。本教程采用的是标准方案：每层独立权重。
+这意味着第 0 层的 `Wq` 和第 1 层的 `Wq` 不是同一组参数，每层学习不同层次的表示，总参数量大致等于单层参数量乘以层数。本教程采用的是标准方案：每层独立权重。
 
 ### 残差路径如何跨层传播
 
@@ -85,15 +79,7 @@ for (auto& layer : layers_) {
 
 ## 4. 为什么要先固定配置
 
-如果从工程实现倒推，先要把层配置固定下来：
-
-- `num_layers`
-- `hidden_size`
-- `num_heads`
-- `ffn_hidden_size`
-
-这些参数最好来自统一配置对象。这样后面切换模型规模时，组装代码不会跟着改。  
-组装层只负责读取配置和循环调用，不负责重新解释每一层的语义。
+如果从工程实现倒推，先要把层配置固定下来：`num_layers`、`hidden_size`、`num_heads`、`ffn_hidden_size`。这些参数最好来自统一配置对象，这样后面切换模型规模时，组装代码不会跟着改。
 
 最小伪代码可以写成：
 

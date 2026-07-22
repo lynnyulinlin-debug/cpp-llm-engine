@@ -3,22 +3,29 @@
 
 ## 1. 这一页要解决什么
 
-这一页要把 KV Cache 设计成生成 runtime 里的显式状态，而不是一段藏在前向函数内部的临时逻辑。  
+这一页要把 KV Cache 变成生成 runtime 里的显式状态。
 它的直接目标是减少增量推理中的重复计算。
 
 ## 阅读入口
 
 - 前置阅读：[`05.3 Naive Generation`](/chapter05_generation/03_naive_generation)、[`05.2 N 层 Transformer 组装`](/chapter05_generation/02_transformer_assembly)
 - 源码直达：[`chapter05_generation 代码入口`](/code/chapter05_generation)
-- 相关阅读：[`05.5 Sampler`](/chapter05_generation/05_sampler)、[`05.6 端到端生成测试`](/chapter05_generation/06_end_to_end_generation)
+- 相关阅读：[`05.5 Scheduler`](/chapter05_generation/05_scheduler)、[`05.6 Sampler`](/chapter05_generation/05_sampler)、[`05.7 端到端生成测试`](/chapter05_generation/06_end_to_end_generation)
+
+## 代码直达
+
+- [`src/kv_cache.h`](/code/chapter05_generation#kv-cache-h)
+- [`src/kv_cache.cpp`](/code/chapter05_generation#kv-cache-cpp)
+- [`src/request.cpp`](/code/chapter05_generation#request-cpp)
+- [`src/runtime.cpp`](/code/chapter05_generation#runtime-cpp)
+- [`tests/kv_cache_test.cpp`](/code/chapter05_generation#kv-cache-test-cpp)
 
 ## 2. 为什么这一步重要
 
 KV Cache 是生成性能里最关键的优化点之一。  
-它让 decode 阶段不必每次都从头计算完整序列，而是只处理新增 token。
+它让 decode 阶段只处理新增 token，而不是每一步都重算历史上下文。
 
-更重要的是，它把“生成 runtime 的状态”变成了可显式管理的对象。  
-没有 cache，decode 每一步都会重复处理历史上下文；有了 cache，历史 K/V 就变成了可以复用的运行时资产。
+同时，它把“生成 runtime 的状态”变成了可显式管理的对象，历史 K/V 也就成了可复用的运行时资产。
 
 ## 3. 最小设计长什么样
 
@@ -37,7 +44,7 @@ struct KVCache {
 ```
 
 然后每次 decode 时，只追加新 token 对应的 K/V。  
-源码锚点：`code/chapter05_generation/src/kv_cache.cpp`
+源码锚点：[`src/kv_cache.cpp`](/code/chapter05_generation#kv-cache-cpp)
 
 这不是为了省一个循环，而是为了把“复用历史状态”这件事变成显式行为。
 
@@ -73,7 +80,7 @@ Tensor prefill(const std::vector<int>& prompt, KVCache& cache);
 Tensor decode(int token, KVCache& cache);
 ```
 
-源码锚点：`code/chapter05_generation/src/kv_cache.cpp`
+源码锚点：[`src/kv_cache.cpp`](/code/chapter05_generation#kv-cache-cpp)
 
 ## 4. 为什么 cache 不能和全局绑定
 
@@ -84,8 +91,10 @@ Tensor decode(int token, KVCache& cache);
 - 每个请求的结束时机不同
 - 多请求并发时，cache 必须能区分归属
 
-所以这一页真正要建立的不是“一个 cache 容器”，而是“cache 如何和请求、层、token 生命周期对齐”的设计约束。  
-如果把 cache 设计成全局共享但没有请求隔离，单请求时可能看不出问题，但一旦进入多请求场景，历史状态就会互相污染。
+所以这一页要建立的不是“一个 cache 容器”，而是“cache 如何和请求、层、token 生命周期对齐”的约束。
+如果 cache 全局共享但没有请求隔离，多请求场景就会互相污染历史状态。
+
+如果要顺着代码看，先看 [`src/kv_cache.h`](/code/chapter05_generation#kv-cache-h) 和 [`src/kv_cache.cpp`](/code/chapter05_generation#kv-cache-cpp)，再看 [`src/request.cpp`](/code/chapter05_generation#request-cpp) 是怎样把 cache 绑到请求上的，最后用 [`tests/kv_cache_test.cpp`](/code/chapter05_generation#kv-cache-test-cpp) 验证追加和隔离行为。
 
 ### 请求隔离怎么做
 
@@ -135,5 +144,7 @@ class GenerationRequest {
 
 ## 7. 和后续章节怎么接
 
-这一页把 decoder 的历史状态显式化，下一页才能继续把这些状态接到 sampler 和端到端测试上。  
- 它不是附属优化，而是 generation runtime 从“能跑”走向“可持续运行”的关键台阶。
+这一页把 decoder 的历史状态显式化，下一页才能继续接到 sampler 和端到端测试上。
+它不是附属优化，而是 generation runtime 从“能跑”走向“可持续运行”的关键台阶。
+
+复盘这一页时，优先看 [`src/kv_cache.cpp`](/code/chapter05_generation#kv-cache-cpp)，然后回到 [`src/runtime.cpp`](/code/chapter05_generation#runtime-cpp) 看它如何被 runtime 消费，最后用 [`tests/kv_cache_test.cpp`](/code/chapter05_generation#kv-cache-test-cpp) 收口。

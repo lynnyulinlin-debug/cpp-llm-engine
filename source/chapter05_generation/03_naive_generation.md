@@ -3,19 +3,26 @@
 
 ## 1. 这一页要解决什么
 
-这一页要把“能生成”先做出来，而且是用最朴素、最容易理解的方式做出来。  
-也就是说，先不要 KV Cache，不要复杂调度，不要流式输出，只先确认整个生成闭环是真能跑通的。
+这一页要把“能生成”先做出来，而且是用最朴素、最容易理解的方式做出来。先不要 KV Cache、复杂调度或流式输出，只先确认生成闭环能跑通。
 
 ## 阅读入口
 
 - 前置阅读：[`05.2 N 层 Transformer 组装`](/chapter05_generation/02_transformer_assembly)、[`chapter04_attention`](/chapter04_attention/intro)
 - 源码直达：[`chapter05_generation 代码入口`](/code/chapter05_generation)
-- 相关阅读：[`05.4 KV Cache`](/chapter05_generation/04_kv_cache)、[`05.5 Sampler`](/chapter05_generation/05_sampler)
+- 相关阅读：[`05.4 KV Cache`](/chapter05_generation/04_kv_cache)、[`05.5 Scheduler`](/chapter05_generation/05_scheduler)、[`05.6 Sampler`](/chapter05_generation/05_sampler)
+
+## 代码直达
+
+- [`src/runtime.cpp`](/code/chapter05_generation#runtime-cpp)
+- [`src/request.cpp`](/code/chapter05_generation#request-cpp)
+- [`src/sampler.cpp`](/code/chapter05_generation#sampler-cpp)
+- [`src/scheduler.cpp`](/code/chapter05_generation#scheduler-cpp)
+- [`examples/main_generation.cpp`](/code/chapter05_generation#main-generation-cpp)
+- [`tests/runtime_smoke_test.cpp`](/code/chapter05_generation#runtime-smoke-test-cpp)
 
 ## 2. 为什么要先做朴素生成
 
-优化必须有基线。朴素生成虽然慢，但它把生成流程先完整展开了：  
-prompt 怎么进入、logits 怎么出来、token 怎么回写、什么时候停止，都能被清楚看见。
+优化必须有基线。朴素生成虽然慢，但它把生成流程完整展开了：prompt 怎么进入、logits 怎么出来、token 怎么回写、什么时候停止，都能被看见。
 
 如果没有这个基线，后面所有 cache、scheduler 和 streaming 的改动都很难判断到底是收益、代价还是噪声。
 
@@ -66,7 +73,7 @@ Sampler 负责把模型输出的 logits 变成下一个 token：
 ## 4. 为什么这一步能讲清楚生成
 
 生成系统最容易被忽略的，不是模型，而是状态流转。  
-朴素生成把状态流转暴露出来以后，读者就能看见生成循环到底如何运转：
+朴素生成把状态流转暴露出来以后，读者就能看见生成循环如何运转：
 
 - 上下文是怎么进入的
 - logits 是怎么出来的
@@ -103,6 +110,31 @@ for (int step = 0; step < max_new_tokens; ++step) {
 
 而 KV Cache 版本只需要对新 token 做增量计算，历史部分不再重复算。  
 当序列更长时，这个差异会迅速放大，所以 naive generation 的作用是提供基线，不是提供性能。
+
+### 这一层和 runtime 状态怎么接
+
+朴素生成不是一个孤立循环，它实际上是 runtime 的最小闭环：
+
+1. `request` 提供 prompt 和当前生成状态
+2. `runtime` 读取当前上下文，跑一次 forward
+3. `sampler` 把 logits 变成下一步 token
+4. `request` 把 token 追加回自己的上下文
+5. `scheduler` 决定下一个该推进哪个请求
+
+最小交互可以写成：
+
+```cpp
+while (!request.finished()) {
+    Tensor logits = runtime.forward(request.context());
+    int token = sampler.sample(logits);
+    request.append(token);
+    scheduler.complete_or_requeue(request);
+}
+```
+
+这一步真正要讲清楚的是：生成循环围绕 `request` 进行，`sampler` 只负责选 token，`scheduler` 只负责决定推进顺序，`runtime` 只负责一次 forward。
+
+这样后面引入 KV Cache 时，读者就能清楚知道“优化的是哪一段”，而不是把生成看成一个黑盒 while loop。
 
 ## 5. 怎么验证
 

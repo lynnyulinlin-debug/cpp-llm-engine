@@ -1,21 +1,30 @@
-# 05.5 Sampler 采样器
+# 05.6 Sampler 采样器
 
 
 ## 1. 这一页要解决什么
 
 实现常用采样策略，把模型输出的 logits 转成实际 token。  
-这一步是生成链路的最后一层决策，不是模型本身的一部分。
+这一步是生成链路的最后一层决策，不属于模型本身。
 
 ## 阅读入口
 
-- 前置阅读：[`05.4 KV Cache`](/chapter05_generation/04_kv_cache)、[`05.3 Naive Generation`](/chapter05_generation/03_naive_generation)
+- 前置阅读：[`05.5 Scheduler`](/chapter05_generation/05_scheduler)、[`05.4 KV Cache`](/chapter05_generation/04_kv_cache)、[`05.3 Naive Generation`](/chapter05_generation/03_naive_generation)
 - 源码直达：[`chapter05_generation 代码入口`](/code/chapter05_generation)
-- 相关阅读：[`05.6 端到端生成测试`](/chapter05_generation/06_end_to_end_generation)、[`05.7 本章小结`](/chapter05_generation/summary)
+- 相关阅读：[`05.7 端到端生成测试`](/chapter05_generation/06_end_to_end_generation)、[`chapter05 小结`](/chapter05_generation/summary)
+
+## 代码直达
+
+- [`src/sampler.cpp`](/code/chapter05_generation#sampler-cpp)
+- [`src/runtime.cpp`](/code/chapter05_generation#runtime-cpp)
+- [`src/request.cpp`](/code/chapter05_generation#request-cpp)
+- [`src/scheduler.cpp`](/code/chapter05_generation#scheduler-cpp)
+- [`tests/sampler_test.cpp`](/code/chapter05_generation#sampler-test-cpp)
+- [`examples/main_streaming.cpp`](/code/chapter05_generation#main-streaming-cpp)
 
 ## 2. 为什么这一步重要
 
 模型前向只会产生分数，真正输出哪个 token 还需要采样策略决定。  
-Sampler 是生成链路的最后一步之一，也是最容易把“模型输出”和“系统决策”混在一起的地方。
+Sampler 是生成链路的最后一步之一，也最容易把“模型输出”和“系统决策”混在一起。
 
 如果不把这一层单独拎出来，调试时很容易把采样策略造成的差异误判成模型问题。
 
@@ -84,8 +93,8 @@ Top-K 的候选集大小固定，Top-p 的候选集会随分布变化。
 
 这对调试很重要，因为很多看起来像模型问题的现象，实际上只是采样策略不同。
 
-`Greedy` 的作用是先把最简单的决策跑通。  
-等这一层稳定后，再引入 `Top-K` 和 `Temperature`，你就能更清楚地看见参数如何影响输出分布。
+`Greedy` 先把最简单的决策跑通。
+等这一层稳定后，再引入 `Top-K` 和 `Temperature`，就能更清楚地看见参数如何影响输出分布。
 
 ### Sampler 与请求绑定
 
@@ -144,4 +153,4 @@ while (!finished) {
 ## 7. 和后续章节怎么接
 
 这一页负责把分数变成 token。  
-下一页就可以把 embedding、Transformer、KV Cache 和 sampler 串成完整的端到端测试。
+下一页就可以把 embedding、Transformer、KV Cache、Scheduler 和 sampler 串成完整的端到端测试。

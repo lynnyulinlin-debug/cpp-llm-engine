@@ -1,4 +1,4 @@
-# 05.7 vLLM 对照：把最小 generation runtime 放到真实 serving 里看
+# 05.8 vLLM 对照：把最小 generation runtime 放到真实 serving 里看
 
 到这里，你已经把 `forward` 变成了一条能逐 token 推进的最小 runtime。  
 这一节不再重复讲生成流程，而是把本章这条最小链路放到 `vLLM` 里对照着看，帮你分清：
@@ -17,6 +17,14 @@
 | `sampler` | token 级输出与 streaming | 生成必须能持续吐 token | token 如何在调度下持续输出 |
 | `Request state` | 多请求状态管理 | 多请求下必须先把上下文分开 | 每个请求的上下文怎样隔离、怎样复用 |
 
+## 代码直达
+
+- [`src/runtime.cpp`](/code/chapter05_generation#runtime-cpp)
+- [`src/scheduler.cpp`](/code/chapter05_generation#scheduler-cpp)
+- [`src/kv_cache.cpp`](/code/chapter05_generation#kv-cache-cpp)
+- [`src/sampler.cpp`](/code/chapter05_generation#sampler-cpp)
+- [`tests/chapter05_generation_test.cpp`](/code/chapter05_generation#chapter05-generation-test-cpp)
+
 ## 2. 为什么它重要
 
 本章已经把 generation 做成了一条可观察、可验证的状态流：
@@ -28,11 +36,11 @@
 - `sampler` 负责把 logits 变成下一步 token
 
 `vLLM` 把这条最小链路扩展成面向高并发服务的 runtime。  
-你在这里要看的，不是它多了多少东西，而是它把本章的边界推到了哪里。
+这里重点看的是，它把本章边界推到了哪里。
 
 ## 3. vLLM 的核心映射
 
-如果你要先建立一个最小心智模型，先记住这四条：
+核心对应关系如下：
 
 1. `prefill / decode` 对应请求的阶段推进
 2. `KV Cache` 对应高吞吐 serving 里的状态与内存管理
@@ -47,7 +55,7 @@
 - `disaggregated prefill / decode` 解决的是更细的执行分层问题
 
 这些都不是本章里必须一次做完的东西，但都建立在本章已经立住的那条主线上。  
-你只要能把这几条和本章对应起来，再看 `vLLM` 时就不会只记住名字，而是能看出它在解决什么问题。
+把它们和本章对应起来，再看 `vLLM` 时就能看出它在解决什么问题。
 
 ## 4. 中间推导是什么
 
@@ -64,9 +72,9 @@
 - 本章先把生成链路拆清楚
 - `vLLM` 再把同一条链路做成高吞吐 serving runtime
 
-## 5. 你现在应该能做什么
+## 5. 学习后应能做什么
 
-学完本节后，你应该已经能把下面几件事说清楚：
+本节完成后，应当能够把下面几件事说清楚：
 
 - 为什么 `prefill` 和 `decode` 不能混成一个模糊的循环
 - 为什么 `KV Cache` 是生成 runtime 的核心状态

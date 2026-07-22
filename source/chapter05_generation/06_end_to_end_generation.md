@@ -1,4 +1,4 @@
-# 05.6 End-to-End Generation Testing 端到端生成测试
+# 05.7 End-to-End Generation Testing 端到端生成测试
 
 
 ## 这一页要解决什么
@@ -7,24 +7,28 @@
 
 ## 阅读入口
 
-- 前置阅读：[`05.4 KV Cache`](/chapter05_generation/04_kv_cache)、[`05.5 Sampler`](/chapter05_generation/05_sampler)
+- 前置阅读：[`05.4 KV Cache`](/chapter05_generation/04_kv_cache)、[`05.5 Scheduler`](/chapter05_generation/05_scheduler)、[`05.6 Sampler`](/chapter05_generation/05_sampler)
 - 源码直达：[`chapter05_generation 代码入口`](/code/chapter05_generation)
-- 相关阅读：[`05.7 本章小结`](/chapter05_generation/summary)、[`chapter06_quantization`](/chapter06_quantization/intro)
+- 相关阅读：[`chapter05 小结`](/chapter05_generation/summary)、[`chapter06_quantization`](/chapter06_quantization/intro)
+
+## 代码直达
+
+- [`src/runtime.cpp`](/code/chapter05_generation#runtime-cpp)
+- [`src/request.cpp`](/code/chapter05_generation#request-cpp)
+- [`src/kv_cache.cpp`](/code/chapter05_generation#kv-cache-cpp)
+- [`src/scheduler.cpp`](/code/chapter05_generation#scheduler-cpp)
+- [`src/sampler.cpp`](/code/chapter05_generation#sampler-cpp)
+- [`tests/chapter05_generation_test.cpp`](/code/chapter05_generation#chapter05-generation-test-cpp)
 
 ## 2. 背景是什么
 
-前面的模块分别正确，并不代表组合起来也正确。端到端测试是最终验收点。
+前面的模块分别正确，并不代表组合起来也正确。端到端测试就是最终验收点。
 
 这一页要确认的是：输入能进、状态能走、cache 能复用、sampler 能出 token，最后还能稳定回到一个可检查的输出。
 
 ## 3. 最小设计是什么
 
-最小测试只需要固定两件事：
-
-- prompt
-- 生成 token 数量
-
-这样就能把它当成一条稳定的回归基线，而不是一次性的手工演示。
+最小测试只需要固定两件事：prompt 和生成 token 数量。这样就能把它当成一条稳定的回归基线，而不是一次性的手工演示。
 
 ### 端到端测试的成功标准
 
@@ -36,8 +40,7 @@
 | 非空输出 | 至少生成了一个 token |
 | 停止条件触发 | 达到 `max_new_tokens` 或生成 EOS |
 
-最低通过标准是：输出非空且长度正确。  
-进阶标准是：在 greedy 模式下，输出与记录过的黄金输出完全一致。
+最低通过标准是：输出非空且长度正确。进阶标准是：在 greedy 模式下，输出与记录过的黄金输出完全一致。
 
 ### 黄金输出是什么
 
@@ -62,12 +65,7 @@ EXPECT_EQ(new_output, expected);
 
 ## 4. 中间推导是什么
 
-端到端测试之所以要放在 KV Cache 之后，是因为它验证的不是单个模块，而是整个 runtime contract：
-
-- embedding 是否和 decoder 对齐
-- cache 是否真的复用了历史状态
-- sampler 是否把 logits 变成了下一步 token
-- 输出数量和停止条件是否可控
+端到端测试之所以要放在 KV Cache 之后，是因为它验证的是整个 runtime contract：embedding 是否和 decoder 对齐、cache 是否真的复用了历史状态、sampler 是否把 logits 变成了下一步 token、输出数量和停止条件是否可控。
 
 如果这里失败，通常需要回头检查 embedding、decoder、cache 或 sampler 其中某一段。
 
@@ -106,7 +104,7 @@ EXPECT_EQ(output1, output2);
 - 同一 prompt 下，结果能稳定复现
 - greedy 模式下可以得到黄金输出或完全一致的回归结果
 
-一个好的端到端测试应当能在固定输入下稳定复现同类行为，这样后续重构时才有可比基线。
+一个好的端到端测试应当能在固定输入下稳定复现同类行为，这样后续重构才有可比基线。
 
 ### 失败时怎么排查
 
@@ -136,10 +134,10 @@ EXPECT_EQ(output1, output2);
 
 ## 7. 和前面的关系
 
-这一页不是独立的演示页，而是这一章的收口动作：
+这一页把前面的模块串成一个可回归闭环：
 
 - `01_embedding_and_position` 负责输入如何进入模型
 - `04_kv_cache` 负责历史状态如何保存和复用
-- 这一页负责把前面的所有步骤串成可回归的闭环
+- 这一页负责验证链路是否真的闭合
 
-如果这一页不稳定，说明 generation runtime 还不能算真正闭合。
+如果这一页不稳定，说明 generation runtime 还不能算稳定闭合。
