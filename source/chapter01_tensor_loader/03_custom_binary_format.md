@@ -5,11 +5,17 @@
 
 设计一个简单、可解析、可扩展的模型文件格式，用来存放 tensor 元信息和原始权重数据。
 
-## 读完你应该能做什么
+## 读完后应能做什么
 
 - 理解为什么需要自定义格式
 - 理解文件格式中元信息和数据区的分离
 - 理解魔数、tensor table 和 data 区的作用
+
+## 代码直达
+
+- [`src/model_loader.h`](/code/chapter01_tensor_loader#model-loader-h)
+- [`src/model_loader.cpp`](/code/chapter01_tensor_loader#model-loader-cpp)
+- [`src/tensor.h`](/code/chapter01_tensor_loader#tensor-h)
 
 ## 为什么这一步重要
 
@@ -37,7 +43,7 @@
 - 能读取 tensor 名称、shape 和偏移
 - 能定位到每个 tensor 的数据区
 
-如果一个人只看文件头和 tensor table 就能大致理解文件内容，这个格式通常就足够清楚了。
+只看文件头和 tensor table 就能大致理解文件内容时，这个格式通常就足够清楚了。
 
 ## 常见问题
 

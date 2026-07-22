@@ -2,11 +2,11 @@
 
 这一章先回答一个基础问题：模型权重怎样安全地进入程序，并被统一表示成 `Tensor` 和 `ModelLoader` 这套对象模型？同时也会说明“数据加载”和“权重加载”的关系：前者是更一般的输入读取问题，后者是本章要解决的具体场景。
 
-如果你只是想先理解“怎么用”，可以先看本章的代码入口 [`chapter01_tensor_loader 代码入口`](/code/chapter01_tensor_loader)，再回到这里看概念和推导。
+若仅先理解“怎么用”，可以先看本章的代码入口 [`chapter01_tensor_loader 代码入口`](/code/chapter01_tensor_loader)，再回到这里看概念和推导。
 
 本章会实现一个可用的 `Tensor` 抽象，并把模型权重从自定义格式加载到程序中。
 
-如果把这章看成一条实际链路，它的顺序应该是：
+这章的实际顺序如下：
 
 1. 先定义 `Tensor` 该表达什么
 2. 再把表达方式落到对象实现里
@@ -14,19 +14,15 @@
 4. 再用 Python 把训练侧权重写进去
 5. 最后由 `ModelLoader` 把文件还原成运行时对象
 
-也就是说，这一章不是先写一个读文件工具，而是先把“输入语义”定住，再让格式和脚本去适配它。
+核心是先定住“输入语义”，再让格式和脚本去适配它。
 
 这一章是主线的起点。后面的 `tensor ops`、`matmul`、`attention` 和 `generation` 都建立在这里定义的 `Tensor` 与加载链路之上。
 
 这一章会碰到的 C++ 概念主要是：类与对象、构造与析构、`shared_ptr`、`vector`、`string`、`unordered_map`，以及头文件和源码分离。
 
-这里最关键的理解是：这一章不只是“把文件读进来”，而是在建立一个可信输入入口。权重一旦进入程序，后面的所有章节都默认它的 shape、dtype、device 和 ownership 已经被正确表达。
+这里最关键的理解是：这一章建立的是可信输入入口。后面的章节都默认权重已经被正确表达成 shape、dtype、device 和 ownership。
 
-如果这一层做薄了，后面最容易冒出来的问题通常不是算子逻辑，而是：
-
-- 文件读进来了，但对象语义不完整
-- shape 对了，但 dtype 或 device 没有真正被表达
-- loader 跟文件布局绑太死，后面一换格式就要重写
+这一层一旦做薄，后面最常见的问题不是算子逻辑，而是对象语义不完整、格式演进受限、loader 和文件布局绑得太死。
 
 ```mermaid
 flowchart LR
@@ -52,6 +48,14 @@ flowchart LR
 - 源码直达：[`chapter01_tensor_loader 代码入口`](/code/chapter01_tensor_loader)、[`tensor.h`](/code/chapter01_tensor_loader)、[`tensor.cpp`](/code/chapter01_tensor_loader)、[`model_loader.h`](/code/chapter01_tensor_loader)、[`model_loader.cpp`](/code/chapter01_tensor_loader)、[`chapter01_tensor_loader_test.cpp`](/code/chapter01_tensor_loader)
 - 相关阅读：[`01.1 Tensor Interface`](/chapter01_tensor_loader/01_tensor_interface)、[`01.5 ModelLoader`](/chapter01_tensor_loader/05_model_loader)、[`01.7 本章小结`](/chapter01_tensor_loader/summary)
 
+## 代码直达
+
+- [`src/tensor.h`](/code/chapter01_tensor_loader#tensor-h)
+- [`src/tensor.cpp`](/code/chapter01_tensor_loader#tensor-cpp)
+- [`src/model_loader.h`](/code/chapter01_tensor_loader#model-loader-h)
+- [`src/model_loader.cpp`](/code/chapter01_tensor_loader#model-loader-cpp)
+- [`tests/chapter01_tensor_loader_test.cpp`](/code/chapter01_tensor_loader#chapter01-tensor-loader-test-cpp)
+
 ## 生态对照
 
 这一章最适合拿 `llama.cpp` 和 `Gemma` 一起看：前者给你最小本地基线，后者给你具体模型家族如何落到 loader 和张量对象上的参照。
@@ -62,15 +66,15 @@ flowchart LR
 
 ## 3. 背景是什么
 
-如果你对面向对象设计不熟，先看 `foundation/05_oop_and_design_basics.md`，重点理解“对象为什么要把状态和行为放在一起”。
+面向对象设计不熟时，先看 `foundation/05_oop_and_design_basics.md`，重点理解“对象为什么要把状态和行为放在一起”。
 
-如果你对容器、复杂度和查找结构不熟，先看 `foundation/06_data_structure_algorithm_basics.md`，重点理解为什么这里常用 `vector` 和 `unordered_map`。
+容器、复杂度和查找结构不熟时，先看 `foundation/06_data_structure_algorithm_basics.md`，重点理解为什么这里常用 `vector` 和 `unordered_map`。
 
 这不是额外负担，而是为了让你在读 `Tensor` 和 `ModelLoader` 时，不会把“数据结构选择”和“对象设计”同时当成障碍。
 
-如果把这一章写深，重点不只是 loader 的文件格式，而是要说明为什么模型权重必须先被统一装进一个清晰的对象模型里：这样后面的算子、view 语义和 runtime 才能把“数据从哪里来”这件事从计算逻辑中分离出去。
+这一章的重点不只是 loader 的文件格式，而是说明为什么模型权重必须先进入统一的对象模型。这样后面的算子、view 语义和 runtime 才能把“数据从哪里来”从计算逻辑里分离出去。
 
-换句话说，这一章真正要建立的是“输入层规则”。只要输入层规则稳定，后面的章就不用每次都重新解释权重怎么来的、对象怎么持有、数据怎么进入程序。
+这一章要建立的是输入层规则。只要规则稳定，后面的章节就不必反复解释权重怎么来、对象怎么持有、数据怎么进入程序。
 
 ## 4. 最小设计是什么
 
@@ -93,17 +97,16 @@ flowchart LR
 - `Tensor` 负责把数据表示成清晰对象
 - `ModelLoader` 负责把文件内容转成这些对象
 
-这个推导的关键转折点在于：**先定义对象，再定义读取方式**。  
-也就是说，我们不是先有文件格式再去适配对象，而是先把程序里需要怎样表示权重说清楚，再把外部文件映射进来。
+这个推导的关键转折点在于：**先定义对象，再定义读取方式**。我们先把程序里需要怎样表示权重说清楚，再把外部文件映射进来。
 
-因此，这章的实际实现顺序也应该按这个方向走：
+因此，这章的实现顺序也应当按这个方向走：
 
 - 先写 `Tensor` 接口，再补实现
 - 再设计文件格式，确保它能表达 tensor table 和原始数据
 - 再写 Python converter，把训练侧权重翻译成统一格式
 - 最后写 `ModelLoader` 和打印验证，把整条链路闭起来
 
-如果顺序反过来，`ModelLoader` 很容易被写成一个“能读什么都读”的杂项入口，后续章节会不断回头修输入层。
+顺序反过来，`ModelLoader` 很容易变成一个“能读什么都读”的杂项入口，后续章节就会不断回头修输入层。
 
 ## 6. 本章会产出什么
 
@@ -112,7 +115,7 @@ flowchart LR
 - 一个能把文件内容转成内存对象的 `ModelLoader`
 - 一个最小可验证的权重读取闭环
 
-更具体一点说，这一章应该让你能够从一个真实文件走到三个确定结果：
+更直接地说，这一章应当能让读者从一个真实文件得到三个确定结果：
 
 - 你知道文件里有什么
 - 你知道 loader 读到了什么
@@ -153,16 +156,15 @@ flowchart LR
 
 ## 10. 本章解决了什么
 
-这一章把“模型状态如何进入程序”这道门固定住了。  
-后面的 view 语义、算子输入和生成 runtime，都会在这套对象模型上继续往下走。
+这一章把“模型状态如何进入程序”这道门固定住了。后面的 view 语义、算子输入和生成 runtime，都会在这套对象模型上继续往下走。
 
-它真正建立的不是某个具体文件格式，而是一条稳定的输入约定：以后只要权重进入程序，就应该先落到这套 `Tensor` / `ModelLoader` 语义里，再由后续章节继续消费。
+它建立的不是某个具体文件格式，而是一条稳定的输入约定：以后只要权重进入程序，就先落到这套 `Tensor` / `ModelLoader` 语义里，再由后续章节继续消费。
 
 ## 11. 下一步是什么
 
 进入 `chapter02_tensor_ops`，在已经可用的 `Tensor` 基础上增加 `reshape` 和 `slice` 这种 view 语义。
 
-换句话说，`chapter01` 先解决“数据从哪里来”，`chapter02` 再解决“同一份数据怎么被不同方式观察”。
+`chapter01` 先解决“数据从哪里来”，`chapter02` 再解决“同一份数据怎么被不同方式观察”。
 
 ## 12. 回看源码
 

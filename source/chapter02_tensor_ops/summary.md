@@ -4,7 +4,7 @@
 
 如果实现正确，`Tensor` 就不只是一个装数据的容器，而是一个可以共享底层存储、返回视图、并在不复制数据的情况下改变形状和局部窗口的对象。
 
-如果把这一章从头到尾走完，你应该能把同一个 `Tensor` 的变化过程说清楚：
+把这一章从头到尾走完后，应当能够把同一个 `Tensor` 的变化过程说清楚：
 
 - 原始张量持有一份底层 storage
 - `reshape` 改的是 shape，不改数据
@@ -25,13 +25,13 @@
 - 对照 [Gemma](/reference/ecosystem/gemma) 回看具体模型家族如何暴露 view 语义问题
 - 对照 [llama.cpp](/reference/ecosystem/llama_cpp) 回看本地推理链路为什么需要 view-aware Tensor
 
-更具体地说，这一章解决的不是“怎么写两个操作”，而是“怎么让所有后续张量操作都默认接受一个事实：视图变化不等于数据复制”。
+这一章解决的不是“怎么写两个操作”，而是“怎么让所有后续张量操作都默认接受一个事实：视图变化不等于数据复制”。
 
 ## 2. 为什么它重要
 
 这一步的意义不只是省内存，更是把数据对象和视图对象分开：底层 storage 负责“数据在哪”，Tensor view 负责“怎么看这些数据”。
 
-这个分层一旦成立，后面的缓存、切片、block 访问、attention mask 和 token 级别复用都会更自然；如果不成立，后面每个章节都要重新绕回“是不是拷贝了数据”这个基础问题。
+这个分层一旦成立，后面的缓存、切片、block 访问、attention mask 和 token 级别复用都会更自然；如果不成立，后面每个章节都要重新绕回“是不是拷贝了数据”这个问题。
 
 ## 3. 背景回顾
 
@@ -47,13 +47,13 @@
 - `slice` 只改局部窗口
 - 多个对象可以共享同一份物理存储
 
-## 5. 你现在应该能做什么
+## 5. 学习后应能做什么
 
 - 说明 `reshape` 为什么不该复制数据
 - 说明 `slice` 为什么应该返回子视图
 - 用测试检查 offset、stride 和 shape 是否一致
 
-如果你现在回头看代码，应该能够解释每个操作背后的判断标准，而不仅仅是记住接口名字。
+回头看代码时，应当能够解释每个操作背后的判断标准，而不仅仅是记住接口名字。
 
 ## 6. 边界说明
 
@@ -74,6 +74,14 @@
 - 先看 [`tensor.h`](/code/chapter02_tensor_ops) 和 [`tensor.cpp`](/code/chapter02_tensor_ops)
 - 再看 [`main_tensor_ops.cpp`](/code/chapter02_tensor_ops)
 - 最后看 [`chapter02_tensor_ops_test.cpp`](/code/chapter02_tensor_ops)
+
+## 代码回看
+
+- [`include/chapter02_tensor_ops/tensor.h`](/code/chapter02_tensor_ops#tensor-h)
+- [`src/tensor.cpp`](/code/chapter02_tensor_ops#tensor-cpp)
+- [`examples/main_tensor_ops.cpp`](/code/chapter02_tensor_ops#main-tensor-ops-cpp)
+- [`tests/chapter02_tensor_ops_test.cpp`](/code/chapter02_tensor_ops#chapter02-tensor-ops-test-cpp)
+- [`scripts/run.sh`](/code/chapter02_tensor_ops#run-sh)
 
 ## 9. 收口结论
 

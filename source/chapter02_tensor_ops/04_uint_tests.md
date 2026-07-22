@@ -5,11 +5,17 @@
 
 用简单单元测试验证 `reshape` 和 `slice` 的 view 语义是否正确。
 
-## 读完你应该能做什么
+## 读完后应能做什么
 
 - 理解为什么 view 操作必须测试
 - 理解如何用最小案例验证共享存储
 - 理解测试应该覆盖语义而不只是输出值
+
+## 代码直达
+
+- [`tests/chapter02_tensor_ops_test.cpp`](/code/chapter02_tensor_ops#chapter02-tensor-ops-test-cpp)
+- [`include/chapter02_tensor_ops/tensor.h`](/code/chapter02_tensor_ops#tensor-h)
+- [`src/tensor.cpp`](/code/chapter02_tensor_ops#tensor-cpp)
 
 ## 为什么这一步重要
 

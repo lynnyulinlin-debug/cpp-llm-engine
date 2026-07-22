@@ -5,11 +5,17 @@
 
 把 Hugging Face 上的模型权重转换成本章定义的二进制格式。
 
-## 读完你应该能做什么
+## 读完后应能做什么
 
 - 理解转换脚本在整体链路中的位置
 - 理解如何把权重、名称和 shape 写入自定义格式
 - 理解 Python 转换脚本和 C++ 加载器如何配合
+
+## 代码直达
+
+- [`src/model_loader.h`](/code/chapter01_tensor_loader#model-loader-h)
+- [`src/model_loader.cpp`](/code/chapter01_tensor_loader#model-loader-cpp)
+- [`tests/chapter01_tensor_loader_test.cpp`](/code/chapter01_tensor_loader#chapter01-tensor-loader-test-cpp)
 
 ## 为什么这一步重要
 
@@ -32,7 +38,7 @@
 - tensor 数量和原始模型一致
 - 关键 tensor 的 shape 和名称正确
 
-如果转换脚本生成的文件能被 `ModelLoader` 直接接住，说明训练侧和推理侧之间已经有了明确接口。
+转换脚本生成的文件能够被 `ModelLoader` 直接接住时，说明训练侧和推理侧之间已经有了明确接口。
 
 ## 常见问题
 

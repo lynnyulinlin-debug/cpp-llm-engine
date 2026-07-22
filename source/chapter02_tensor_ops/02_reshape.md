@@ -5,11 +5,17 @@
 
 实现只改变形状、不复制数据的 `reshape` 操作。
 
-## 读完你应该能做什么
+## 读完后应能做什么
 
 - 理解 `reshape` 的语义边界
 - 理解为什么 `reshape` 不能偷偷拷贝数据
 - 理解 `reshape` 对后续算子的意义
+
+## 代码直达
+
+- [`include/chapter02_tensor_ops/tensor.h`](/code/chapter02_tensor_ops#tensor-h)
+- [`src/tensor.cpp`](/code/chapter02_tensor_ops#tensor-cpp)
+- [`tests/chapter02_tensor_ops_test.cpp`](/code/chapter02_tensor_ops#chapter02-tensor-ops-test-cpp)
 
 ## 为什么这一步重要
 

@@ -5,16 +5,22 @@
 
 定义后续所有算子和模型加载都会使用的 `Tensor` 基础接口。
 
-## 读完你应该能做什么
+## 读完后应能做什么
 
 - 明确 `Tensor` 需要包含哪些核心字段
 - 理解 `shape`、`dtype`、`device` 和数据存储之间的关系
 - 理解为什么 `Tensor` 要先作为抽象存在，而不是直接操作裸指针
 
+## 代码直达
+
+- [`src/tensor.h`](/code/chapter01_tensor_loader#tensor-h)
+- [`src/tensor.cpp`](/code/chapter01_tensor_loader#tensor-cpp)
+- [`tests/chapter01_tensor_loader_test.cpp`](/code/chapter01_tensor_loader#chapter01-tensor-loader-test-cpp)
+
 ## 为什么这一步重要
 
 后面的算子、模型加载、量化和缓存管理，都依赖统一的张量抽象。  
-如果这一层设计不清楚，后续章节就会不停重复处理内存、形状和设备这些基础问题。
+这一层设计不清楚时，后续章节就会不停重复处理内存、形状和设备这些基础问题。
 
 换句话说，这一页不是在定义“一个更大的容器”，而是在定义整个教程共享的数据语言。  
 一旦 `Tensor` 的边界不稳定，后面的每一章都会被迫重新解释同样的概念。
@@ -64,7 +70,7 @@ struct Tensor {
 - 能区分“张量元信息”和“底层存储”
 - 能解释为什么后续需要 shared storage
 
-如果你能在不看实现的情况下解释“为什么 `Tensor` 需要 shape、dtype、device 和 storage 四类信息”，说明这一页的抽象已经成立。
+能够在不看实现的情况下解释“为什么 `Tensor` 需要 shape、dtype、device 和 storage 四类信息”，说明这一页的抽象已经成立。
 
 ## 常见问题
 

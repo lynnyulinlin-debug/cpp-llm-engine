@@ -5,11 +5,18 @@
 
 实现 C++ `ModelLoader`，把自定义格式文件解析成程序内部的 `Tensor` 集合。
 
-## 读完你应该能做什么
+## 读完后应能做什么
 
 - 理解 loader 的职责边界
 - 理解如何从文件读取 tensor table 和 data region
 - 理解如何把文件内容组织成可访问的内存对象
+
+## 代码直达
+
+- [`src/model_loader.h`](/code/chapter01_tensor_loader#model-loader-h)
+- [`src/model_loader.cpp`](/code/chapter01_tensor_loader#model-loader-cpp)
+- [`src/tensor.h`](/code/chapter01_tensor_loader#tensor-h)
+- [`tests/chapter01_tensor_loader_test.cpp`](/code/chapter01_tensor_loader#chapter01-tensor-loader-test-cpp)
 
 ## 为什么这一步重要
 
@@ -40,7 +47,7 @@
 - 能按名称找到 tensor
 - 能打印 tensor 的 shape 和 dtype
 
-如果你能通过名称快速定位某个权重，并确认它的元信息与文件内容一致，loader 基本就已经完成使命了。
+能够通过名称快速定位某个权重，并确认它的元信息与文件内容一致，loader 基本就已经完成使命了。
 
 ## 常见问题
 

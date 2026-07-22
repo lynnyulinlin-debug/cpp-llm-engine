@@ -5,11 +5,17 @@
 
 加载模型并打印所有 tensor 的名称和形状，用最小可见结果确认链路正确。
 
-## 读完你应该能做什么
+## 读完后应能做什么
 
 - 知道如何验证模型是否真的被正确加载
 - 知道如何通过打印 metadata 做快速排查
 - 知道这一页是整个加载链路的最终验收
+
+## 代码直达
+
+- [`src/model_loader.cpp`](/code/chapter01_tensor_loader#model-loader-cpp)
+- [`src/model_loader.h`](/code/chapter01_tensor_loader#model-loader-h)
+- [`tests/chapter01_tensor_loader_test.cpp`](/code/chapter01_tensor_loader#chapter01-tensor-loader-test-cpp)
 
 ## 为什么这一步重要
 
@@ -38,4 +44,4 @@
 - tensor 数量少于预期
 - 名称和 shape 对不上
 
-如果这一页输出已经能和文件里的实际内容一一对应，说明从文件到内存的链路已经闭合了。
+这一页输出能够和文件里的实际内容一一对应时，说明从文件到内存的链路已经闭合了。

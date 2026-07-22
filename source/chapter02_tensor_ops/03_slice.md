@@ -5,11 +5,17 @@
 
 实现返回子视图的 `slice` 操作，让张量可以表达局部窗口而不复制数据。
 
-## 读完你应该能做什么
+## 读完后应能做什么
 
 - 理解 `slice` 和 `reshape` 的区别
 - 理解子视图为什么要带偏移
 - 理解如何在共享存储上构造局部窗口
+
+## 代码直达
+
+- [`include/chapter02_tensor_ops/tensor.h`](/code/chapter02_tensor_ops#tensor-h)
+- [`src/tensor.cpp`](/code/chapter02_tensor_ops#tensor-cpp)
+- [`tests/chapter02_tensor_ops_test.cpp`](/code/chapter02_tensor_ops#chapter02-tensor-ops-test-cpp)
 
 ## 为什么这一步重要
 

@@ -5,11 +5,17 @@
 
 让多个 `Tensor` 对象可以共享同一份底层数据，而不是每次视图变化都复制内存。
 
-## 读完你应该能做什么
+## 读完后应能做什么
 
 - 理解为什么要共享底层存储
 - 理解 `shared_ptr` 在 view 语义中的角色
 - 理解“数据”和“视图”分离的意义
+
+## 代码直达
+
+- [`include/chapter02_tensor_ops/tensor.h`](/code/chapter02_tensor_ops#tensor-h)
+- [`src/tensor.cpp`](/code/chapter02_tensor_ops#tensor-cpp)
+- [`tests/chapter02_tensor_ops_test.cpp`](/code/chapter02_tensor_ops#chapter02-tensor-ops-test-cpp)
 
 ## 为什么这一步重要
 

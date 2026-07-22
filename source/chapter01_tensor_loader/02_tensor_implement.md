@@ -5,11 +5,17 @@
 
 把 `Tensor` 接口落到可用的 C++ 实现上，先支持 CPU 内存和基础对象生命周期管理。
 
-## 读完你应该能做什么
+## 读完后应能做什么
 
 - 实现张量对象的内存分配与释放
 - 理解 copy / move semantics 在张量对象上的意义
 - 理解为什么需要析构和所有权约束
+
+## 代码直达
+
+- [`src/tensor.h`](/code/chapter01_tensor_loader#tensor-h)
+- [`src/tensor.cpp`](/code/chapter01_tensor_loader#tensor-cpp)
+- [`tests/chapter01_tensor_loader_test.cpp`](/code/chapter01_tensor_loader#chapter01-tensor-loader-test-cpp)
 
 ## 为什么这一步重要
 
@@ -39,7 +45,7 @@
 
 这一页的重点是让 `Tensor` 真正成为一个可用对象，而不是只有字段定义的结构体。最实用的做法是先把生命周期跑通，再逐步把共享存储和视图语义加进来。
 
-如果后续要支持更复杂后端，CPU 存储路径也仍然应该保留，因为它是最稳定的调试基线。
+后续即使支持更复杂后端，CPU 存储路径也仍然应该保留，因为它是最稳定的调试基线。
 
 ## 怎么验证
 
@@ -47,7 +53,7 @@
 - 拷贝后的对象内容正确
 - 移动后的对象仍然处于合法状态
 
-如果复制和移动都不会破坏数据，说明这个 Tensor 对象至少已经具备“在容器和算子之间传递”的基本能力。
+复制和移动都不会破坏数据时，说明这个 Tensor 对象至少已经具备“在容器和算子之间传递”的基本能力。
 
 ## 常见问题
 
