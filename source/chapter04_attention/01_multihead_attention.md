@@ -11,7 +11,14 @@
 - 源码直达：[`chapter04_attention 代码入口`](/code/chapter04_attention)
 - 相关阅读：[`04.2 LayerNorm 与激活`](/chapter04_attention/02_layernorm_and_activation)、[`04.4 DecoderLayer`](/chapter04_attention/04_decoder_layer)
 
-## 读完你应该能做什么
+## 代码直达
+
+- [`src/attention.cpp`](/code/chapter04_attention#attention-cpp)
+- [`src/linear_layer.cpp`](/code/chapter04_attention#linear-layer-cpp)
+- [`src/tensor.cpp`](/code/chapter04_attention#tensor-cpp)
+- [`tests/chapter04_attention_test.cpp`](/code/chapter04_attention#chapter04-attention-test-cpp)
+
+## 读完后应能做什么
 
 - 理解注意力公式的基本结构
 - 理解 Q/K/V 线性变换的作用
@@ -31,7 +38,7 @@
 - 得到每个 head 的输出
 - 合并所有 head 的结果
 
-实现时最重要的不是把公式背出来，而是把张量 shape 一步一步对应起来。你应该能明确说出每一步输入和输出的维度，这样后面调试才不会变成“看值猜错在哪”。
+实现时最重要的不是把公式背出来，而是把张量 shape 一步一步对应起来。每一步输入和输出的维度需要能明确说清，这样后面调试才不会变成“看值猜错在哪”。
 
 最小实现通常先从单 batch、单序列长度开始，然后再扩展到更一般的输入。
 

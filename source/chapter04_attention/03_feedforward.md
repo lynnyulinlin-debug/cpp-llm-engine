@@ -11,7 +11,14 @@
 - 源码直达：[`chapter04_attention 代码入口`](/code/chapter04_attention)
 - 相关阅读：[`04.4 DecoderLayer`](/chapter04_attention/04_decoder_layer)、[`04.5 首层权重加载`](/chapter04_attention/05_load_first_layer)
 
-## 读完你应该能做什么
+## 代码直达
+
+- [`src/feed_forward.cpp`](/code/chapter04_attention#feed-forward-cpp)
+- [`src/linear_layer.cpp`](/code/chapter04_attention#linear-layer-cpp)
+- [`src/tensor.cpp`](/code/chapter04_attention#tensor-cpp)
+- [`tests/chapter04_attention_test.cpp`](/code/chapter04_attention#chapter04-attention-test-cpp)
+
+## 读完后应能做什么
 
 - 理解 FFN 为什么是两层线性层
 - 理解中间维度扩展的作用

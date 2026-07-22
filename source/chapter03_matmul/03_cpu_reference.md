@@ -12,7 +12,13 @@
 - 源码直达：[`chapter03_matmul 代码入口`](/code/chapter03_matmul)
 - 相关阅读：[`cuBLAS 实现`](/chapter03_matmul/04_cublas_implement)、[`PyTorch 对照测试`](/chapter03_matmul/05_test_with_pytorch)
 
-## 2. 读完你应该能做什么
+## 代码直达
+
+- [`src/matrix.cpp`](/code/chapter03_matmul#matrix-cpp)
+- [`src/matmul_op.cpp`](/code/chapter03_matmul#matmul-op-cpp)
+- [`tests/chapter03_matmul_test.cpp`](/code/chapter03_matmul#chapter03-matmul-test-cpp)
+
+## 2. 读完后应能做什么
 
 - 理解为什么先做 CPU 参考实现
 - 理解如何用朴素实现验证数学正确性

@@ -11,7 +11,14 @@
 - 源码直达：[`chapter03_matmul 代码入口`](/code/chapter03_matmul)
 - 相关阅读：[`复杂度直觉`](/chapter03_matmul/06_complexity_intuition)、[`本章小结`](/chapter03_matmul/summary)
 
-## 读完你应该能做什么
+## 代码直达
+
+- [`tests/chapter03_matmul_test.cpp`](/code/chapter03_matmul#chapter03-matmul-test-cpp)
+- [`src/matmul_op.cpp`](/code/chapter03_matmul#matmul-op-cpp)
+- [`src/matrix.cpp`](/code/chapter03_matmul#matrix-cpp)
+- [`examples/main_matmul.cpp`](/code/chapter03_matmul#main-matmul-cpp)
+
+## 读完后应能做什么
 
 - 理解为什么要做对照测试
 - 理解数值误差应该怎么判断

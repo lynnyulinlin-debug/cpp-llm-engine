@@ -28,18 +28,26 @@ flowchart TD
 
 | 先看什么 | 这一章给什么 | 为什么重要 | 对应小节 |
 | --- | --- | --- | --- |
-| 单层 decoder 为什么先做 | `DecoderLayer` 最小结构 | 多层堆叠要先有稳定单层 | [`04.2`](#2-本章要解决什么) / [`04.4`](#4-最小设计是什么) |
-| attention 和 FFN 怎么分工 | Q/K/V 数据流 + residual 结构 | 结构边界比术语更重要 | [`04.3`](#3-背景是什么) / [`04.5`](#5-中间推导是什么) |
-| 怎么保证可验证 | shape contract + 前向流程 | 先把单层做对，后面才好扩展 | [`04.5`](#5-中间推导是什么) / [`04.8`](#8-怎么验证) |
-| 和 `Gemma` / `TensorRT-LLM` 怎么对照 | 模型家族视角 + 高性能 engine 视角 | 先看结构，再看生态里的落点 | [`04.6`](#6-gemma--tensorrt-llm-对照) |
+| 单层 decoder 为什么先做 | `DecoderLayer` 最小结构 | 多层堆叠要先有稳定单层 | [`04.3`](#3-本章要解决什么) / [`04.5`](#5-最小设计是什么) |
+| attention 和 FFN 怎么分工 | Q/K/V 数据流 + residual 结构 | 结构边界比术语更重要 | [`04.4`](#4-背景是什么) / [`04.6`](#6-中间推导是什么) |
+| 怎么保证可验证 | shape contract + 前向流程 | 先把单层做对，后面才好扩展 | [`04.6`](#6-中间推导是什么) / [`04.9`](#9-怎么验证) |
+| 和 `Gemma` / `TensorRT-LLM` 怎么对照 | 模型家族视角 + 高性能 engine 视角 | 先看结构，再看生态里的落点 | [`生态对照`](#生态对照) |
 | 源码直达 | `chapter04_attention` | 先看核心实现 | [`代码入口`](/code/chapter04_attention) |
-| 下一步接到哪里 | `chapter05_generation` | 生成 runtime 建立在这层结构上 | [`04.10`](#10-本章解决了什么) / [`04.11`](#11-下一步是什么) |
+| 下一步接到哪里 | `chapter05_generation` | 生成 runtime 建立在这层结构上 | [`04.11`](#11-本章解决了什么) / [`04.12`](#12-下一步是什么) |
 
 ## 2. 阅读入口
 
 - 前置阅读：[`chapter03_matmul`](/chapter03_matmul/intro)、[`chapter03 小结`](/chapter03_matmul/summary)
 - 源码直达：[`chapter04_attention 代码入口`](/code/chapter04_attention)
 - 相关阅读：[`04.1 Multi-head Attention`](/chapter04_attention/01_multihead_attention)、[`04.4 DecoderLayer`](/chapter04_attention/04_decoder_layer)、[`04.5 首层权重加载`](/chapter04_attention/05_load_first_layer)、[`04.6 Gemma / TensorRT-LLM 对照`](/chapter04_attention/06_gemma_tensorrt_comparison)
+
+## 代码直达
+
+- [`src/attention.cpp`](/code/chapter04_attention#attention-cpp)
+- [`src/feed_forward.cpp`](/code/chapter04_attention#feed-forward-cpp)
+- [`src/decoder_layer.cpp`](/code/chapter04_attention#decoder-layer-cpp)
+- [`src/layer_norm.cpp`](/code/chapter04_attention#layer-norm-cpp)
+- [`tests/chapter04_attention_test.cpp`](/code/chapter04_attention#chapter04-attention-test-cpp)
 
 ## 3. 本章要解决什么
 
@@ -173,7 +181,7 @@ flowchart LR
 
 从章节分工上看，`chapter03` 提供算子边界，`chapter04` 提供结构边界，`chapter05` 才开始提供运行时边界。三层一层层往上叠，教程的主线就会越来越接近真实推理引擎的组织方式。
 
-## 14. 相关阅读
+## 13. 相关阅读
 
 - 前置依赖：建议先读 [chapter03_matmul 导读](/chapter03_matmul/intro) 和 [chapter03_matmul 小结](/chapter03_matmul/summary)，因为本章的 Linear / MatMul 组合直接建立在那一章的算子边界上。
 - 后续使用：`chapter05_generation` 会把这一章的 `DecoderLayer` 嵌入 runtime；`chapter06_quantization` 会在同样的结构上替换权重表示。

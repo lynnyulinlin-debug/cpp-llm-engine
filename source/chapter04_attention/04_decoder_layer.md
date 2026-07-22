@@ -11,7 +11,14 @@
 - 源码直达：[`chapter04_attention 代码入口`](/code/chapter04_attention)
 - 相关阅读：[`04.5 首层权重加载`](/chapter04_attention/05_load_first_layer)、[`04.7 本章小结`](/chapter04_attention/summary)
 
-## 读完你应该能做什么
+## 代码直达
+
+- [`src/decoder_layer.cpp`](/code/chapter04_attention#decoder-layer-cpp)
+- [`src/attention.cpp`](/code/chapter04_attention#attention-cpp)
+- [`src/feed_forward.cpp`](/code/chapter04_attention#feed-forward-cpp)
+- [`tests/chapter04_attention_test.cpp`](/code/chapter04_attention#chapter04-attention-test-cpp)
+
+## 读完后应能做什么
 
 - 理解 DecoderLayer 的标准结构
 - 理解残差连接在模块组合中的作用
@@ -88,7 +95,7 @@ for i in range(num_layers):
 - 残差连接不破坏维度
 - 模块顺序符合预期
 
-如果你能对一层 DecoderLayer 画出完整的数据流图，并让代码和图一致，这一页就完成了。
+如果一层 DecoderLayer 的完整数据流图能够和代码一致，这一页就完成了。
 
 最小伪代码可以写成：
 

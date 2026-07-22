@@ -11,7 +11,13 @@
 - 源码直达：[`chapter03_matmul 代码入口`](/code/chapter03_matmul)
 - 相关阅读：[`CPU Reference`](/chapter03_matmul/03_cpu_reference)、[`cuBLAS 实现`](/chapter03_matmul/04_cublas_implement)
 
-## 2. 读完你应该能做什么
+## 代码直达
+
+- [`src/operator.cpp`](/code/chapter03_matmul#operator-cpp)
+- [`src/matmul_op.cpp`](/code/chapter03_matmul#matmul-op-cpp)
+- [`tests/chapter03_matmul_test.cpp`](/code/chapter03_matmul#chapter03-matmul-test-cpp)
+
+## 2. 读完后应能做什么
 
 - 理解为什么算子需要统一接口
 - 理解 `forward` 的职责边界
@@ -59,7 +65,7 @@ public:
 - `forward` 接口可以统一调用
 - 基类不承担具体计算逻辑
 
-如果你能把 `MatMulOp`、`LayerNormOp`、`FFNOp` 放进同一套调用流程里，而不需要为每个算子写特殊分支，这个基类就已经起作用了。
+如果 `MatMulOp`、`LayerNormOp`、`FFNOp` 能放进同一套调用流程里，而不需要为每个算子写特殊分支，这个基类就已经起作用了。
 
 ```cpp
 class Operator {

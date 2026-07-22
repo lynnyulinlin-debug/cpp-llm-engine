@@ -11,7 +11,14 @@
 - 源码直达：[`chapter03_matmul 代码入口`](/code/chapter03_matmul)
 - 相关阅读：[`PyTorch 对照测试`](/chapter03_matmul/05_test_with_pytorch)、[`复杂度直觉`](/chapter03_matmul/06_complexity_intuition)
 
-## 读完你应该能做什么
+## 代码直达
+
+- [`src/matmul_op.cpp`](/code/chapter03_matmul#matmul-op-cpp)
+- [`src/operator.cpp`](/code/chapter03_matmul#operator-cpp)
+- [`src/matrix.cpp`](/code/chapter03_matmul#matrix-cpp)
+- [`tests/chapter03_matmul_test.cpp`](/code/chapter03_matmul#chapter03-matmul-test-cpp)
+
+## 读完后应能做什么
 
 - 理解 cuBLAS 在本章中的作用
 - 理解如何把内部张量布局映射到 cuBLAS 调用

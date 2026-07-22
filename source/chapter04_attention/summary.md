@@ -25,7 +25,7 @@
 
 ## 生态回看
 
-学完这一章后，再回看 `Gemma` 和 `TensorRT-LLM`，你会更容易看懂“单层 decoder 结构”在真实生态里的两个落点。
+回看 `Gemma` 和 `TensorRT-LLM` 时，有助于看懂“单层 decoder 结构”在真实生态里的两个落点。
 
 - 先看 [04.6 Gemma / TensorRT-LLM 对照](/chapter04_attention/06_gemma_tensorrt_comparison)
 - 对照 [Gemma](/reference/ecosystem/gemma) 回看具体模型家族里的 decoder 结构
@@ -39,13 +39,20 @@
 - 源码直达：[`chapter04_attention 代码入口`](/code/chapter04_attention)
 - 相关阅读：[`04.6 Gemma / TensorRT-LLM 对照`](/chapter04_attention/06_gemma_tensorrt_comparison)、[`chapter05_generation`](/chapter05_generation/intro)、[`chapter06_quantization`](/chapter06_quantization/intro)
 
+## 代码直达
+
+- [`src/attention.cpp`](/code/chapter04_attention#attention-cpp)
+- [`src/feed_forward.cpp`](/code/chapter04_attention#feed-forward-cpp)
+- [`src/decoder_layer.cpp`](/code/chapter04_attention#decoder-layer-cpp)
+- [`tests/chapter04_attention_test.cpp`](/code/chapter04_attention#chapter04-attention-test-cpp)
+
 ## 2. 为什么它重要
 
 如果这一章没有先验证中间 shape 和前向流程，后面的多层组装和生成逻辑会非常难排错。
 
 这一章不是生成的附属，而是生成 runtime 的结构前提。
 
-因为只要单层 decoder 的连接关系不稳，后面的生成循环就会把这个问题扩大成状态问题：你会很难判断是 layer 本身错了，还是多个 layer 串起来之后才错了。
+因为只要单层 decoder 的连接关系不稳，后面的生成循环就会把这个问题扩大成状态问题：很难判断是 layer 本身错了，还是多个 layer 串起来之后才错了。
 
 ## 3. 本章验证项清单
 
@@ -71,14 +78,14 @@
 
 这一步的意义其实是把“模块都有了”变成“模块之间的关系也稳定了”。前者只是有组件，后者才是结构。
 
-## 6. 你现在应该能做什么
+## 6. 学习后应能做什么
 
 - 判断一个 decoder layer 的结构是否完整
 - 通过 shape 和前向流程检查实现正确性
 - 说明为什么 residual 和 mask 位置不能随便改
 - 为下一章的生成 runtime 提供稳定模块基础
 
-如果你能够说明为什么这一层必须先闭合、为什么 residual 和 mask 位置不能随便改，说明你已经不只是看懂了模块，而是看懂了模块之间的关系。
+如果能够说明为什么这一层必须先闭合、为什么 residual 和 mask 位置不能随便改，说明已经不只是看懂了模块，而是看懂了模块之间的关系。
 
 ## 7. 边界说明
 
@@ -117,9 +124,15 @@
 
 换句话说，`chapter04` 让你相信 decoder layer 本身是对的，`chapter05` 才让你开始关心它们如何在时间维度上持续工作。
 
-## 10. 收口结论
+## 9. 收口结论
 
 这一章的收口结论是：单层 decoder 已经闭合，Transformer 的核心结构可以稳定工作。  
 下一章不再补 decoder 的基本组件，而是把这个稳定结构放进生成 runtime，开始处理 prompt、token、cache 和 sampler 这些运行时问题。
 
 这也是这一章和 `chapter03` 的区别：`chapter03` 固定算子，`chapter04` 固定结构，`chapter05` 才固定运行时。
+
+## 代码回看
+
+- [`src/decoder_layer.cpp`](/code/chapter04_attention#decoder-layer-cpp)
+- [`src/attention.cpp`](/code/chapter04_attention#attention-cpp)
+- [`tests/chapter04_attention_test.cpp`](/code/chapter04_attention#chapter04-attention-test-cpp)

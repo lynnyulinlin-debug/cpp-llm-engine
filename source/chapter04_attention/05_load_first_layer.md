@@ -11,7 +11,15 @@
 - 源码直达：[`chapter04_attention 代码入口`](/code/chapter04_attention)
 - 相关阅读：[`04.7 本章小结`](/chapter04_attention/summary)、[`chapter05_generation`](/chapter05_generation/intro)
 
-## 读完你应该能做什么
+## 代码直达
+
+- [`src/decoder_layer.cpp`](/code/chapter04_attention#decoder-layer-cpp)
+- [`src/linear_layer.cpp`](/code/chapter04_attention#linear-layer-cpp)
+- [`src/tensor.cpp`](/code/chapter04_attention#tensor-cpp)
+- [`src/model_loader.cpp`](/code/chapter01_tensor_loader#model-loader-cpp)
+- [`tests/chapter04_attention_test.cpp`](/code/chapter04_attention#chapter04-attention-test-cpp)
+
+## 读完后应能做什么
 
 - 理解如何把第 1 章的加载结果接入当前模块
 - 理解如何验证第一层权重是否真正可用
@@ -49,7 +57,7 @@
 
 实际调试时，建议先把这一层拆成两个检查点：先确认权重是否都能按名字找到，再确认每个张量的 shape 是否和模块定义一致。这样可以把“加载失败”和“模块定义不匹配”区分开。
 
-如果你一开始就尝试整层前向，出现错误时往往很难判断问题来自 loader、张量布局还是 attention 计算本身。
+一开始就尝试整层前向时，出现错误往往很难判断问题来自 loader、张量布局还是 attention 计算本身。
 
 ### 权重缺失时怎么办
 
@@ -77,7 +85,7 @@
 | LLaMA | `model.layers.0.self_attn.q_proj` |
 | 本教程 | `layer0.attention.wq` |
 
-本教程使用的是简化命名，目的是让“名称映射”和“模块接线”更容易看懂。真实项目里通常需要根据具体模型文件调整解析逻辑。
+本教程使用的是简化命名，目的是让“名称映射”和“模块接线”更便于理解。真实项目里通常需要根据具体模型文件调整解析逻辑。
 
 ### 与 Chapter01 的衔接
 

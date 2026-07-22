@@ -9,17 +9,26 @@
 
 ## 核心文件
 
+- <h3 id="attention-cpp">src/attention.cpp</h3>
 - `code/chapter04_attention/src/attention.cpp`
+- <h3 id="feed-forward-cpp">src/feed_forward.cpp</h3>
 - `code/chapter04_attention/src/feed_forward.cpp`
+- <h3 id="decoder-layer-cpp">src/decoder_layer.cpp</h3>
 - `code/chapter04_attention/src/decoder_layer.cpp`
+- <h3 id="layer-norm-cpp">src/layer_norm.cpp</h3>
 - `code/chapter04_attention/src/layer_norm.cpp`
+- <h3 id="linear-layer-cpp">src/linear_layer.cpp</h3>
 - `code/chapter04_attention/src/linear_layer.cpp`
+- <h3 id="tensor-cpp">src/tensor.cpp</h3>
 - `code/chapter04_attention/src/tensor.cpp`
 
 ## 示例与测试
 
+- <h3 id="main-attention-cpp">examples/main_attention.cpp</h3>
 - `code/chapter04_attention/examples/main_attention.cpp`
+- <h3 id="run-sh">scripts/run.sh</h3>
 - `code/chapter04_attention/scripts/run.sh`
+- <h3 id="chapter04-attention-test-cpp">tests/chapter04_attention_test.cpp</h3>
 - `code/chapter04_attention/tests/chapter04_attention_test.cpp`
 
 ## 对应文档

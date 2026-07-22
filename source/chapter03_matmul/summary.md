@@ -4,7 +4,7 @@
 
 如果实现正确，`MatMul` 已经成为一个独立算子，既有可读的 CPU 基线，也有可用的 cuBLAS 加速实现。
 
-如果你从头到尾走完这一章，应该能把同一条计算链说清楚：
+把这一章从头到尾走完后，应当能够把同一条计算链说清楚：
 
 - 输入是 view-aware Tensor
 - 接口层只看 `MatMulOp`
@@ -21,7 +21,7 @@
 
 ## 生态回看
 
-学完这一章后，再回看 `llama.cpp` 和 `TensorRT-LLM`，你会更容易看懂“算子边界稳定”与“GPU engine 高性能”之间的关系。
+回看 `llama.cpp` 和 `TensorRT-LLM` 时，有助于看懂“算子边界稳定”与“GPU engine 高性能”之间的关系。
 
 - 先看 [生态对照总览](/reference/ecosystem/README)
 - 对照 [llama.cpp](/reference/ecosystem/llama_cpp) 回看最小运行时怎样先把 MatMul 跑起来
@@ -64,14 +64,14 @@
 - 它有没有保持 `MatMulOp` 的语义不变
 - 它有没有在同样输入下保持和参考实现一致
 
-## 5. 你现在应该能做什么
+## 5. 学习后应能做什么
 
 - 解释为什么 `MatMulOp` 必须先于优化实现存在
 - 说明 CPU reference 为什么是最稳的 correctness baseline
 - 说明 cuBLAS 为什么可以作为后端而不是上层接口
 - 通过对照测试检查布局和数值是否一致
 
-如果你能把这些关系讲清楚，就说明你已经不只是会用 `MatMul`，而是已经能把它当成一层工程边界来思考。
+如果这些关系能够讲清楚，就说明已经不只是会用 `MatMul`，而是已经能把它当成一层工程边界来思考。
 
 ## 6. 边界说明
 
@@ -90,7 +90,7 @@
 
 进入 `chapter04_attention`，把 `MatMul` 用到多头注意力和前馈网络中，开始组装真正的 decoder 结构。
 
-如果你对为什么参考实现要先写朴素循环还不够踏实，可以先补读 `06_complexity_intuition.md`，它专门解释这个设计选择。
+如果对为什么参考实现要先写朴素循环还不够踏实，可以先补读 `06_complexity_intuition.md`，它专门解释这个设计选择。
 
 ## 8. 回看源码
 
@@ -99,9 +99,16 @@
 - 验证入口：[`chapter03_matmul_test.cpp`](/code/chapter03_matmul)
 - 代码索引：[`chapter03_matmul 代码入口`](/code/chapter03_matmul)
 
+## 代码直达
+
+- [`src/operator.cpp`](/code/chapter03_matmul#operator-cpp)
+- [`src/matmul_op.cpp`](/code/chapter03_matmul#matmul-op-cpp)
+- [`src/matrix.cpp`](/code/chapter03_matmul#matrix-cpp)
+- [`tests/chapter03_matmul_test.cpp`](/code/chapter03_matmul#chapter03-matmul-test-cpp)
+
 ## 9. 收口结论
 
 这一章的收口结论是：`MatMul` 已经从普通运算变成可复用、可验证、可加速的算子层边界。  
 下一章不再重新定义矩阵乘法，而是在这个边界上把 attention、FFN 和 residual 组合成真正的 decoder 结构。
 
-换句话说，`chapter03` 不是终点，而是从“张量对象”走向“模型结构”的第一道稳定门槛。
+`chapter03` 不是终点，而是从“张量对象”走向“模型结构”的第一道稳定门槛。

@@ -11,23 +11,31 @@
 3. 再看 CPU reference 为什么要先于优化实现存在
 4. 最后看 cuBLAS 为什么只是后端，而不是上层语义
 
-这样读的好处是，你不会把“能算”直接等同于“算子已经设计好了”。这章真正要解决的是语义边界，而不是单纯写出一个矩阵乘法循环。
+这样读的好处是，你不会把“能算”直接等同于“算子已经设计好了”。这章真正要解决的是语义边界，而不是先写出一个矩阵乘法循环。
 
 ## 1. 本章概览
 
 | 先看什么 | 这一章给什么 | 为什么重要 | 对应小节 |
 | --- | --- | --- | --- |
-| 矩阵乘法为什么要先抽象 | `MatMulOp` 稳定边界 | 上层可以只关心语义 | [`定位与产出`](#2-本章定位与产出) / [`最小设计`](#3-最小设计是什么) |
-| 怎么保证先算对 | CPU reference + PyTorch 对照 | 先把语义和布局讲清楚 | [`最小设计`](#3-最小设计是什么) / [`中间推导`](#4-中间推导是什么) / [`怎么验证`](#6-怎么验证) |
-| 怎么再提速 | cuBLAS backend | 高性能实现不破坏接口 | [`最小设计`](#3-最小设计是什么) / [`实现路径`](#5-实现路径是什么) |
+| 矩阵乘法为什么要先抽象 | `MatMulOp` 稳定边界 | 上层可以只关心语义 | [`定位与产出`](#3-本章定位与产出) / [`最小设计`](#4-最小设计是什么) |
+| 怎么保证先算对 | CPU reference + PyTorch 对照 | 先把语义和布局讲清楚 | [`最小设计`](#4-最小设计是什么) / [`中间推导`](#5-中间推导是什么) / [`怎么验证`](#7-怎么验证) |
+| 怎么再提速 | cuBLAS backend | 高性能实现不破坏接口 | [`最小设计`](#4-最小设计是什么) / [`实现路径`](#6-实现路径是什么) |
 | 源码直达 | `operator.h` / `matmul_op.cpp` / `chapter03_matmul_test.cpp` | 先看接口、主实现和验证 | [`operator.h`](/code/chapter03_matmul) / [`matmul_op.cpp`](/code/chapter03_matmul) / [`chapter03_matmul_test.cpp`](/code/chapter03_matmul) |
-| 下一步接到哪里 | `chapter04_attention` | attention 和 FFN 都会复用这个边界 | [`下一步`](#8-下一步是什么) |
+| 下一步接到哪里 | `chapter04_attention` | attention 和 FFN 都会复用这个边界 | [`下一步`](#9-下一步是什么) |
 
 ## 2. 阅读入口
 
 - 前置阅读：`chapter01_tensor_loader`、`chapter02_tensor_ops`
 - 源码直达：[`operator.h`](/code/chapter03_matmul)、[`matmul_op.h`](/code/chapter03_matmul)、[`operator.cpp`](/code/chapter03_matmul)、[`matmul_op.cpp`](/code/chapter03_matmul)、[`chapter03_matmul_test.cpp`](/code/chapter03_matmul)
 - 相关阅读：[`03.1 Operator Base`](/chapter03_matmul/01_operator_base)、[`03.2 MatMulOp Design`](/chapter03_matmul/02_matmul_design)、[`03.3 CPU Reference`](/chapter03_matmul/03_cpu_reference)、[`03.4 cuBLAS Implementation`](/chapter03_matmul/04_cublas_implement)
+
+## 代码直达
+
+- [`src/operator.cpp`](/code/chapter03_matmul#operator-cpp)
+- [`src/matmul_op.cpp`](/code/chapter03_matmul#matmul-op-cpp)
+- [`src/matrix.cpp`](/code/chapter03_matmul#matrix-cpp)
+- [`tests/chapter03_matmul_test.cpp`](/code/chapter03_matmul#chapter03-matmul-test-cpp)
+- [`examples/main_matmul.cpp`](/code/chapter03_matmul#main-matmul-cpp)
 
 ## 生态对照
 
@@ -36,7 +44,7 @@
 - 先看 [生态对照总览](/reference/ecosystem/README)
 - 对照 [llama.cpp](/reference/ecosystem/llama_cpp) 看最小本地运行时如何组织基础算子
 - 对照 [TensorRT-LLM](/reference/ecosystem/tensorrt_llm) 看算子边界怎样进入 GPU engine 和 backend 分层
-- 如果你想把“模型对象如何影响算子输入”也一起看清楚，可以顺手回看 [Gemma](/reference/ecosystem/gemma)
+- 把“模型对象如何影响算子输入”也一起看清楚时，可以顺手回看 [Gemma](/reference/ecosystem/gemma)
 
 ## 3. 本章定位与产出
 
@@ -62,9 +70,9 @@
 - 一个 cuBLAS 实现
 - 一组数值对照测试
 
-这一章之所以放在 `Tensor` 和 `Attention` 之间，是因为它刚好处在“数据对象”到“模型结构”之间的计算门槛上。没有这一层，后面的 decoder 会直接面对裸数组；有了这一层，模型结构才能依赖一个清晰的数值边界。
+这一章放在 `Tensor` 和 `Attention` 之间，是因为它正好处在“数据对象”到“模型结构”之间的计算门槛上。没有这一层，后面的 decoder 会直接面对裸数组；有了这一层，模型结构才能依赖一个清晰的数值边界。
 
-换句话说，`chapter03` 的职责不是“把线性代数讲完”，而是把后续章节都要复用的算子边界先立住。只要这个边界清楚，attention、FFN、甚至后面的量化路径，都可以在同一套语义上往前走。
+`chapter03` 的职责不是“把线性代数讲完”，而是先立住后续章节都会复用的算子边界。只要这个边界清楚，attention、FFN、甚至后面的量化路径，都可以在同一套语义上往前走。
 
 ## 4. 最小设计是什么
 
@@ -111,7 +119,7 @@ flowchart LR
     GPUPath --> Compare
 ```
 
-这张图把 chapter03 的验证路径画出来：同一份输入可以走 CPU reference 或 cuBLAS，然后再和 PyTorch 对照。
+这张图把 `chapter03` 的验证路径画出来：同一份输入可以走 CPU reference 或 cuBLAS，然后再和 PyTorch 对照。
 
 它背后的实际工作流通常是：
 
@@ -119,7 +127,7 @@ flowchart LR
 2. 再用 PyTorch 当参照，确认数值没有偏离
 3. 最后才把 cuBLAS 接进来，检查它是否保持同样的语义
 
-这样做的好处是，任何一层出问题时，问题都比较容易定位。
+这样做的好处是，任何一层出问题时都比较容易定位。
 
 ## 6. 实现路径是什么
 

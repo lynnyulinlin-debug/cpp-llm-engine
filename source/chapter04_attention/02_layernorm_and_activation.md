@@ -11,7 +11,13 @@
 - 源码直达：[`chapter04_attention 代码入口`](/code/chapter04_attention)
 - 相关阅读：[`04.3 Feed Forward Network`](/chapter04_attention/03_feedforward)、[`04.4 DecoderLayer`](/chapter04_attention/04_decoder_layer)
 
-## 读完你应该能做什么
+## 代码直达
+
+- [`src/layer_norm.cpp`](/code/chapter04_attention#layer-norm-cpp)
+- [`src/tensor.cpp`](/code/chapter04_attention#tensor-cpp)
+- [`tests/chapter04_attention_test.cpp`](/code/chapter04_attention#chapter04-attention-test-cpp)
+
+## 读完后应能做什么
 
 - 理解 LayerNorm 的作用
 - 理解激活函数在非线性表达中的意义

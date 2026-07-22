@@ -17,6 +17,12 @@
 - 源码直达：[`chapter03_matmul 代码入口`](/code/chapter03_matmul)
 - 相关阅读：[`cuBLAS 实现`](/chapter03_matmul/04_cublas_implement)、[`PyTorch 对照测试`](/chapter03_matmul/05_test_with_pytorch)
 
+## 代码直达
+
+- [`src/matmul_op.cpp`](/code/chapter03_matmul#matmul-op-cpp)
+- [`src/operator.cpp`](/code/chapter03_matmul#operator-cpp)
+- [`tests/chapter03_matmul_test.cpp`](/code/chapter03_matmul#chapter03-matmul-test-cpp)
+
 ## 2. 为什么先讨论设计
 
 在推理引擎里，矩阵乘法不是“先写一个公式就完了”的东西。真正难的地方是把内部 Tensor 布局、安全的资源管理，以及外部高性能库的调用方式接起来。
@@ -48,7 +54,7 @@
 
 ## 5. 验证这页是否写对了
 
-读完后，读者应该能不看实现就回答：
+读完后，应当能够不看实现就回答：
 
 - 输入是什么
 - 输出是什么
