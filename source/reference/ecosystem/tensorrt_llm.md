@@ -12,7 +12,7 @@
 
 ## 什么时候选它
 
-如果你的问题是高性能 NVIDIA GPU 推理，就优先看 `TensorRT-LLM`：
+高性能 NVIDIA GPU 推理场景下，优先看 `TensorRT-LLM`：
 
 - engine build 和 runtime 分层很重要
 - kernel 性能很重要

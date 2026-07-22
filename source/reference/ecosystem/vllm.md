@@ -20,14 +20,14 @@
 
 ## 场景决策
 
-- 如果你在做单机本地推理，先看 `llama.cpp`
-- 如果你在做模型前向和 runtime 的主线构建，先看本教程的 `chapter05_generation`
-- 如果你在做高吞吐 serving，重点看 `vLLM`
-- 如果你在做应用编排和结构化 serving，再看 `SGLang`
+- 单机本地推理场景下，先看 `llama.cpp`
+- 模型前向和 runtime 的主线构建场景下，先看本教程的 `chapter05_generation`
+- 高吞吐 serving 场景下，重点看 `vLLM`
+- 应用编排和结构化 serving 场景下，再看 `SGLang`
 
 ## 什么时候选它
 
-如果你的问题是服务端吞吐和请求调度，就优先看 `vLLM`：
+服务端吞吐和请求调度场景下，优先看 `vLLM`：
 
 - 并发请求很多
 - 需要在负载下复用 KV cache
