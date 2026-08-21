@@ -13,13 +13,13 @@
 
 - 阅读 `reference/ecosystem/vllm.md`
 - 对照 request scheduling、batching、streaming 和 cache management
-- 思考哪些部分可以迁移到你自己的 runtime
+- 想清楚哪些部分值得迁移到自己的 runtime
 
 ## 3. 继续看性能
 
 - 阅读 `reference/ecosystem/tensorrt_llm.md`
 - 回看 `chapter07_benchmark`，重点关注测量和比较纪律
-- 在优化前先分清正确性、性能和 profiling
+- 优化前先分清正确性、性能和 profiling
 
 ## 4. 扩展模型或交付视角
 
@@ -31,7 +31,7 @@
 
 - 阅读 `reference/framework_comparison.md`
 - 先分清训练、推理和本教程各自负责哪一层
-- 再回到主线章节看对象、算子和 runtime 是怎么被拆开的
+- 再回到主线章节看对象、算子和 runtime 的拆分
 
 ## 6. 补背景
 
@@ -43,10 +43,10 @@
 ## 7. 先统一术语
 
 - `reference/glossary.md`
-- 先把 `Tensor`、`MatMul`、`KV Cache`、`scheduler` 这类核心词的写法统一
+- 先把 `Tensor`、`MatMul`、`KV Cache`、`scheduler` 这些核心词写统一
 
 ## 8. 检查链接
 
 - 先跑 `npm run docs:check-links`
 - 再跑 `npm run docs:build`
-- 如果还是报错，优先看站点路由和锚点是否漂移
+- 如果还是报错，优先看站点路由和锚点
