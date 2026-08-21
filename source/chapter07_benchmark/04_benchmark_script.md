@@ -5,23 +5,23 @@
 
 编写 `benchmark.sh`，自动运行 benchmark 并记录硬件与运行信息。
 
-## 读完后应能做什么
+读完后应能做到：
 
 - 理解为什么 benchmark 需要自动化
 - 理解应该记录哪些环境信息
 - 理解脚本如何支持重复测量
 
-## 代码直达
+## 阅读入口
 
-- [`scripts/run.sh`](/code/chapter07_benchmark#run-sh)
-- [`examples/main_benchmark.cpp`](/code/chapter07_benchmark#main-benchmark-cpp)
-- [`tests/chapter07_benchmark_test.cpp`](/code/chapter07_benchmark#chapter07-benchmark-test-cpp)
+- 前置阅读：[`07.3 Benchmark Metrics`](./03_benchmark_metrics.md)、[`07.2 End-to-End Correctness Testing`](./02_e2e_correctness.md)
+- 源码直达：<a href="../_code/chapter07_benchmark/scripts/run.sh"><code>run.sh</code></a>、<a href="../_code/chapter07_benchmark/examples/main_benchmark.cpp"><code>main_benchmark.cpp</code></a>、<a href="../_code/chapter07_benchmark/tests/chapter07_benchmark_test.cpp"><code>chapter07_benchmark_test.cpp</code></a>
+- 相关阅读：[`07.6 Result Interpretation`](./06_result_interpretation.md)、[`回归测试`](../reference/regression_testing.md)
 
-## 为什么这一步重要
+## 脚本设计
 
 没有脚本化的 benchmark 很难复现，也很难比较不同版本的性能。
 
-## 这一页的核心内容
+这一页的核心内容：
 
 - 自动运行测试
 - 记录硬件信息
@@ -45,13 +45,15 @@ set -euo pipefail
 
 在本教程中，`run_tests` 和 `run_benchmark` 对应的是 `build/` 目录下的测试与 benchmark 可执行文件，比如 `./build/bin/test_all` 和 `./build/bin/benchmark_matmul`。脚本应当位于项目根目录，并默认构建已经完成，或者由脚本内部自动触发构建。
 
-## 实现建议
+实现建议：
 
 - 让脚本能独立执行
 - 固定输入和配置
 - 把环境信息和结果一起保存
 
-## 怎么验证
+## 验证与排查
+
+验证时重点看：
 
 - 脚本能自动完成一次测量
 - 硬件信息被正确记录
@@ -59,7 +61,7 @@ set -euo pipefail
 
 如果同一脚本在同一环境里多次运行，输出结果格式稳定且便于横向比较，这一页就达标了。
 
-## 常见问题
+常见问题：
 
 - 测量条件没有固定
 - 输出结果没有归档

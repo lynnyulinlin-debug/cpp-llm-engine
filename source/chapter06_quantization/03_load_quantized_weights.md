@@ -5,30 +5,23 @@
 
 修改 `ModelLoader`，让它可以读取量化权重文件或 GGUF 中的量化数据。
 
-## 阅读入口
-
-- 前置阅读：[`06.1 Quantization Basics`](/chapter06_quantization/01_quantization_basics)、[`06.2 Extend Tensor`](/chapter06_quantization/02_extend_tensor)
-- 源码直达：[`chapter06_quantization 代码入口`](/code/chapter06_quantization)
-- 相关阅读：[`06.4 DequantizeOp`](/chapter06_quantization/04_dequantize_op)、[`06.5 Quantized Linear`](/chapter06_quantization/05_linear_with_quant)
-
-## 代码直达
-
-- [`src/tensor.cpp`](/code/chapter06_quantization#tensor-cpp)
-- [`src/dequantize_op.cpp`](/code/chapter06_quantization#dequantize-op-cpp)
-- [`src/quantized_linear.cpp`](/code/chapter06_quantization#quantized-linear-cpp)
-- [`tests/chapter06_quantization_test.cpp`](/code/chapter06_quantization#chapter06-quantization-test-cpp)
-
-## 读完后应能做什么
+读完后应能做到：
 
 - 理解量化权重在文件中的组织方式
 - 理解 loader 如何识别量化 dtype
 - 理解量化数据如何进入程序内部
 
-## 为什么这一步重要
+## 阅读入口
+
+- 前置阅读：[`06.1 Quantization Basics`](./01_quantization_basics.md)、[`06.2 Extend Tensor`](./02_extend_tensor.md)
+- 源码直达：<a href="../_code/chapter06_quantization/src/tensor.cpp"><code>tensor.cpp</code></a>、<a href="../_code/chapter06_quantization/src/quantized_linear.cpp"><code>quantized_linear.cpp</code></a>、<a href="../_code/chapter06_quantization/tests/chapter06_quantization_test.cpp"><code>chapter06_quantization_test.cpp</code></a>
+- 相关阅读：[`06.4 DequantizeOp`](./04_dequantize_op.md)、[`06.5 Quantized Linear`](./05_linear_with_quant.md)
+
+## 核心设计
 
 模型只有在加载环节真正读懂量化格式，后面的反量化和量化 Linear 才有意义。
 
-## 这一页的核心内容
+这一页的核心内容：
 
 - 量化权重文件解析
 - 量化 dtype 识别
@@ -67,13 +60,15 @@ Tensor load_quant_tensor(std::istream& in) {
 
 真正复杂的地方是 meta 里要包含足够的信息支撑后续反量化。
 
-## 实现建议
+实现建议：
 
 - 在现有 loader 上扩展，而不是重写全部逻辑
 - 保持量化和非量化路径并存
 - 清楚地区分 metadata 和 raw data
 
-## 怎么验证
+## 验证与排查
+
+验证时重点看：
 
 - 量化权重可以被正确读取
 - tensor 数量和名称合理
@@ -81,7 +76,7 @@ Tensor load_quant_tensor(std::istream& in) {
 
 如果加载后的 quant tensor 可以和原始权重在元信息上对得上，这一步通常就已经可靠了。
 
-## 常见问题
+常见问题：
 
 - 量化格式识别失败
 - dtype 和数据内容不一致

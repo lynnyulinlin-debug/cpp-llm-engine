@@ -1,4 +1,4 @@
-# 07.6 主流对照：把 benchmark 放回真实服务里看
+# 07.7 主流对照：把 benchmark 放回真实服务里看
 
 到这里，你已经把正确性和性能拆开了。  
 这一节不重复讲测试和 benchmark，而是把本章结果放到 `vLLM`、`SGLang`、`TensorRT-LLM` 和 `Ollama` 里对照着看，帮你分清：
@@ -7,7 +7,7 @@
 - 哪些结果是在比服务方式
 - 哪些结果是在比 engine 和交付方式
 
-## 1. 本节概览
+## 本节概览
 
 | 本章里的东西 | `vLLM` 里会看什么 | `SGLang` 里会看什么 | `TensorRT-LLM` 里会看什么 | `Ollama` 里会看什么 |
 | --- | --- | --- | --- | --- |
@@ -16,14 +16,13 @@
 | baseline / optimized / reference | serving runtime 的对照 | 编排方式的对照 | engine / runtime 路径的对照 | 本地交付方式的对照 |
 | 结果解读 | 生成和调度是否真的变快 | 多步骤流程是否仍然可控 | 优化是否真的来自 engine | 打包后是否仍然好用 |
 
-## 代码直达
+## 阅读入口
 
-- [`src/benchmark.cpp`](/code/chapter07_benchmark#benchmark-cpp)
-- [`src/test_helpers.cpp`](/code/chapter07_benchmark#test-helpers-cpp)
-- [`examples/main_benchmark.cpp`](/code/chapter07_benchmark#main-benchmark-cpp)
-- [`tests/chapter07_benchmark_test.cpp`](/code/chapter07_benchmark#chapter07-benchmark-test-cpp)
+- 前置阅读：[`07.6 Result Interpretation`](./06_result_interpretation.md)、[`07.3 Benchmark Metrics`](./03_benchmark_metrics.md)
+- 源码直达：<a href="../_code/chapter07_benchmark/src/benchmark.cpp"><code>benchmark.cpp</code></a>、<a href="../_code/chapter07_benchmark/src/test_helpers.cpp"><code>test_helpers.cpp</code></a>、<a href="../_code/chapter07_benchmark/examples/main_benchmark.cpp"><code>main_benchmark.cpp</code></a>
+- 相关阅读：[`vLLM`](../reference/ecosystem/vllm.md)、[`SGLang`](../reference/ecosystem/sglang.md)、[`TensorRT-LLM`](../reference/ecosystem/tensorrt_llm.md)、[`Ollama`](../reference/ecosystem/ollama.md)
 
-## 2. 为什么它重要
+## 工程映射
 
 本章已经把结果拆成三层：
 
@@ -43,7 +42,7 @@
 
 这也是这节要做的事：把 chapter07 的 benchmark 结果放回真实使用场景里看，而不是只在教程内部看一组数字。
 
-## 3. 先看什么
+先看什么：
 
 最小判断顺序如下：
 
@@ -54,7 +53,7 @@
 
 这四个方向里，`vLLM` 最像 chapter05 + chapter07 的组合结果，`TensorRT-LLM` 最像 chapter03 + chapter04 + chapter06 的组合结果，`SGLang` 和 `Ollama` 则提醒你，benchmark 之外还有编排和交付。
 
-## 4. 中间推导是什么
+中间推导：
 
 往回推为什么要把这些框架放进来，通常会得到几个约束：
 
@@ -70,7 +69,7 @@
 - `TensorRT-LLM` 帮你看 engine 级优化
 - `Ollama` 帮你看本地交付后的实际使用感受
 
-## 5. 学习后应能做什么
+## 学习边界
 
 本节完成后，应当能够把下面几件事说清楚：
 
@@ -81,8 +80,6 @@
 
 把这些对应关系讲明白，就说明你已经能把 benchmark 结果放回真实使用场景里看。
 
-## 6. 边界说明
-
 这一节不负责复刻 `vLLM`、`SGLang`、`TensorRT-LLM` 或 `Ollama` 的全部能力。
 
 它只负责把本章的验证结果和这些真实场景的关注点对齐，让你知道：
@@ -92,10 +89,10 @@
 - 哪些数字是在比 engine
 - 哪些数字是在比交付
 
-## 7. 参考页
+参考页：
 
-- [vLLM](/reference/ecosystem/vllm)
-- [SGLang](/reference/ecosystem/sglang)
-- [TensorRT-LLM](/reference/ecosystem/tensorrt_llm)
-- [Ollama](/reference/ecosystem/ollama)
-- [chapter07_benchmark 代码入口](/code/chapter07_benchmark)
+- [vLLM](../reference/ecosystem/vllm.md)
+- [SGLang](../reference/ecosystem/sglang.md)
+- [TensorRT-LLM](../reference/ecosystem/tensorrt_llm.md)
+- [Ollama](../reference/ecosystem/ollama.md)
+- <a href="../_code/chapter07_benchmark/src/benchmark.cpp"><code>benchmark.cpp</code></a>、<a href="../_code/chapter07_benchmark/src/test_helpers.cpp"><code>test_helpers.cpp</code></a>

@@ -5,30 +5,23 @@
 
 实现 `DequantizeOp`，把 INT8 数据反量化回 FP16 或同类浮点表示，供后续计算使用。
 
-## 阅读入口
-
-- 前置阅读：[`06.2 Extend Tensor`](/chapter06_quantization/02_extend_tensor)、[`06.3 Load Quantized Weights`](/chapter06_quantization/03_load_quantized_weights)
-- 源码直达：[`chapter06_quantization 代码入口`](/code/chapter06_quantization)
-- 相关阅读：[`06.5 Quantized Linear`](/chapter06_quantization/05_linear_with_quant)、[`06.6 Accuracy Validation`](/chapter06_quantization/06_accuracy_validation)
-
-## 代码直达
-
-- [`src/dequantize_op.cpp`](/code/chapter06_quantization#dequantize-op-cpp)
-- [`src/tensor.cpp`](/code/chapter06_quantization#tensor-cpp)
-- [`src/quantized_linear.cpp`](/code/chapter06_quantization#quantized-linear-cpp)
-- [`tests/chapter06_quantization_test.cpp`](/code/chapter06_quantization#chapter06-quantization-test-cpp)
-
-## 读完后应能做什么
+读完后应能做到：
 
 - 理解反量化的作用
 - 理解 scale 和 dtype 转换的关系
 - 理解反量化在推理链路中的位置
 
-## 为什么这一步重要
+## 阅读入口
+
+- 前置阅读：[`06.2 Extend Tensor`](./02_extend_tensor.md)、[`06.3 Load Quantized Weights`](./03_load_quantized_weights.md)
+- 源码直达：<a href="../_code/chapter06_quantization/src/dequantize_op.cpp"><code>dequantize_op.cpp</code></a>、<a href="../_code/chapter06_quantization/src/tensor.cpp"><code>tensor.cpp</code></a>、<a href="../_code/chapter06_quantization/tests/chapter06_quantization_test.cpp"><code>chapter06_quantization_test.cpp</code></a>
+- 相关阅读：[`06.5 Quantized Linear`](./05_linear_with_quant.md)、[`06.6 Accuracy Validation`](./06_accuracy_validation.md)
+
+## 核心实现
 
 量化权重不一定能直接参与所有算子计算。反量化是把压缩表示重新变成可计算表示的重要桥梁。
 
-## 这一页的核心内容
+这一页的核心内容：
 
 - INT8 -> FP16
 - scale 应用
@@ -56,13 +49,15 @@ Tensor dequantize(const Tensor& q, float scale) {
 }
 ```
 
-## 实现建议
+实现建议：
 
 - 先支持最基础的 INT8 到浮点转换
 - 保持接口和后续 Linear 可直接连接
 - 不要把反量化逻辑散落在多个算子里
 
-## 怎么验证
+## 验证与排查
+
+验证时重点看：
 
 - 反量化结果和预期接近
 - 输出 dtype 正确
@@ -70,7 +65,7 @@ Tensor dequantize(const Tensor& q, float scale) {
 
 最小验证可以直接选择几个整数样本，手动算出对应的浮点结果，然后和 op 输出对照。
 
-## 常见问题
+常见问题：
 
 - scale 使用错误
 - 输出 dtype 选择不一致

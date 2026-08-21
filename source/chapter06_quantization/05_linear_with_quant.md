@@ -5,31 +5,23 @@
 
 把反量化逻辑与 Linear 层结合，支持量化权重推理。
 
-## 阅读入口
-
-- 前置阅读：[`06.4 DequantizeOp`](/chapter06_quantization/04_dequantize_op)、[`06.3 Load Quantized Weights`](/chapter06_quantization/03_load_quantized_weights)
-- 源码直达：[`chapter06_quantization 代码入口`](/code/chapter06_quantization)
-- 相关阅读：[`06.6 Accuracy Validation`](/chapter06_quantization/06_accuracy_validation)、[`chapter07_benchmark`](/chapter07_benchmark/intro)
-
-## 代码直达
-
-- [`src/linear_layer.cpp`](/code/chapter06_quantization#linear-layer-cpp)
-- [`src/quantized_linear.cpp`](/code/chapter06_quantization#quantized-linear-cpp)
-- [`src/dequantize_op.cpp`](/code/chapter06_quantization#dequantize-op-cpp)
-- [`tests/chapter06_quantization_test.cpp`](/code/chapter06_quantization#chapter06-quantization-test-cpp)
-- [`examples/main_quantization.cpp`](/code/chapter06_quantization#main-quantization-cpp)
-
-## 读完后应能做什么
+读完后应能做到：
 
 - 理解为什么要把 dequant 融入 Linear
 - 理解量化权重推理路径如何组织
 - 理解如何在不破坏接口的前提下提升效率
 
-## 为什么这一步重要
+## 阅读入口
+
+- 前置阅读：[`06.4 DequantizeOp`](./04_dequantize_op.md)、[`06.3 Load Quantized Weights`](./03_load_quantized_weights.md)
+- 源码直达：<a href="../_code/chapter06_quantization/src/quantized_linear.cpp"><code>quantized_linear.cpp</code></a>、<a href="../_code/chapter06_quantization/src/dequantize_op.cpp"><code>dequantize_op.cpp</code></a>、<a href="../_code/chapter06_quantization/tests/chapter06_quantization_test.cpp"><code>chapter06_quantization_test.cpp</code></a>
+- 相关阅读：[`06.6 Accuracy Validation`](./06_accuracy_validation.md)、[`chapter07_benchmark`](../chapter07_benchmark/intro.md)
+
+## 核心实现
 
 如果每次都先单独反量化再做线性计算，性能和内存开销都会更高。把流程融合进 Linear 更符合推理实际。
 
-## 这一页的核心内容
+这一页的核心内容：
 
 - 量化权重进入 Linear
 - dequant 与矩阵乘法结合
@@ -52,13 +44,15 @@ Tensor y = matmul(x, w);
 
 后续要优化时，再考虑把 `dequantize` 和 `matmul` 融合进一个更高效的 backend。
 
-## 实现建议
+实现建议：
 
 - 先确保正确性
 - 再考虑融合策略
 - 不破坏已有 FP16 路径
 
-## 怎么验证
+## 验证与排查
+
+验证时重点看：
 
 - 量化 Linear 可以运行
 - 结果与非量化版本接近
@@ -66,7 +60,7 @@ Tensor y = matmul(x, w);
 
 如果调用方看不出内部已经切换到量化权重路径，这个抽象就算成功了一半。
 
-## 常见问题
+常见问题：
 
 - 量化权重和激活的路径混乱
 - 先做性能优化，后发现语义错误

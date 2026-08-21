@@ -1,21 +1,21 @@
 # 07.6 Result Interpretation 结果解读与决策模板
 
 
-## 1. 这一页要解决什么
+## 这一页要解决什么
 
 把 benchmark 跑出来的数字翻译成工程结论，回答“这个优化到底值不值得保留”。这一页只固定测完之后的判断流程。
 
-## 代码直达
+## 阅读入口
 
-- [`src/benchmark.cpp`](/code/chapter07_benchmark#benchmark-cpp)
-- [`src/test_helpers.cpp`](/code/chapter07_benchmark#test-helpers-cpp)
-- [`tests/chapter07_benchmark_test.cpp`](/code/chapter07_benchmark#chapter07-benchmark-test-cpp)
+- 前置阅读：[`07.3 Benchmark Metrics`](./03_benchmark_metrics.md)、[`07.4 Benchmark Script`](./04_benchmark_script.md)
+- 源码直达：<a href="../_code/chapter07_benchmark/src/benchmark.cpp"><code>benchmark.cpp</code></a>、<a href="../_code/chapter07_benchmark/src/test_helpers.cpp"><code>test_helpers.cpp</code></a>、<a href="../_code/chapter07_benchmark/tests/chapter07_benchmark_test.cpp"><code>chapter07_benchmark_test.cpp</code></a>
+- 相关阅读：[`08.5 A/B Experiment`](../chapter08_profiling/05_ab_experiment.md)、[`回归测试`](../reference/regression_testing.md)
 
-## 2. 为什么这一步重要
+## 判断流程
 
 benchmark 的结果本身不是结论，结论来自结果与目标、基线和参考实现的对照。这一页要做的，就是把 benchmark 从“跑分工具”变成“决策证据”。
 
-## 3. 最小判断顺序
+最小判断顺序：
 
 建议先按这个顺序读结果：
 
@@ -26,7 +26,7 @@ benchmark 的结果本身不是结论，结论来自结果与目标、基线和�
 
 如果正确性不通过，性能数字没有意义，应该先回头修代码。
 
-## 4. 三列对比怎么看
+三列对比怎么看：
 
 最实用的比较方式，是把 `baseline`、`optimized` 和 `reference` 放在同一张表里看。
 
@@ -36,7 +36,7 @@ benchmark 的结果本身不是结论，结论来自结果与目标、基线和�
 
 这种三列对比能把“改动有没有收益”和“误差有没有被放大”分开看。
 
-## 5. 常见结果模式
+常见结果模式：
 
 | 结果模式 | 判断 | 建议行动 |
 | --- | --- | --- |
@@ -49,14 +49,14 @@ benchmark 的结果本身不是结论，结论来自结果与目标、基线和�
 
 误差阈值的设定取决于任务敏感度。在推理引擎验证中，常见的参考范围是：`cosine_similarity > 0.99` 表示方向一致，`mean_absolute_error < 1e-4` 表示量级可接受。对于更敏感的任务，比如代码生成或数学推理，阈值可能需要进一步收紧。建议先基于 FP16 基线在不同输入下的自然波动范围设定初始阈值，再根据任务需求调整。
 
-## 6. 决策模板
+决策模板：
 
 最小报告可以按这个结构写：
 
 ```markdown
-## Benchmark Report
+### Benchmark Report
 
-### 测量条件
+#### 测量条件
 - 硬件：GPU A100 / CPU Xeon
 - Batch size：1 / 8 / 32
 - Sequence length：512 / 2048
@@ -64,7 +64,7 @@ benchmark 的结果本身不是结论，结论来自结果与目标、基线和�
 - CUDA 版本：12.1
 - 采样策略：greedy / temperature
 
-### 结果
+#### 结果
 | 指标 | Baseline | Optimized | Delta |
 |------|----------|-----------|-------|
 | Prefill latency (ms) | 120 | 95 | -21% |
@@ -72,7 +72,7 @@ benchmark 的结果本身不是结论，结论来自结果与目标、基线和�
 | Throughput (tok/s) | 220 | 260 | +18% |
 | Accuracy (cosine sim) | 0.9998 | 0.9997 | -0.0001 |
 
-### 决策
+#### 决策
 - ✅ 正确性通过
 - ✅ 性能提升
 - ⚠️ 误差在可接受范围内
@@ -81,7 +81,9 @@ benchmark 的结果本身不是结论，结论来自结果与目标、基线和�
 
 这份模板的重点是把测量条件、指标结果和最终决策放在一起，避免只留下零散数字。
 
-## 7. 怎么验证
+## 验证与衔接
+
+验证时重点看：
 
 - 能把 benchmark 结果按条件、基线和参考实现拆开看
 - 能根据结果明确说出“保留 / 回滚 / 继续优化”
@@ -89,18 +91,18 @@ benchmark 的结果本身不是结论，结论来自结果与目标、基线和�
 
 能够对一组结果写出明确的决策说明，而不是只贴数字，这一页就达标了。
 
-## 8. 常见问题
+常见问题：
 
 - 只看性能，不看正确性
 - 只看单个指标，不看指标组合
 - 没有和 baseline / reference 一起比较
 - 测量条件不完整，导致结论不可复查
 
-## 9. 和前后章节怎么接
+和前后章节怎么接：
 
-这一页承接 `07.5` 的优化建议，把“可以怎么优化”变成“优化后如何判断值不值”，也为 `07.7` 收口做铺垫。
+这一页承接 `07.5` 的优化建议，把“可以怎么优化”变成“优化后如何判断值不值”，也为 `07.8` 本章小结做铺垫。
 
-## 10. 收口结论
+收口结论：
 
 benchmark 的数字本身不是目标，目标是形成一个可执行的工程判断：
 

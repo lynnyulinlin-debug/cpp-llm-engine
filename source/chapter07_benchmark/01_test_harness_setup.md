@@ -5,29 +5,23 @@
 
 引入一个统一的测试 harness，并用它来编写算子和模块的单元测试。
 
-## 阅读入口
-
-- 前置阅读：[`chapter07 导读`](/chapter07_benchmark/intro)、[`chapter05_generation`](/chapter05_generation/intro)
-- 源码直达：[`chapter07_benchmark 代码入口`](/code/chapter07_benchmark)
-- 相关阅读：[`07.2 End-to-End Correctness Testing`](/chapter07_benchmark/02_e2e_correctness)、[`07.3 Benchmark Metrics`](/chapter07_benchmark/03_benchmark_metrics)
-
-## 代码直达
-
-- [`src/test_helpers.cpp`](/code/chapter07_benchmark#test-helpers-cpp)
-- [`src/benchmark.cpp`](/code/chapter07_benchmark#benchmark-cpp)
-- [`tests/chapter07_benchmark_test.cpp`](/code/chapter07_benchmark#chapter07-benchmark-test-cpp)
-
-## 读完后应能做什么
+读完后应能做到：
 
 - 理解为什么需要统一的测试入口
 - 理解如何为算子和模块建立测试入口
 - 理解测试代码和业务代码的边界
 
-## 为什么这一步重要
+## 阅读入口
+
+- 前置阅读：[`chapter07 导读`](./intro.md)、[`chapter05_generation`](../chapter05_generation/intro.md)
+- 源码直达：<a href="../_code/chapter07_benchmark/src/test_helpers.cpp"><code>test_helpers.cpp</code></a>、<a href="../_code/chapter07_benchmark/tests/chapter07_benchmark_test.cpp"><code>chapter07_benchmark_test.cpp</code></a>
+- 相关阅读：[`07.2 End-to-End Correctness Testing`](./02_e2e_correctness.md)、[`07.3 Benchmark Metrics`](./03_benchmark_metrics.md)
+
+## 测试设计
 
 单元测试是整个教程可维护性的基础。如果没有统一测试框架，后面每个章节的验证方式都会不一致。
 
-## 这一页的核心内容
+这一页的核心内容：
 
 - 统一测试入口
 - 命名测试用例
@@ -52,13 +46,15 @@ bool test_small_shape() {
 }
 ```
 
-## 实现建议
+实现建议：
 
 - 先从最简单的测试开始
 - 保持测试样例小而明确
 - 让失败信息足够清晰
 
-## 怎么验证
+## 验证与排查
+
+验证时重点看：
 
 - 可以编写并运行测试
 - 测试能够覆盖关键算子
@@ -66,7 +62,7 @@ bool test_small_shape() {
 
 能够在本章里快速跑通一个失败案例，并从输出中准确定位问题，说明测试框架已经具备工程价值。
 
-## 常见问题
+常见问题：
 
 - 测试和实现耦合过深
 - 测试样例太大，不易定位问题

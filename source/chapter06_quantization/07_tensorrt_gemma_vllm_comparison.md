@@ -7,7 +7,7 @@
 - 哪些是高性能 engine 里的量化做法
 - 哪些是模型家族和 serving runtime 会真正影响到的地方
 
-## 1. 本节概览
+## 本节概览
 
 | 本章里的东西 | `TensorRT-LLM` 里会看什么 | `Gemma` 里会看什么 | `vLLM` 里会看什么 |
 | --- | --- | --- | --- |
@@ -16,15 +16,13 @@
 | 量化 Linear | 高性能 GPU engine 中的算子实现 | 量化后还能不能保持可接受误差 | 量化后还能不能继续服务高并发场景 |
 | 精度验证 | 部署前的工程判断 | 模型家族作为验证对象 | serving 场景下的回归边界 |
 
-## 代码直达
+## 阅读入口
 
-- [`src/quantized_linear.cpp`](/code/chapter06_quantization#quantized-linear-cpp)
-- [`src/dequantize_op.cpp`](/code/chapter06_quantization#dequantize-op-cpp)
-- [`src/tensor.cpp`](/code/chapter06_quantization#tensor-cpp)
-- [`tests/chapter06_quantization_test.cpp`](/code/chapter06_quantization#chapter06-quantization-test-cpp)
-- [`examples/main_quantization.cpp`](/code/chapter06_quantization#main-quantization-cpp)
+- 前置阅读：[`06.5 Quantized Linear`](./05_linear_with_quant.md)、[`06.6 Accuracy Validation`](./06_accuracy_validation.md)
+- 源码直达：<a href="../_code/chapter06_quantization/src/quantized_linear.cpp"><code>quantized_linear.cpp</code></a>、<a href="../_code/chapter06_quantization/src/dequantize_op.cpp"><code>dequantize_op.cpp</code></a>、<a href="../_code/chapter06_quantization/tests/chapter06_quantization_test.cpp"><code>chapter06_quantization_test.cpp</code></a>
+- 相关阅读：[`06.8 量化在 Serving Runtime 里的位置`](./08_quantization_in_serving_runtime.md)、[`TensorRT-LLM`](../reference/ecosystem/tensorrt_llm.md)、[`vLLM`](../reference/ecosystem/vllm.md)
 
-## 2. 为什么它重要
+## 工程映射
 
 本章已经把量化做成了一条清楚的链路：
 
@@ -42,7 +40,7 @@
 
 所以这节的作用，不是再补一遍背景，而是把本章已经做出来的量化路径放回真实生态里看它会落到哪里。
 
-## 3. 先看什么
+先看什么：
 
 阅读顺序如下：
 
@@ -53,7 +51,7 @@
 
 这四步里，前两步最接近“量化怎么做”，后两步更像“量化做完以后会碰到什么”。
 
-## 4. 中间推导是什么
+中间推导：
 
 往回推这三者为什么都要看，通常会得到几个约束：
 
@@ -70,7 +68,7 @@
 - `Gemma` 看的是模型家族会把这条链路放大成什么问题
 - `vLLM` 看的是量化后的 runtime 还能不能继续稳定服务
 
-## 5. 学习后应能做什么
+## 学习边界
 
 本节完成后，应当能够把下面几件事说清楚：
 
@@ -81,8 +79,6 @@
 
 把这些对应关系讲明白，就说明你已经不只是知道量化怎么实现，而是知道量化在真实生态里会被谁接住、被谁验证、被谁继续跑下去。
 
-## 6. 边界说明
-
 这一节不负责复刻 `TensorRT-LLM`、`Gemma` 或 `vLLM` 的全部能力。
 
 它只负责把本章最小量化链路和这三个生态的关注点对齐，让你知道：
@@ -91,9 +87,9 @@
 - 哪些设计只是把这些概念做得更完整
 - 哪些地方是工程落点，不是量化本身
 
-## 7. 参考页
+参考页：
 
-- [TensorRT-LLM](/reference/ecosystem/tensorrt_llm)
-- [Gemma](/reference/ecosystem/gemma)
-- [vLLM](/reference/ecosystem/vllm)
-- [chapter06_quantization 代码入口](/code/chapter06_quantization)
+- [TensorRT-LLM](../reference/ecosystem/tensorrt_llm.md)
+- [Gemma](../reference/ecosystem/gemma.md)
+- [vLLM](../reference/ecosystem/vllm.md)
+- <a href="../_code/chapter06_quantization/src/tensor.cpp"><code>tensor.cpp</code></a>、<a href="../_code/chapter06_quantization/src/dequantize_op.cpp"><code>dequantize_op.cpp</code></a>、<a href="../_code/chapter06_quantization/src/quantized_linear.cpp"><code>quantized_linear.cpp</code></a>

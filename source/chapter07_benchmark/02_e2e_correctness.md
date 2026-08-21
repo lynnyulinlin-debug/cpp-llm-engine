@@ -5,23 +5,23 @@
 
 通过端到端测试，把当前推理结果和 PyTorch golden logits 对照起来，确认整条链路正确。
 
-## 读完后应能做什么
+读完后应能做到：
 
 - 理解为什么需要端到端正确性测试
 - 理解 golden logits 的作用
 - 理解 cosine similarity 的比较方式
 
-## 代码直达
+## 阅读入口
 
-- [`tests/chapter07_benchmark_test.cpp`](/code/chapter07_benchmark#chapter07-benchmark-test-cpp)
-- [`src/test_helpers.cpp`](/code/chapter07_benchmark#test-helpers-cpp)
-- [`src/benchmark.cpp`](/code/chapter07_benchmark#benchmark-cpp)
+- 前置阅读：[`07.1 Test Harness Basics`](./01_test_harness_setup.md)、[`chapter05_generation`](../chapter05_generation/intro.md)
+- 源码直达：<a href="../_code/chapter07_benchmark/tests/chapter07_benchmark_test.cpp"><code>chapter07_benchmark_test.cpp</code></a>、<a href="../_code/chapter07_benchmark/src/test_helpers.cpp"><code>test_helpers.cpp</code></a>
+- 相关阅读：[`07.3 Benchmark Metrics`](./03_benchmark_metrics.md)、[`回归测试`](../reference/regression_testing.md)
 
-## 为什么这一步重要
+## 测试设计
 
 单个模块正确不代表整条链路正确。端到端测试是确认“从输入到输出”都没问题的最直接方式。
 
-## 这一页的核心内容
+这一页的核心内容：
 
 - 输入 prompt
 - 跑完整推理链路
@@ -44,7 +44,9 @@ auto actual = engine_forward(prompt);
 EXPECT_GT(cosine_similarity(golden, actual), 0.99f);
 ```
 
-## 验证标准
+## 验证与排查
+
+验证标准：
 
 - cosine similarity 达到预期阈值
 - 输出形状正确
@@ -52,7 +54,7 @@ EXPECT_GT(cosine_similarity(golden, actual), 0.99f);
 
 如果相同输入在多次运行中都落在同一误差范围内，说明这条链路已经足够稳定，可以作为回归基线。
 
-## 常见问题
+常见问题：
 
 - golden logits 不匹配当前模型版本
 - 输入预处理不一致

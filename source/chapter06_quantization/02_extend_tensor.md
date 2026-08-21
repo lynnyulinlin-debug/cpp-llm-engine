@@ -5,30 +5,23 @@
 
 让 `Tensor` 支持 INT8 dtype，为量化权重和量化计算打基础。
 
-## 阅读入口
-
-- 前置阅读：[`06.1 Quantization Basics`](/chapter06_quantization/01_quantization_basics)、[`chapter05_generation`](/chapter05_generation/intro)
-- 源码直达：[`chapter06_quantization 代码入口`](/code/chapter06_quantization)
-- 相关阅读：[`06.3 Load Quantized Weights`](/chapter06_quantization/03_load_quantized_weights)、[`06.4 DequantizeOp`](/chapter06_quantization/04_dequantize_op)
-
-## 代码直达
-
-- [`src/tensor.cpp`](/code/chapter06_quantization#tensor-cpp)
-- [`src/dequantize_op.cpp`](/code/chapter06_quantization#dequantize-op-cpp)
-- [`src/linear_layer.cpp`](/code/chapter06_quantization#linear-layer-cpp)
-- [`tests/chapter06_quantization_test.cpp`](/code/chapter06_quantization#chapter06-quantization-test-cpp)
-
-## 读完后应能做什么
+读完后应能做到：
 
 - 理解为什么 Tensor 需要支持更多 dtype
 - 理解 INT8 张量在存储层面的变化
 - 理解扩展 dtype 后对后续算子的影响
 
-## 为什么这一步重要
+## 阅读入口
+
+- 前置阅读：[`06.1 Quantization Basics`](./01_quantization_basics.md)、[`chapter05_generation`](../chapter05_generation/intro.md)
+- 源码直达：<a href="../_code/chapter06_quantization/include/chapter06_quantization/tensor.h"><code>tensor.h</code></a>、<a href="../_code/chapter06_quantization/src/tensor.cpp"><code>tensor.cpp</code></a>、<a href="../_code/chapter06_quantization/tests/chapter06_quantization_test.cpp"><code>chapter06_quantization_test.cpp</code></a>
+- 相关阅读：[`06.3 Load Quantized Weights`](./03_load_quantized_weights.md)、[`06.4 DequantizeOp`](./04_dequantize_op.md)
+
+## 核心设计
 
 量化不是单独存在的。它必须落到张量表达上，才能让模型加载、算子和验证走通。
 
-## 这一页的核心内容
+这一页的核心内容：
 
 - 在 `Tensor` 中加入 INT8 dtype
 - 保留元信息和存储表示
@@ -51,13 +44,15 @@ enum class DType : uint8_t {
 
 再由 `dtype_size()` 和 `deduce_dtype()` 去完成类型和字节宽度的映射。
 
-## 实现建议
+实现建议：
 
 - 保持 dtype 枚举可扩展
 - 不破坏原有 FP16 / FP32 路径
 - 让量化 dtype 和 storage 表示解耦
 
-## 怎么验证
+## 验证与排查
+
+验证时重点看：
 
 - Tensor 可以表达 INT8 数据
 - 旧的浮点路径不受影响
@@ -65,7 +60,7 @@ enum class DType : uint8_t {
 
 如果一个旧的 FP32 测试在扩展 INT8 后仍然通过，说明这次扩展没有破坏原有主线。
 
-## 常见问题
+常见问题：
 
 - 只加 dtype，没处理存储表示
 - 破坏了原有非量化路径

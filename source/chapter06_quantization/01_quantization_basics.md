@@ -5,31 +5,24 @@
 
 理解量化的基本原理、数值映射和误差来源，为后续 INT8 推理路径做准备。
 
-## 阅读入口
-
-- 前置阅读：[`chapter06 导读`](/chapter06_quantization/intro)、[`chapter05_generation`](/chapter05_generation/intro)
-- 源码直达：[`chapter06_quantization 代码入口`](/code/chapter06_quantization)
-- 相关阅读：[`06.2 Extend Tensor`](/chapter06_quantization/02_extend_tensor)、[`06.3 Load Quantized Weights`](/chapter06_quantization/03_load_quantized_weights)
-
-## 代码直达
-
-- [`src/tensor.cpp`](/code/chapter06_quantization#tensor-cpp)
-- [`src/dequantize_op.cpp`](/code/chapter06_quantization#dequantize-op-cpp)
-- [`src/linear_layer.cpp`](/code/chapter06_quantization#linear-layer-cpp)
-- [`tests/chapter06_quantization_test.cpp`](/code/chapter06_quantization#chapter06-quantization-test-cpp)
-
-## 读完后应能做什么
+读完后应能做到：
 
 - 理解为什么需要量化
 - 理解同步和非同步量化的基本概念
 - 理解 INT8、INT16 等数值表示之间的转换
 - 理解量化误差为什么会出现
 
-## 为什么这一步重要
+## 阅读入口
+
+- 前置阅读：[`chapter06 导读`](./intro.md)、[`chapter05_generation`](../chapter05_generation/intro.md)
+- 源码直达：<a href="../_code/chapter06_quantization/src/tensor.cpp"><code>tensor.cpp</code></a>、<a href="../_code/chapter06_quantization/src/dequantize_op.cpp"><code>dequantize_op.cpp</code></a>、<a href="../_code/chapter06_quantization/tests/chapter06_quantization_test.cpp"><code>chapter06_quantization_test.cpp</code></a>
+- 相关阅读：[`06.2 Extend Tensor`](./02_extend_tensor.md)、[`06.3 Load Quantized Weights`](./03_load_quantized_weights.md)
+
+## 核心概念
 
 量化不是简单地把位宽变小，而是要在存储、带宽、速度和精度之间做权衡。先理解基础原理，后面的实现和验证才不会变成“只会调参数”。
 
-## 这一页的核心内容
+这一页的核心内容：
 
 - 量化的目的
 - INT8 / INT16 映射关系
@@ -53,13 +46,15 @@ float x_hat = q * scale;
 
 这段公式虽然简单，但已经足以表达量化和反量化的核心关系。
 
-## 实现思路
+实现思路：
 
 - 先写清楚数值转换公式
 - 再讨论不同量化策略
 - 最后再进入工程实现
 
-## 怎么验证
+## 验证与排查
+
+验证时重点看：
 
 - 能说明浮点到整数的转换过程
 - 能解释为什么会有误差
@@ -67,7 +62,7 @@ float x_hat = q * scale;
 
 能够给出一个具体浮点值，手算出它被量化后的整数，再手算反量化结果，这一步就算真正理解了。
 
-## 常见问题
+常见问题：
 
 - 把量化当成简单的类型转换
 - 忽略误差和饱和
