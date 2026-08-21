@@ -6,7 +6,8 @@
     "docs:dev": "vitepress dev docs",
     "docs:check-links": "node scripts/check_docs_links.mjs",
     "docs:build": "vitepress build docs",
-    "docs:preview": "vitepress preview docs"
+    "docs:preview": "vitepress preview docs",
+    "test:regression": "bash scripts/run_regression_baseline.sh"
   },
   "devDependencies": {
     "vitepress": "^1.6.4",
