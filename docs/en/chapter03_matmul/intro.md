@@ -1,4 +1,4 @@
-# Chapter 03 MatMul
+# Chapter 03 MatMul and Compute Backends
 
 Build a MatMul operator with a clean CPU baseline and a GPU backend.
 

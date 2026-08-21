@@ -1,4 +1,4 @@
-# Chapter 02 Tensor Ops
+# Chapter 02 Tensor Views and Shared Storage
 
 Introduce view semantics, shared storage, reshape, and slice operations.
 

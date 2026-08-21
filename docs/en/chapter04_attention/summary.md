@@ -1,4 +1,4 @@
-# Chapter 04 Attention Summary
+# Chapter 04 Decoder Structure and Attention Summary
 
 ## What this chapter closed
 

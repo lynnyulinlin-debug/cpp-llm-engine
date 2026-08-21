@@ -1,4 +1,4 @@
-# Chapter 02 Tensor Ops Summary
+# Chapter 02 Tensor Views and Shared Storage Summary
 
 ## What this chapter closed
 

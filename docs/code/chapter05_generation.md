@@ -1,86 +1,41 @@
-# chapter05_generation 代码索引
+# chapter05_generation 代码导航
+
+这一页用于定位 generation runtime 的请求、调度、KV cache、采样和端到端测试。
 
 ## 阅读顺序
 
-1. 先看 [chapter05 导读](../chapter05_generation/intro)
-2. 再看 `src/request.cpp`、`src/runtime.cpp`
-3. 然后看 `src/kv_cache.cpp`、`src/scheduler.cpp`
-4. 再看 `src/sampler.cpp`、`src/transformer.cpp`
-5. 最后看测试和脚本
+1. 先看 `request.cpp` 和 `runtime.cpp`
+2. 再看 `kv_cache.cpp`、`scheduler.cpp`、`sampler.cpp`
+3. 最后看测试和脚本
 
 ## 运行时骨架
 
-<h3 id="request-cpp">src/request.cpp</h3>
+| 文件 | 作用 |
+| --- | --- |
+| <a href="/_code/chapter05_generation/include/chapter05_generation/request.h"><code>request.h</code></a> | 请求状态接口 |
+| <a href="/_code/chapter05_generation/src/request.cpp"><code>src/request.cpp</code></a> | 请求生命周期 |
+| <a href="/_code/chapter05_generation/include/chapter05_generation/runtime.h"><code>runtime.h</code></a> | Runtime 接口 |
+| <a href="/_code/chapter05_generation/src/runtime.cpp"><code>src/runtime.cpp</code></a> | 生成 runtime |
+| <a href="/_code/chapter05_generation/src/kv_cache.cpp"><code>src/kv_cache.cpp</code></a> | KV Cache |
+| <a href="/_code/chapter05_generation/src/scheduler.cpp"><code>src/scheduler.cpp</code></a> | Scheduler |
+| <a href="/_code/chapter05_generation/src/sampler.cpp"><code>src/sampler.cpp</code></a> | Sampler |
+| <a href="/_code/chapter05_generation/src/transformer.cpp"><code>src/transformer.cpp</code></a> | Transformer 组装 |
 
-- `code/chapter05_generation/src/request.cpp`
+## 验证与脚本
 
-<h3 id="runtime-cpp">src/runtime.cpp</h3>
-
-- `code/chapter05_generation/src/runtime.cpp`
-
-<h3 id="kv-cache-h">src/kv_cache.h</h3>
-
-- `code/chapter05_generation/src/kv_cache.h`
-
-<h3 id="kv-cache-cpp">src/kv_cache.cpp</h3>
-
-- `code/chapter05_generation/src/kv_cache.cpp`
-
-<h3 id="scheduler-cpp">src/scheduler.cpp</h3>
-
-- `code/chapter05_generation/src/scheduler.cpp`
-
-<h3 id="sampler-cpp">src/sampler.cpp</h3>
-
-- `code/chapter05_generation/src/sampler.cpp`
-
-<h3 id="transformer-cpp">src/transformer.cpp</h3>
-
-- `code/chapter05_generation/src/transformer.cpp`
-
-<h3 id="decoder-layer-cpp">src/decoder_layer.cpp</h3>
-
-- `code/chapter05_generation/src/decoder_layer.cpp`
-
-## 示例与测试
-
-<h3 id="main-generation-cpp">examples/main_generation.cpp</h3>
-
-- `code/chapter05_generation/examples/main_generation.cpp`
-
-<h3 id="main-streaming-cpp">examples/main_streaming.cpp</h3>
-
-- `code/chapter05_generation/examples/main_streaming.cpp`
-
-<h3 id="run-sh">scripts/run.sh</h3>
-
-- `code/chapter05_generation/scripts/run.sh`
-
-<h3 id="runtime-smoke-test-cpp">tests/runtime_smoke_test.cpp</h3>
-
-- `code/chapter05_generation/tests/runtime_smoke_test.cpp`
-
-<h3 id="kv-cache-test-cpp">tests/kv_cache_test.cpp</h3>
-
-- `code/chapter05_generation/tests/kv_cache_test.cpp`
-
-<h3 id="sampler-test-cpp">tests/sampler_test.cpp</h3>
-
-- `code/chapter05_generation/tests/sampler_test.cpp`
-
-<h3 id="chapter05-scheduler-test-cpp">tests/chapter05_scheduler_test.cpp</h3>
-
-- `code/chapter05_generation/tests/chapter05_scheduler_test.cpp`
-
-<h3 id="chapter05-generation-test-cpp">tests/chapter05_generation_test.cpp</h3>
-
-- `code/chapter05_generation/tests/chapter05_generation_test.cpp`
+| 文件 | 作用 |
+| --- | --- |
+| <a href="/_code/chapter05_generation/examples/main_generation.cpp"><code>examples/main_generation.cpp</code></a> | 生成示例 |
+| <a href="/_code/chapter05_generation/examples/main_streaming.cpp"><code>examples/main_streaming.cpp</code></a> | 流式示例 |
+| <a href="/_code/chapter05_generation/tests/runtime_smoke_test.cpp"><code>tests/runtime_smoke_test.cpp</code></a> | runtime smoke test |
+| <a href="/_code/chapter05_generation/tests/chapter05_generation_test.cpp"><code>tests/chapter05_generation_test.cpp</code></a> | 端到端测试 |
+| <a href="/_code/chapter05_generation/scripts/run.sh"><code>scripts/run.sh</code></a> | 运行脚本 |
 
 ## 对应文档
 
-- [chapter05 导读](../chapter05_generation/intro)
-- [chapter05 小结](../chapter05_generation/summary)
+- [chapter05 导读](../chapter05_generation/intro.md)
+- [chapter05 小结](../chapter05_generation/summary.md)
 
 ## 说明
 
-这一章的代码重点是把 `forward` 变成可验证的 generation runtime。读者应当先跟着阅读顺序看核心文件，再用测试和脚本收口，而不是只扫目录列表。
+代码索引页只做补充导航。正文页的“源码直达”应直接链接到具体文件，不应只跳到本页或章节代码目录。

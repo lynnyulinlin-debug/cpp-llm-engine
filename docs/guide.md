@@ -86,6 +86,60 @@ ctest --test-dir code/chapter01_tensor_loader/build --output-on-failure
 - 想先跑通基线：`chapter00_quickstart`
 - 想理解 runtime：`chapter05_generation`
 - 想看验证收口：`chapter07_benchmark`
+- 想看性能归因和优化闭环：`chapter08_profiling`
+
+## 硬件与环境
+
+这套教程是 `CPU-first` 设计，默认不要求一开始就有 GPU。学习者可以按下面三档准备环境。
+
+### 1. 本地 CPU 学习环境
+
+适合先把主线跑通，覆盖 `foundation`、`chapter00`、`chapter01`、`chapter02`。
+
+建议配置：
+
+- 4 核以上 CPU
+- 16 GB 内存
+- 20 GB 以上可用磁盘
+- Linux 环境，优先 Ubuntu 22.04
+- `CMake`、`g++` 或 `clang++`、`git`
+- `Node.js + npm`
+
+### 2. 本地带 GPU 的学习环境
+
+适合继续到 `chapter03` 之后的 CUDA / backend 对照。
+
+建议配置：
+
+- NVIDIA GPU，8 GB VRAM 起步
+- 12 GB VRAM 更舒服
+- 16 GB 及以上更适合后面的性能对照
+- 16 GB 以上内存更稳
+- SSD
+- NVIDIA Driver + CUDA Toolkit
+- `nvcc`、`nvidia-smi` 可用
+
+具体的 CUDA 安装与验证步骤，见 [CUDA 安装与配置](/guides/setup_cuda)。
+
+### 3. 云端环境
+
+适合本地没有合适 GPU，或者只想把 `chapter03` 之后的 GPU 对照和 benchmark 放到云上跑。
+
+建议做法：
+
+- 选 Linux 镜像，优先 Ubuntu 22.04
+- 选带 NVIDIA GPU 的实例
+- 先确认 `nvidia-smi`
+- 再确认 `nvcc --version`
+- 再装 `cmake`、`g++`、`git`、`node`
+- 用持久盘保存仓库和模型文件
+
+### 最小建议顺序
+
+1. 先装基础工具链
+2. 先跑 CPU 路径
+3. 需要 GPU 时再补本地 CUDA 或云端 GPU
+4. 用 `nvidia-smi`、`nvcc --version`、`cmake --version` 做最小验证
 
 ## CPU / GPU 分界线
 
@@ -94,13 +148,44 @@ ctest --test-dir code/chapter01_tensor_loader/build --output-on-failure
 - `chapter03_matmul/04_cublas_implement.md`：第一处具体 GPU 实现
 - 软件环境说明：看 [CUDA 安装与配置](/guides/setup_cuda)
 
-## 阅读路径
+## 三条推荐路径
 
-- 入门路径：`foundation` -> `chapter00` -> `chapter01` -> `chapter02` -> `chapter03` -> `chapter04` -> `chapter05` -> `chapter06` -> `chapter07`
-- 工程路径：`chapter00` -> `chapter01` -> `chapter02` -> `chapter03` -> `chapter04` -> `chapter05` -> `chapter07`
-- 性能路径：`chapter02` -> `chapter03` -> `chapter04` -> `chapter05` -> `chapter07`
-- 部署路径：`chapter06` -> `chapter07`
-- 收口路径：`chapter07` -> `reference` -> `guides` -> `maintenance`
+### 初学者路径
+
+- 前置条件：能使用终端，尚未稳定使用 C++/CMake。
+- 顺序：`foundation` -> `chapter00` -> `chapter01` -> `chapter02`。
+- 产物：完成基础题库中至少 4 道题，并跑通第一次真实推理。
+- 验证：`npm run test:regression`。
+
+### C++ 工程路径
+
+- 前置条件：能读写基本 C++，但希望建立 Tensor、算子和 runtime 的工程边界。
+- 顺序：Foundation 题库 -> `chapter01` -> `chapter03` -> `chapter05` -> `chapter07`。
+- 产物：完成一个可构建、可测试的 Tensor/算子/runtime 路径。
+- 验证：对应章节 `run.sh`，最后执行 `npm run test:regression`。
+
+### 推理引擎进阶路径
+
+- 前置条件：已有 C++、GPU 或推理系统经验。
+- 顺序：`chapter05` -> `reference` -> `chapter07` -> `chapter08`。
+- 产物：能解释 Request、Scheduler、KV Cache、内存、回归和 profiling 之间的证据链。
+- 验证：Chapter 05/07 脚本、`npm run test:regression` 和文档链接检查。
+
+三条路径都默认 CPU-first。只有 `chapter03` 的 CUDA 后端和 FQ10 的 CUDA starter 需要 GPU 环境。
+
+## 开源项目怎么配合读
+
+这套教程不是要替代开源项目，而是先把引擎原理和最小实现讲清楚，再把真实项目作为对照坐标。
+
+建议按章节配合这些项目阅读：
+
+- `chapter00`、`chapter01`：先看 `llama.cpp`，建立最小本地推理直觉
+- `chapter02`、`chapter03`：再看 `gemma.cpp` 和 `TensorRT-LLM`，理解对象、算子和后端分层
+- `chapter04`、`chapter05`：再看 `vLLM`、`SGLang`，理解 runtime、调度和 serving 组织方式
+- `chapter06`：再看 `TensorRT-LLM`，理解量化和部署如何接到 GPU engine
+- `chapter07`：再看 `vLLM`、`SGLang`、`Ollama`，理解 benchmark、验证和交付怎么落到真实系统
+
+如果你想先看总览，直接进 [生态对照](/reference/ecosystem/README)。
 
 ## 日常检查
 
@@ -114,4 +199,5 @@ npm run docs:check-links
 
 ```bash
 npm run docs:build
+npm run test:regression
 ```

@@ -1,4 +1,4 @@
-# Chapter 03 MatMul Summary
+# Chapter 03 MatMul and Compute Backends Summary
 
 ## What this chapter closed
 

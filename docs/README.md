@@ -41,6 +41,21 @@ _A Practical Tutorial for Building a C++ LLM Inference Engine_
 
 这意味着这套教程的收束方式很明确：先把一个推理引擎做出来，再把它验证清楚，最后把它放回真实生态里对照和维护。
 
+## 进阶优化路线
+
+如果你已经读完主线，下面这条路线适合继续往推理优化专题深入。它不是主线替代，而是主线之后的专题扩展。
+
+| Task | 专题方向 | 关注点 |
+| --- | --- | --- |
+| 1 | 推理结构地基 | `MHA` / `GQA`、`LLaMA3 Block` |
+| 2 | Attention 访存瓶颈与 FlashAttention | 访存模型、`SRAM` 优化、`FlashAttention` |
+| 3 | 解码算法 | `Decoding Strategies`、`Speculative Decoding`、`Multi-Token Decoding`、`Decode Scheduling` |
+| 4 | `KV Cache` 与推理服务内存管理 | `PagedAttention`、`RadixAttention`、`Prefix Caching`、`Chunked Prefill`、`KV Cache Scheduling` |
+| 5 | 量化推理与部署 | `INT4 / INT8`、`W8A16`、`GPTQ / AWQ`、`FP8`、`KV Cache Quantization` |
+| 6 | 扩展选读与专题复盘 | `Inference Performance Comparison` |
+
+这条路线更适合已经理解主线章节、并希望把 attention、generation、quantization 和 benchmark 再往优化视角拉深的读者。
+
 ## 和常见推理引擎的对照
 
 - `llama.cpp`：本地基线，适合先跑起来，对应 `chapter00_quickstart` 和 `chapter01_tensor_loader`
@@ -83,9 +98,10 @@ flowchart LR
 | 6 | [`chapter05_generation`](/chapter05_generation/intro) | token-by-token generation、KV cache、sampler | 英文导读 / 基本完成 |
 | 7 | [`chapter06_quantization`](/chapter06_quantization/intro) | 量化推理路径和精度权衡 | 英文导读 / 基本完成 |
 | 8 | [`chapter07_benchmark`](/chapter07_benchmark/intro) | 正确性验证、性能比较、证据收口 | 英文导读 / 基本完成 |
-| 9 | [`guides`](/guides/README) | 开发参考、构建、环境、迁移 | 英文入口已覆盖 |
-| 10 | [`reference`](/reference/README) | 设计参考、术语、生态对照 | 部分完成 |
-| 11 | [`maintenance`](/maintenance/README) | 教程维护、写作规范、模板 | 部分完成 |
+| 9 | [`chapter08_profiling`](/chapter08_profiling/intro) | profiling、A/B 对比、优化闭环 | 中文初稿 |
+| 10 | [`guides`](/guides/README) | 开发参考、构建、环境、迁移 | 英文入口已覆盖 |
+| 11 | [`reference`](/reference/README) | 设计参考、术语、生态对照 | 部分完成 |
+| 12 | [`maintenance`](/maintenance/README) | 教程维护、写作规范、模板 | 部分完成 |
 
 ## 适合谁
 
@@ -99,12 +115,13 @@ flowchart LR
 2. 再看 [docs/README.md](/README)
 3. 基础薄弱就先看 [source/foundation/README.md](/foundation/README)
 4. 想先跑结果就从 `chapter00_quickstart` 开始
-5. 想做工程判断就重点看 `chapter05_generation` 和 `chapter07_benchmark`
+5. 想做工程判断就重点看 `chapter05_generation`、`chapter07_benchmark` 和 `chapter08_profiling`
 
 ## CPU / GPU 分界线
 
 - `chapter00`、`chapter01`、`chapter02`：先用 CPU 路径就能学和验证
 - `chapter03_matmul`：开始把 GPU 作为明确后端引入主线
+- 更具体的硬件和 CUDA 建议，统一看 [阅读指南](/guide)
 - 第一处具体 GPU 实现：[`chapter03_matmul/04_cublas_implement.md`](/chapter03_matmul/04_cublas_implement)
 - 开发参考入口：[`guides/README.md`](/guides/README)
 - 设计参考入口：[`reference/README.md`](/reference/README)

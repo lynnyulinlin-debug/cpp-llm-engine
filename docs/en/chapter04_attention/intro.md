@@ -1,4 +1,4 @@
-# Chapter 04 Attention
+# Chapter 04 Decoder Structure and Attention
 
 Assemble attention, FFN, and DecoderLayer into one working transformer block.
 

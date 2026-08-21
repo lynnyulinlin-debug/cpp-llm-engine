@@ -1,4 +1,4 @@
-# Chapter 01 Tensor Loader Summary
+# Chapter 01 Model Weights and Tensor Objects Summary
 
 ## What this chapter closed
 

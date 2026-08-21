@@ -1,4 +1,4 @@
-# Chapter 01 Tensor Loader
+# Chapter 01 Model Weights and Tensor Objects
 
 Introduce the Tensor abstraction and the loader that maps model weights into memory.
 

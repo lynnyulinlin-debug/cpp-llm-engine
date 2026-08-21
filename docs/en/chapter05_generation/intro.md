@@ -1,4 +1,4 @@
-# Chapter 05 Generation Runtime
+# Chapter 05 Generation Runtime and Serving Basics
 
 Turn a single DecoderLayer into a generation runtime with cache and sampling.
 

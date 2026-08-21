@@ -29,6 +29,7 @@ features:
 
 这是一个面向中文学习者优先的 C++ LLM 推理教程。  
 如果你想先知道怎么读，先看 [阅读指南](/guide)；如果你想直接看主线，从 [教程主入口](/README) 进入。
+环境和硬件建议也集中在 [阅读指南](/guide) 里，不在首页重复展开。
 
 中文主线已经基本完成，当前工作重点是英文正文、残余句式清理，以及参考层和维护层的持续补齐。
 
@@ -42,8 +43,9 @@ features:
 | `chapter04` - `chapter05` | 结构与运行时 |
 | `chapter06` | 表示与成本 |
 | `chapter07` | 验证与证据 |
+| `chapter08` | 性能归因与优化闭环 |
 
-`chapter07` 之后，主线转入 `reference`、`guides` 和 `maintenance`：
+`chapter08` 之后，主线转入 `reference`、`guides` 和 `maintenance`：
 
 - `reference` 讲概念解释、术语和生态对照
 - `guides` 讲构建、环境、迁移和工程方法
@@ -53,7 +55,7 @@ features:
 
 ## 你会看到什么
 
-- `foundation` 到 `chapter07_benchmark` 的主线
+- `foundation` 到 `chapter08_profiling` 的主线
 - 训练框架、推理框架和本教程的对照层
 - 术语表、写作规范和维护规范
 - 图示、表格和收口页
