@@ -14,5 +14,10 @@ int main() {
     std::cout << "result items/s: " << result.items_per_second << '\n';
     std::cout << "samples: " << samples.size() << '\n';
     std::cout << chapter07_benchmark::render_summary();
+    std::cout << chapter07_benchmark::render_trace();
+    std::cout << chapter07_benchmark::render_hotspots();
+    std::cout << chapter07_benchmark::render_trace_json();
+    std::cout << chapter07_benchmark::render_chrome_trace_json();
+    std::cout << chapter07_benchmark::render_multi_request_trace_json();
     return 0;
 }
