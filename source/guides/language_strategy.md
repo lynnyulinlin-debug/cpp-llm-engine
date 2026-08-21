@@ -49,7 +49,7 @@
 1. 英文入口页，先判断全局结构
 2. 章节 `intro.md`，先理解问题和目标
 3. 章节 `summary.md`，先抓住收口和下一步
-4. 术语表 [glossary.md](/reference/glossary)，先统一概念
+4. 术语表 [glossary.md](../reference/glossary.md)，先统一概念
 5. 正文，按章节需要逐步阅读
 
 ## 4. 推荐的维护方式

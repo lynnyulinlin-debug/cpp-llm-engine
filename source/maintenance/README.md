@@ -4,10 +4,10 @@
 
 ## 内容范围
 
-- [tutorial_maintenance.md](/maintenance/tutorial_maintenance)：教程维护文档
-- [tutorial_writing_guidelines.md](/maintenance/tutorial_writing_guidelines)：教程编写规范
-- [chapter_template.md](/maintenance/chapter_template)：章节模板
-- [summary_template.md](/maintenance/summary_template)：章节收口模板
+- [tutorial_maintenance.md](./tutorial_maintenance.md)：教程维护文档
+- [tutorial_writing_guidelines.md](./tutorial_writing_guidelines.md)：教程编写规范
+- [chapter_template.md](./chapter_template.md)：章节模板
+- [summary_template.md](./summary_template.md)：章节收口模板
 
 ## 怎么用
 

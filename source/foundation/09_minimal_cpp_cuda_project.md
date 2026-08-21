@@ -26,12 +26,12 @@
 - library target 和 test target
 - 在不破坏构建的前提下新增一个源文件
 
-## 与 00.2 的关系
+## 与 F02 的关系
 
-`00.2` 介绍了 `project()`、`add_executable()`、`add_library()`、`target_link_libraries()` 等命令。  
-`00.9` 则把这些命令组合成一个真实可运行的最小项目。
+`F02` 介绍了 `project()`、`add_executable()`、`add_library()`、`target_link_libraries()` 等命令。
+`F09` 则把这些命令组合成一个真实可运行的最小项目。
 
-如果你对某个 CMake 命令不熟，可以回到 `00.2` 看对应说明；如果你更关心“这些命令最终怎么拼起来”，就看这一页。
+如果你对某个 CMake 命令不熟，可以回到 `F02` 看对应说明；如果你更关心“这些命令最终怎么拼起来”，就看这一页。
 
 ## 这一页的核心内容
 

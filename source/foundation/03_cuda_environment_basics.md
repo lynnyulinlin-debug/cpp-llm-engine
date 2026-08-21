@@ -36,13 +36,13 @@ CPU 路径已经足够完成这些工作：
 CUDA 则在你需要这些事情时才变成必需：
 
 - benchmark GPU 加速的 matmul 或 attention 实现
-- 编译那些显式启用 CUDA backend 的章节
+- 编译 `chapter03` 里显式启用 CUDA backend 的部分
 - 对比 CPU reference 和 GPU backend
 - 使用 cuBLAS 这类 CUDA 库的加速路径
 
 换句话说：CPU 足够学习和验证正确性，CUDA 主要服务于加速和后端比较。
 
-如果你想先看常见 CUDA 库和用途的简表，可以看 [07_cuda_common_libraries.md](/foundation/07_cuda_common_libraries)。这一章只聚焦环境和运行时检查。
+如果你想先看常见 CUDA 库和用途的简表，可以看 [07_cuda_common_libraries.md](./07_cuda_common_libraries.md)。这一章只聚焦环境和运行时检查。
 
 ## 这一页的核心内容
 
@@ -105,11 +105,12 @@ CUDA_VISIBLE_DEVICES="" ./my_program
 - `chapter01_tensor_loader`
 - `chapter02_tensor_ops`
 - `chapter04_attention`
+- `chapter03_matmul` 的 CPU reference 路径
 - `chapter05_generation`
 - `chapter06_quantization`
 - `chapter07_benchmark`
 
-真正需要 CUDA 的方向，出现在你想比较 backend 或把 GPU 加速当作优化路径的时候，而不是学习门槛本身。
+真正需要 CUDA 的方向，出现在你想比较 backend 或把 GPU 加速当作优化路径的时候，而不是学习门槛本身。对 `chapter03_matmul` 来说，这意味着 CPU reference 可以先用 CPU-first 路径读完，只有 `cuBLAS` 后端和 GPU 对照需要 CUDA 环境。
 
 ## 最小示例
 

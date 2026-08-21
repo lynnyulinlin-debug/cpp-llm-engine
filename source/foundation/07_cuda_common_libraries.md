@@ -41,8 +41,8 @@
 
 | 章节 | 关注层 | 问题 |
 | --- | --- | --- |
-| `00.3` | 环境层 | GPU 可见吗？driver / runtime 可用吗？ |
-| `00.7` | 库层 | `cuBLAS` 解决什么问题？`CUDA Graph` 解决什么问题？ |
+| `F03` | 环境层 | GPU 可见吗？driver / runtime 可用吗？ |
+| `F07` | 库层 | `cuBLAS` 解决什么问题？`CUDA Graph` 解决什么问题？ |
 | `chapter03_matmul` | 应用层 | 如何用 `cuBLAS` 实现 MatMul？ |
 
 三层连起来就是一条完整路径：环境检查 -> 库选择 -> 代码实现。

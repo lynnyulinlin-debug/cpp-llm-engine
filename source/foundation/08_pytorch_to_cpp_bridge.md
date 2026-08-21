@@ -26,9 +26,9 @@
 - `Quantization` 和 benchmark 验证
 - 用 PyTorch 心智模型阅读教程的 C++ 源码
 
-## 与 00.5 的职责呼应
+## 与 F05 的职责呼应
 
-| 00.5 职责分类 | PyTorch 概念 | 教程类 |
+| F05 职责分类 | PyTorch 概念 | 教程类 |
 | --- | --- | --- |
 | 数据容器 | `torch.Tensor` | `Tensor` |
 | 文件入口 | `state_dict` | `ModelLoader` |
