@@ -5,7 +5,7 @@
 
 把 `Tensor` 接口落到可用的 C++ 实现上，先支持 CPU 内存和基础对象生命周期管理。
 
-## 读完后应能做什么
+读完后应能做到：
 
 - 实现张量对象的内存分配与释放
 - 理解 copy / move semantics 在张量对象上的意义
@@ -13,30 +13,25 @@
 
 ## 代码直达
 
-- [`src/tensor.h`](/code/chapter01_tensor_loader#tensor-h)
-- [`src/tensor.cpp`](/code/chapter01_tensor_loader#tensor-cpp)
-- [`tests/chapter01_tensor_loader_test.cpp`](/code/chapter01_tensor_loader#chapter01-tensor-loader-test-cpp)
+- <a href="../_code/chapter01_tensor_loader/src/tensor.h"><code>tensor.h</code></a>
+- <a href="../_code/chapter01_tensor_loader/src/tensor.cpp"><code>tensor.cpp</code></a>
 
-## 为什么这一步重要
+## 核心实现
 
 这一页决定 `Tensor` 是一个“纸面结构”还是一个真正可用的对象。后面的模型加载和算子操作都需要它能稳定管理存储。
 
-## 这一页的核心内容
+这一页的核心内容：
 
-### 1. CPU 内存分配
+CPU 内存分配：先实现最简单的 CPU 内存路径，确保对象能存储和读取数据。
 
-先实现最简单的 CPU 内存路径，确保对象能存储和读取数据。
-
-### 2. 拷贝与移动
+拷贝与移动：
 
 - 拷贝：复制数据
 - 移动：转移所有权或共享底层存储
 
-### 3. 析构与所有权
+析构与所有权：资源必须有明确的归属，否则模型加载和推理阶段很容易出现泄漏或悬垂引用。
 
-资源必须有明确的归属，否则模型加载和推理阶段很容易出现泄漏或悬垂引用。
-
-## 最小实现方向
+最小实现方向：
 
 - 构造时分配 CPU 存储
 - 析构时自动释放
@@ -47,7 +42,9 @@
 
 后续即使支持更复杂后端，CPU 存储路径也仍然应该保留，因为它是最稳定的调试基线。
 
-## 怎么验证
+## 验证与排查
+
+验证时重点看：
 
 - 构造后能正确读写数据
 - 拷贝后的对象内容正确
@@ -55,7 +52,7 @@
 
 复制和移动都不会破坏数据时，说明这个 Tensor 对象至少已经具备“在容器和算子之间传递”的基本能力。
 
-## 常见问题
+常见问题：
 
 - 用裸指针直接管理所有权
 - 拷贝时误复制了大块不必要数据

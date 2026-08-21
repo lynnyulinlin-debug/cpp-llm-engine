@@ -5,7 +5,7 @@
 
 实现返回子视图的 `slice` 操作，让张量可以表达局部窗口而不复制数据。
 
-## 读完后应能做什么
+读完后应能做到：
 
 - 理解 `slice` 和 `reshape` 的区别
 - 理解子视图为什么要带偏移
@@ -13,15 +13,14 @@
 
 ## 代码直达
 
-- [`include/chapter02_tensor_ops/tensor.h`](/code/chapter02_tensor_ops#tensor-h)
-- [`src/tensor.cpp`](/code/chapter02_tensor_ops#tensor-cpp)
-- [`tests/chapter02_tensor_ops_test.cpp`](/code/chapter02_tensor_ops#chapter02-tensor-ops-test-cpp)
+- <a href="../_code/chapter02_tensor_ops/src/tensor.cpp"><code>tensor.cpp</code></a>
+- <a href="../_code/chapter02_tensor_ops/tests/chapter02_tensor_ops_test.cpp"><code>chapter02_tensor_ops_test.cpp</code></a>
 
-## 为什么这一步重要
+## 核心语义
 
 很多后续场景都需要局部访问张量，例如分块计算、子矩阵访问、token 范围处理。`slice` 是这些能力的基础。
 
-## 语义要求
+语义要求：
 
 - 返回子视图
 - 共享底层数据
@@ -45,13 +44,27 @@ Tensor slice(const Tensor& t, std::size_t begin, std::size_t len) {
 
 如果是二维切片，偏移计算会更复杂，但思想还是一样：共享 storage，只改视图边界。
 
-## 实现建议
+实现建议：
 
 - 计算切片起点对应的偏移
 - 保留原始 storage
 - 更新视图范围和 shape
 
-## 怎么验证
+## `slice` 在真实项目里为什么重要
+
+`slice` 这一页和推理引擎的联系，比看起来更直接。很多真实工程问题本质上都不是“做一次新计算”，而是“从已有数据里取出该看的那一段”。
+
+最典型的对应场景包括：
+
+- token 范围的局部读取
+- attention 中间结果的局部窗口
+- KV cache block 或 chunk 的局部访问
+
+所以这一页真正要建立的不是切片语法，而是一种工程习惯：先问能不能通过 view 取局部窗口，再问要不要复制出一份新数据。
+
+## 验证与排查
+
+验证时重点看：
 
 - 子视图能读到原始数据中的对应片段
 - 父视图和子视图共享同一存储
@@ -59,7 +72,7 @@ Tensor slice(const Tensor& t, std::size_t begin, std::size_t len) {
 
 建议用一个小数组做测试，例如 `{10, 20, 30, 40, 50}`，切出中间一段，确认返回内容和原始数组对应区间一致。
 
-## 常见问题
+常见问题：
 
 - 切片偏移计算错误
 - 返回了数据拷贝而不是视图

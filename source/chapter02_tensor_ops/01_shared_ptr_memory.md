@@ -5,7 +5,7 @@
 
 让多个 `Tensor` 对象可以共享同一份底层数据，而不是每次视图变化都复制内存。
 
-## 读完后应能做什么
+读完后应能做到：
 
 - 理解为什么要共享底层存储
 - 理解 `shared_ptr` 在 view 语义中的角色
@@ -13,19 +13,16 @@
 
 ## 代码直达
 
-- [`include/chapter02_tensor_ops/tensor.h`](/code/chapter02_tensor_ops#tensor-h)
-- [`src/tensor.cpp`](/code/chapter02_tensor_ops#tensor-cpp)
-- [`tests/chapter02_tensor_ops_test.cpp`](/code/chapter02_tensor_ops#chapter02-tensor-ops-test-cpp)
+- <a href="../_code/chapter02_tensor_ops/include/chapter02_tensor_ops/tensor.h"><code>tensor.h</code></a>
+- <a href="../_code/chapter02_tensor_ops/src/tensor.cpp"><code>tensor.cpp</code></a>
 
-## 为什么这一步重要
+## 核心语义
 
 `reshape` 和 `slice` 都不应该随意复制数据。复制不仅浪费内存，还会让视图语义失去意义。  
 共享底层存储是实现高效 Tensor 操作的前提。
 
 更具体一点说，这一页要解决的不是“怎么少拷贝一次”，而是“如何让一个数据对象同时支持多种观察方式”。  
 如果没有共享存储，view 语义就只是一个看起来省事、实际上很贵的包装。
-
-## 共享思路
 
 最稳妥的做法是把责任拆开：
 
@@ -45,6 +42,18 @@ Tensor b = a;
 
 这种设计的关键不是“省一次拷贝”这么简单，而是为后面的 `reshape`、`slice`、`KV Cache` 复用同一套存储语义。
 
+## 这一页在真实推理里对应什么
+
+如果说 `chapter01` 解决的是“权重怎样进入程序”，这一页解决的就是下一步：进入程序后的数据怎样被多个视图复用，而不是每次变化都重新拷贝。
+
+在真实推理项目里，这种共享存储语义通常会出现在三类地方：
+
+- 输入或中间张量的多种 shape 解释
+- attention 或 projection 前后的局部视图
+- KV cache 这类需要长期持有、反复观察的数据块
+
+所以这一页真正建立的是一条底线：view 可以多，storage 不能乱复制。
+
 示例伪代码可以写成：
 
 ```cpp
@@ -61,13 +70,15 @@ TensorView make_view(const TensorView& parent, std::size_t offset, std::vector<i
 
 这类结构的重点是“视图”只保存引用，不复制底层字节。
 
-## 实现建议
+实现建议：
 
 - 使用 `std::shared_ptr<uint8_t>` 或等价存储句柄管理原始数据
 - 让 `Tensor` 持有偏移、长度和 shape 信息
 - 不把 view 的派生数据单独复制出来
 
-## 怎么验证
+## 验证与排查
+
+验证时重点看：
 
 - 多个视图对象可以同时访问同一份数据
 - 一个视图销毁后，底层存储不会被提前释放
@@ -79,7 +90,7 @@ TensorView make_view(const TensorView& parent, std::size_t offset, std::vector<i
 - 销毁子张量不会影响父张量的数据可读性
 - 多次复制对象不会引发 double free
 
-## 常见问题
+常见问题：
 
 - 把共享存储误写成独占所有权
 - 忘记保存偏移信息

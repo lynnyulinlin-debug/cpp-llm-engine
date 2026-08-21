@@ -2,9 +2,9 @@
 
 ## 阅读入口
 
-- 前置阅读：[`00.1 Environment Setup`](/chapter00_quickstart/01_environment_setup)、[`00.2 Clone and Build`](/chapter00_quickstart/02_clone_and_build_llamacpp)、[`00.4 First Inference`](/chapter00_quickstart/04_first_inference)
-- 源码直达：[`main_quick.cpp`](/code/chapter00_quickstart)、[`run.sh`](/code/chapter00_quickstart)
-- 相关阅读：[`00.7 本章小结`](/chapter00_quickstart/summary)
+- 前置阅读：[`00.1 Environment Setup`](./01_environment_setup.md)、[`00.2 Clone and Build`](./02_clone_and_build_llamacpp.md)、[`00.4 First Inference`](./04_first_inference.md)
+- 源码直达：<a href="../_code/chapter00_quickstart/main_quick.cpp"><code>main_quick.cpp</code></a>、<a href="../_code/chapter00_quickstart/run.sh"><code>run.sh</code></a>
+- 相关阅读：[`00.7 本章小结`](./summary.md)
 
 ## 这一页要解决什么
 

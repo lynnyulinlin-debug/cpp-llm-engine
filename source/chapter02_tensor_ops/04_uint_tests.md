@@ -5,7 +5,7 @@
 
 用简单单元测试验证 `reshape` 和 `slice` 的 view 语义是否正确。
 
-## 读完后应能做什么
+读完后应能做到：
 
 - 理解为什么 view 操作必须测试
 - 理解如何用最小案例验证共享存储
@@ -13,22 +13,21 @@
 
 ## 代码直达
 
-- [`tests/chapter02_tensor_ops_test.cpp`](/code/chapter02_tensor_ops#chapter02-tensor-ops-test-cpp)
-- [`include/chapter02_tensor_ops/tensor.h`](/code/chapter02_tensor_ops#tensor-h)
-- [`src/tensor.cpp`](/code/chapter02_tensor_ops#tensor-cpp)
+- <a href="../_code/chapter02_tensor_ops/tests/chapter02_tensor_ops_test.cpp"><code>chapter02_tensor_ops_test.cpp</code></a>
+- <a href="../_code/chapter02_tensor_ops/src/tensor.cpp"><code>tensor.cpp</code></a>
 
-## 为什么这一步重要
+## 测试设计
 
 这一章的正确性不在于“能不能跑”，而在于“有没有保持 view 语义”。如果测试缺失，后面很容易在不知不觉中引入数据复制或偏移错误。
 
-## 测试重点
+测试重点：
 
 - `reshape` 不复制数据
 - `slice` 返回共享存储
 - 切片内容和预期一致
 - 元素数和 shape 保持合理
 
-## 建议测试方式
+建议测试方式：
 
 - 固定输入
 - 小尺寸张量
@@ -40,7 +39,9 @@
 1. 数值层面：切片后的数据内容是否正确
 2. 结构层面：新旧张量是否共享同一份 storage，偏移是否如预期变化
 
-## 怎么验证
+## 验证与排查
+
+验证时重点看：
 
 - 测试能稳定通过
 - 错误实现会在测试中失败
@@ -61,7 +62,7 @@ TEST(TensorView, ReshapeSharesStorage) {
 
 这类测试同时验证了“数据内容”和“共享关系”。
 
-## 常见问题
+常见问题：
 
 - 只测数值，不测共享关系
 - 只测正向路径，不测边界情况

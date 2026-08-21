@@ -2,9 +2,9 @@
 
 ## 阅读入口
 
-- 前置阅读：[`00.2 Clone and Build`](/chapter00_quickstart/02_clone_and_build_llamacpp)、[`00.3 Download TinyLlama`](/chapter00_quickstart/03_download_tinyllama)
-- 源码直达：[`main_quick.cpp`](/code/chapter00_quickstart)、[`run.sh`](/code/chapter00_quickstart)
-- 相关阅读：[`00.5 Troubleshooting`](/chapter00_quickstart/05_troubleshooting)、[`00.7 本章小结`](/chapter00_quickstart/summary)
+- 前置阅读：[`00.2 Clone and Build`](./02_clone_and_build_llamacpp.md)、[`00.3 Download TinyLlama`](./03_download_tinyllama.md)
+- 源码直达：<a href="../_code/chapter00_quickstart/main_quick.cpp"><code>main_quick.cpp</code></a>、<a href="../_code/chapter00_quickstart/run.sh"><code>run.sh</code></a>
+- 相关阅读：[`00.5 Troubleshooting`](./05_troubleshooting.md)、[`推理引擎输入链路`](../reference/input_pipeline.md)、[`00.7 本章小结`](./summary.md)
 
 ## 这一页要解决什么
 
@@ -43,7 +43,7 @@ cd /data/cpp-llm-engine/llama.cpp/build
 
 示例输出会因模型版本和随机性而变化，但应当是类似自然语言文本，而不是报错信息。
 
-这一页的重点不是“生成得多好”，而是“整个链路能否从命令行一路走到输出”。只要模型加载、前向推理和 token 输出都正常，说明 baseline 已经成立。
+这一页的重点不是输出质量，而是确认命令行输入、模型加载、前向推理和 token 输出构成一条可重复的 baseline。输入契约的完整拆分见 [`推理引擎输入链路`](../reference/input_pipeline.md)。
 
 ## 怎么验证
 

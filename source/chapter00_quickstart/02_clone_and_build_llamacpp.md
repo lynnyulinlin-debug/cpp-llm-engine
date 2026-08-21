@@ -2,9 +2,9 @@
 
 ## 阅读入口
 
-- 前置阅读：[`00.1 Environment Setup`](/chapter00_quickstart/01_environment_setup)
-- 源码直达：[`main_quick.cpp`](/code/chapter00_quickstart)、[`run.sh`](/code/chapter00_quickstart)
-- 相关阅读：[`00.3 Download TinyLlama`](/chapter00_quickstart/03_download_tinyllama)、[`00.4 First Inference`](/chapter00_quickstart/04_first_inference)
+- 前置阅读：[`00.1 Environment Setup`](./01_environment_setup.md)
+- 源码直达：<a href="../_code/chapter00_quickstart/main_quick.cpp"><code>main_quick.cpp</code></a>、<a href="../_code/chapter00_quickstart/run.sh"><code>run.sh</code></a>
+- 相关阅读：[`00.3 Download TinyLlama`](./03_download_tinyllama.md)、[`00.4 First Inference`](./04_first_inference.md)
 
 ## 这一页要解决什么
 

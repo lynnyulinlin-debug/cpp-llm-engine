@@ -2,9 +2,9 @@
 
 ## 阅读入口
 
-- 前置阅读：[`00.2 Clone and Build`](/chapter00_quickstart/02_clone_and_build_llamacpp)
-- 源码直达：[`main_quick.cpp`](/code/chapter00_quickstart)、[`run.sh`](/code/chapter00_quickstart)
-- 相关阅读：[`00.4 First Inference`](/chapter00_quickstart/04_first_inference)、[`00.5 Troubleshooting`](/chapter00_quickstart/05_troubleshooting)
+- 前置阅读：[`00.2 Clone and Build`](./02_clone_and_build_llamacpp.md)
+- 源码直达：<a href="../_code/chapter00_quickstart/main_quick.cpp"><code>main_quick.cpp</code></a>、<a href="../_code/chapter00_quickstart/run.sh"><code>run.sh</code></a>
+- 相关阅读：[`00.4 First Inference`](./04_first_inference.md)、[`00.5 Troubleshooting`](./05_troubleshooting.md)
 
 ## 这一页要解决什么
 

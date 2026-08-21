@@ -4,57 +4,29 @@
 
 本章只负责把第一条真实链路跑通：准备依赖、编译 `llama.cpp`、下载一个小模型，并完成第一次推理验证。
 
-它不负责教程导航，也不展开讲 C++、CMake 或 CUDA 基础。这些内容放在独立的 `foundation` 部分，阅读路径由 `docs/guide.md` 统一说明。
+## 本章概览
 
-```mermaid
-flowchart LR
-    A[准备依赖] --> B[编译 llama.cpp]
-    B --> C[下载 TinyLlama]
-    C --> D[第一次推理]
-    D --> E[确认输出]
-    E --> F[进入 chapter01_tensor_loader]
-```
-
-## 1. 本章概览
-
-| 先看什么 | 这一章给什么 | 为什么重要 | 对应小节 |
+| 先看什么 | 这一节讲什么 | 为什么重要 | 对应小节 |
 | --- | --- | --- | --- |
-| 为什么先跑通基线 | 第一次真实推理结果 | 先确认教程能落地 | [`00.3`](#3-本章要解决什么) / [`00.4`](#4-背景是什么) |
-| 这一章做哪些检查 | 环境、编译、模型下载、首次输出 | 先把起跑线固定住 | [`00.5`](#5-最小设计是什么) / [`00.6`](#6-中间推导是什么) / [`00.9`](#9-怎么验证) |
-| 这一章产出什么 | 可运行 smoke test | 后续章节都依赖这条基线 | [`00.7`](#7-本章会产出什么) / [`00.11`](#11-本章解决了什么) |
-| 源码直达 | `main_quick.cpp` / `run.sh` | 先看最小可运行链路 | [`main_quick.cpp`](/code/chapter00_quickstart) / [`run.sh`](/code/chapter00_quickstart) |
-| 下一步接到哪里 | `chapter01_tensor_loader` | 从起跑线进入主线 | [`00.12`](#12-下一步是什么) |
+| 环境怎么准备 | 基础工具和运行条件 | 先排除环境问题 | [`00.1 Environment Setup`](./01_environment_setup.md) |
+| 怎么编译基线 | 克隆并编译 `llama.cpp` | 先得到可运行基线 | [`00.2 Clone and Build`](./02_clone_and_build_llamacpp.md) |
+| 模型怎么准备 | 下载 TinyLlama | 先拿到真实输入 | [`00.3 Download TinyLlama`](./03_download_tinyllama.md) |
+| 怎么完成首次推理 | 运行第一次本地推理 | 先看到真实输出 | [`00.4 First Inference`](./04_first_inference.md) |
+| 出错怎么排查 | 常见环境和路径问题 | 先把起跑线稳定住 | [`00.5 Troubleshooting`](./05_troubleshooting.md) |
+| 怎么体验 serving baseline | 可选部署 vLLM OpenAI-compatible server | 先看到真实推理服务形态 | [`00.6 Deploy vLLM`](./06_deploy_vllm.md) |
+| 本章怎么收口 | 确认最小基线成立 | 进入主线前先固定状态 | [`00.7 本章小结`](./summary.md) |
 
-## 2. 阅读入口
+## 阅读入口
 
-- 前置阅读：[`foundation`](/foundation/README)
-- 源码直达：[`main_quick.cpp`](/code/chapter00_quickstart)、[`run.sh`](/code/chapter00_quickstart)、[`CMakeLists.txt`](/code/chapter00_quickstart)
-- 相关阅读：[`00.1 Environment Setup`](/chapter00_quickstart/01_environment_setup)、[`00.4 First Inference`](/chapter00_quickstart/04_first_inference)、[`00.7 本章小结`](/chapter00_quickstart/summary)
+- 前置阅读：[`foundation`](../foundation/README.md)
+- 源码直达：<a href="../_code/chapter00_quickstart/main_quick.cpp"><code>main_quick.cpp</code></a>、<a href="../_code/chapter00_quickstart/run.sh"><code>run.sh</code></a>、<a href="../_code/chapter00_quickstart/CMakeLists.txt"><code>CMakeLists.txt</code></a>
+- 相关阅读：[`00.1 Environment Setup`](./01_environment_setup.md)、[`00.4 First Inference`](./04_first_inference.md)、[`00.6 Deploy vLLM`](./06_deploy_vllm.md)、[`00.7 本章小结`](./summary.md)
 
-## 生态对照
+## 这章在解决什么
 
-这一章最接近真实生态里的本地基线和本地交付层。先看这些参考，再回来看为什么这里要先追求“跑通第一条链路”。
+这一章只做一件事：把第一条真实推理链路跑通。它不负责教程导航，也不展开讲 C++、CMake 或 CUDA 基础；它要先确认教程所依赖的最小运行环境是成立的。
 
-- 先看 [生态对照总览](/reference/ecosystem/README)
-- 对照 [llama.cpp](/reference/ecosystem/llama_cpp) 看最小本地推理基线怎样把模型先跑起来
-- 对照 [Ollama](/reference/ecosystem/ollama) 看本地交付层怎样把推理能力包装给最终用户
-
-## 3. 本章要解决什么
-
-- 确认本机具备基本的编译和运行条件
-- 能编译 `llama.cpp` 的 CPU 版本，或按需切换到 CUDA 版本
-- 下载 TinyLlama 并完成一次最小推理
-- 看懂第一次推理成功时应该出现什么结果
-
-## 4. 背景是什么
-
-如果读者一上来就进入主线的 `Tensor`、`MatMul` 和 `Attention`，很容易先卡在“代码到底能不能跑起来”这件事上。  
-所以在进入结构和算子之前，最好先验证一件最基本的事：本地环境能否完成一次真实推理。
-
-这一章的背景不是“讲推理模型怎么工作”，而是“先确认教程所依赖的最小运行环境是成立的”。  
-只要这一步通了，后面的章节就不再只是纸面设计，而是可以逐章验证的实现路径。
-
-## 5. 最小设计是什么
+## 这章怎么做
 
 这一章只保留最小但真实的一条路径：
 
@@ -62,54 +34,13 @@ flowchart LR
 - 编译 `llama.cpp`
 - 下载小模型
 - 运行第一次推理
+- 可选部署一次 `vLLM` serving baseline
 - 记录成功时的输出形态
 
-这意味着它不追求覆盖所有运行场景，而是先把“教程真的能跑起来”这件事固定住。
+这意味着它不追求覆盖所有运行场景，而是先把“教程真的能跑起来”这件事固定住。`vLLM` 小节是可选体验，用来提前看到真实推理服务的形态，不作为后续章节的强制依赖。
 
-## 6. 中间推导是什么
+## 收口与下一步
 
-如果从“怎样最快进入主线”倒推，通常会得到几个约束：
+这一章的验证很直接：能成功编译、能下载并加载模型、能看到第一次推理的输出。它把教程的起跑线固定在一个可复现的状态上。
 
-- 读者需要先看到一个真实可跑的结果，才更容易建立信心
-- 读者需要先确认环境、编译和模型下载都通了，后面才好区分是代码问题还是环境问题
-- 主线章节不应该背负环境排错的负担，所以这些基础检查要前置到这里
-- 只要最小推理基线成立，后面的章节就可以逐步替换成自己的实现，而不是重新从零确认整条链路
-
-所以这一章的关键不是“把命令跑一遍”，而是把主线的起跑线固定住：  
-先确认 `llama.cpp` 能跑，再进入后续自己的 `Tensor`、`ModelLoader` 和算子实现。
-
-## 7. 本章会产出什么
-
-- 一个可运行的本地推理基线
-- 一个可复现的 smoke test
-- 一个遇到问题时可回退到 CPU 路径的方案
-
-## 8. 实现路径是什么
-
-1. 环境准备
-2. 克隆并编译 `llama.cpp`
-3. 下载 TinyLlama 模型
-4. 运行首次推理
-5. 常见问题排查
-
-## 9. 怎么验证
-
-- 确认可以成功编译
-- 确认可以下载并加载模型
-- 确认第一次推理有可观察输出
-- 确认失败时能回退到更容易排查的 CPU 路径
-
-## 10. 常见问题是什么
-
-- 依赖没有装全，导致编译失败
-- 模型下载路径不对，导致首次推理卡住
-- 终端环境不一致，导致命令在本机和教程里表现不同
-- 把环境问题误判成代码问题
-
-## 11. 本章解决了什么
-
-这一章把第一条真实推理链路跑通了，并把教程的起跑线固定在一个可复现的状态上。
-
-## 12. 下一步是什么
-
-进入 `chapter01_tensor_loader`，开始把模型权重安全地读进程序，并把输入语义固定下来。
+下一步进入 `chapter01_tensor_loader`，开始把模型权重安全地读进程序，并把输入语义固定下来。
