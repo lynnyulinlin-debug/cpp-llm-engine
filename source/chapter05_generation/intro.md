@@ -44,7 +44,7 @@ flowchart LR
 
 - 前置阅读：[`chapter04_attention`](../chapter04_attention/intro.md)、[`chapter04 小结`](../chapter04_attention/summary.md)
 - 源码直达：<a href="../_code/chapter05_generation/src/runtime.cpp"><code>runtime.cpp</code></a>、<a href="../_code/chapter05_generation/src/scheduler.cpp"><code>scheduler.cpp</code></a>、<a href="../_code/chapter05_generation/src/kv_cache.cpp"><code>kv_cache.cpp</code></a>
-- 相关阅读：正文页按上面的 `本章概览` 顺序阅读；扩展系统视角见 [推理引擎输入链路](../reference/input_pipeline.md)、[推理引擎服务化基础](../reference/service_basics.md)
+- 相关阅读：正文页按上面的 `本章概览` 顺序阅读；系统总图见 [推理引擎系统补强图](../reference/inference_engine_systems.md)，扩展视角见 [推理引擎输入链路](../reference/input_pipeline.md)、[推理引擎服务化基础](../reference/service_basics.md)
 
 ## 这章在解决什么
 

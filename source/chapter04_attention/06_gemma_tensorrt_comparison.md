@@ -7,7 +7,7 @@
 - 哪些是模型家族带来的结构差异
 - 哪些是高性能 engine 进一步拆出来的执行边界
 
-## 1. 本节概览
+## 本节概览
 
 | 本章里的东西 | `Gemma` 里的对应关注点 | `TensorRT-LLM` 里的对应关注点 | 读的时候重点看什么 |
 | --- | --- | --- | --- |
@@ -16,7 +16,7 @@
 | LayerNorm 和 FFN | 模型结构里的标准组件组合 | 算子融合与 runtime 执行路径 | 模块如何被组合起来 |
 | 首层权重接入 | 模型家族如何影响 shape 和兼容性 | 权重如何进入 engine 和部署链路 | 权重从哪里接进来 |
 
-## 2. 为什么它重要
+## 生态位置
 
 本章解决的是“单层 decoder 是否站得住”。  
 `Gemma` 和 `TensorRT-LLM` 提醒你，站得住只是第一步，后面还要面对两个现实问题：
@@ -29,7 +29,7 @@
 - `Gemma` 给你看模型家族视角
 - `TensorRT-LLM` 给你看高性能 engine 视角
 
-## 3. 先看什么
+先看什么：
 
 阅读顺序如下：
 
@@ -39,7 +39,7 @@
 
 这里最重要的不是逐项对照名称，而是看它们如何组织结构、边界和执行路径。
 
-## 4. 中间推导是什么
+中间推导：
 
 往回推为什么要把这两类生态放进来，通常会得到几个约束：
 
@@ -54,7 +54,7 @@
 - `Gemma` 看的是同一结构在具体模型家族里的样子
 - `TensorRT-LLM` 看的是同一结构在高性能 engine 里的切分方式
 
-## 5. 学习后应能做什么
+## 学习边界
 
 学完本节后，应当能够把下面几件事说清楚：
 
@@ -65,8 +65,6 @@
 
 把这些对应关系讲明白，就说明你已经能把本章的结构放回真实生态里去看。
 
-## 6. 边界说明
-
 这一节不负责复刻 `Gemma` 或 `TensorRT-LLM` 的全部能力。
 
 它只负责把本章的单层 decoder 和这两个生态的关注点对齐，让你知道：
@@ -75,8 +73,8 @@
 - 哪些设计只是把这些概念做得更完整
 - 哪些地方是工程落点，不是结构本身
 
-## 7. 参考页
+参考页：
 
-- [Gemma](/reference/ecosystem/gemma)
-- [TensorRT-LLM](/reference/ecosystem/tensorrt_llm)
-- [chapter04_attention 代码入口](/code/chapter04_attention)
+- [Gemma](../reference/ecosystem/gemma.md)
+- [TensorRT-LLM](../reference/ecosystem/tensorrt_llm.md)
+- <a href="../_code/chapter04_attention/src/attention.cpp"><code>attention.cpp</code></a>、<a href="../_code/chapter04_attention/src/decoder_layer.cpp"><code>decoder_layer.cpp</code></a>

@@ -34,6 +34,8 @@ while has_work:
 
 真实 vLLM 会把这件事做得复杂得多：它需要考虑 token budget、block budget、prefill 和 decode 的混排、抢占、streaming output，以及 GPU batch 形状。但入门时先抓住一个事实：scheduler 调度的不是完整请求的一次执行，而是每个 step 里哪些 token 应该被推进。
 
+最小 admission 规则应保持明确：先检查 token/cache budget，再把 waiting 请求加入当前 step；预算不足时回压、延迟或拒绝，而不是让 batch 无限增长。取消和超时请求必须在下一次 step 前移出运行集合，已完成请求先发出最终结果，再进入 cache 和 workspace 回收路径。
+
 ## 和本教程最小实现的关系
 
 本教程当前的 scheduler 先让请求推进规则变得可见，不追求完整 serving 性能。这个小节补上的，是从最小 scheduler 走向 vLLM / nano-vLLM 的关键差距：真实 runtime 会持续重组 batch，而不是把 batch 当成一次性输入。
@@ -43,3 +45,5 @@ while has_work:
 - waiting / running / finished 队列分离
 - 每个 step 显式计算 token budget
 - decode 结束后立即更新请求和 cache 状态
+
+验证时至少覆盖：新请求不会绕过容量检查，取消请求不会再生成 token，完成请求不会占用下一轮 batch，streaming 输出和最终 finish reason 各只提交一次。

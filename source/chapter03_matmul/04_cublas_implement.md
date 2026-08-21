@@ -5,30 +5,23 @@
 
 用 `cublasGemmEx` 实现高效矩阵乘法，并正确处理转置标志与内存布局。
 
-## 阅读入口
-
-- 前置阅读：[`MatMulOp 设计`](/chapter03_matmul/02_matmul_design)、[`CPU Reference`](/chapter03_matmul/03_cpu_reference)
-- 源码直达：[`chapter03_matmul 代码入口`](/code/chapter03_matmul)
-- 相关阅读：[`PyTorch 对照测试`](/chapter03_matmul/05_test_with_pytorch)、[`复杂度直觉`](/chapter03_matmul/06_complexity_intuition)
-
-## 代码直达
-
-- [`src/matmul_op.cpp`](/code/chapter03_matmul#matmul-op-cpp)
-- [`src/operator.cpp`](/code/chapter03_matmul#operator-cpp)
-- [`src/matrix.cpp`](/code/chapter03_matmul#matrix-cpp)
-- [`tests/chapter03_matmul_test.cpp`](/code/chapter03_matmul#chapter03-matmul-test-cpp)
-
-## 读完后应能做什么
+读完后应能做到：
 
 - 理解 cuBLAS 在本章中的作用
 - 理解如何把内部张量布局映射到 cuBLAS 调用
 - 理解转置参数和内存布局的关系
 
-## 为什么这一步重要
+## 阅读入口
+
+- 前置阅读：[`MatMulOp 设计`](./02_matmul_design.md)、[`CPU Reference`](./03_cpu_reference.md)
+- 源码直达：<a href="../_code/chapter03_matmul/src/matmul_op.cpp"><code>matmul_op.cpp</code></a>、<a href="../_code/chapter03_matmul/src/matrix.cpp"><code>matrix.cpp</code></a>、<a href="../_code/chapter03_matmul/tests/chapter03_matmul_test.cpp"><code>chapter03_matmul_test.cpp</code></a>
+- 相关阅读：[`PyTorch 对照测试`](./05_test_with_pytorch.md)、[`复杂度直觉`](./06_complexity_intuition.md)
+
+## 核心实现
 
 这一步把“正确的参考实现”升级成“高效实现”。如果布局处理不对，结果会错得很隐蔽，所以这一页必须和 CPU baseline 紧密对照。
 
-## 这一页的核心内容
+这一页的核心内容：
 
 - `cublasGemmEx`
 - `cublasHandle_t`
@@ -43,7 +36,7 @@
 
 这样如果后续想切换其他 GPU backend，不需要重写上层算子逻辑。
 
-### row-major 到 cuBLAS 的映射示例
+row-major 到 cuBLAS 的映射示例：
 
 如果项目内部统一使用 row-major，而你要计算 `C = A * B`，那么在 cuBLAS 里通常会把同一块内存按 column-major 的视角解释成转置后的矩阵来算。
 
@@ -56,13 +49,23 @@
 这样做的原因是：cuBLAS 默认按 column-major 理解输入，而项目内部可能按 row-major 存储。  
 把这层翻译说清楚之后，读者在看 cuBLAS 文档时就不会把“数学上的转置”和“内存布局上的解释”混为一谈。
 
-## 实现建议
+实现建议：
 
 - 先保持接口和 CPU 版本一致
 - 只替换底层计算路径
 - 保留和 CPU baseline 相同的测试入口
 
-## 怎么验证
+## 这一页在真实项目里对应什么
+
+教程这里接 `cuBLAS`，不是因为真实项目只会用 `cuBLAS`，而是因为它足够清楚地表达了一个 backend 层问题：同样的 `MatMul` 语义，可以交给不同实现路径。
+
+如果说 `03.2` 负责立住“算子语义边界”，这一页负责的就是下一步：backend 怎样承接这条边界，而不把上层语义改坏。
+
+所以本页只解决一件事：backend 怎样把稳定语义翻译成高性能实现。它不试图提前展开调度、continuous batching 或 profiling 主线，也不重新定义 `MatMul` 本身的语义。
+
+## 验证与排查
+
+验证时重点看：
 
 - 和 CPU 参考实现数值接近
 - 和 PyTorch 对照误差可接受
@@ -83,7 +86,7 @@ Tensor matmul_cublas(const Tensor& a, const Tensor& b, cublasHandle_t handle) {
 
 关键不是把 cuBLAS API 直接暴露给上层，而是把它包在一个可替换的 backend 里。
 
-## 常见问题
+常见问题：
 
 - 转置标志设置反了
 - 行主序和列主序混用

@@ -1,114 +1,30 @@
-# 03.7 Chapter Wrap-up 本章解决了什么
+# 03.8 Chapter Wrap-up 本章解决了什么
 
 这章回答的是：矩阵乘法是否已经形成可复用、可验证、可加速的算子？
 
 如果实现正确，`MatMul` 已经成为一个独立算子，既有可读的 CPU 基线，也有可用的 cuBLAS 加速实现。
 
-把这一章从头到尾走完后，应当能够把同一条计算链说清楚：
-
-- 输入是 view-aware Tensor
-- 接口层只看 `MatMulOp`
-- CPU reference 先保证语义
-- cuBLAS 再保证性能
-- PyTorch 对照负责验证结果没有偏离
-
-## 1. 本章解决了什么
+## 本章解决了什么
 
 - `MatMul` 已经从普通运算变成稳定的算子边界
 - CPU reference 负责把语义和布局说清楚
 - cuBLAS 负责把性能提上来，但不会改写接口契约
 - PyTorch 对照负责确认数值行为没有偏离预期
+- 本章已经能对照 vLLM / nano-vLLM 里的 Linear、QKV projection、FFN 和 backend / kernel 分层
 
-## 生态回看
+## 为什么重要
 
-回看 `llama.cpp` 和 `TensorRT-LLM` 时，有助于看懂“算子边界稳定”与“GPU engine 高性能”之间的关系。
+这一章把 `chapter02` 的 view-aware Tensor 收束成一个稳定的数值算子边界，让上层只关心语义，不用直接面对裸数组或后端差异。`chapter02` 解决数据怎么看，`chapter03` 解决数据怎么算。
 
-- 先看 [生态对照总览](/reference/ecosystem/README)
-- 对照 [llama.cpp](/reference/ecosystem/llama_cpp) 回看最小运行时怎样先把 MatMul 跑起来
-- 对照 [TensorRT-LLM](/reference/ecosystem/tensorrt_llm) 回看算子层怎样接到高性能 engine
-- 如果想顺带看模型对象影响，可以再看 [Gemma](/reference/ecosystem/gemma)
+读真实推理项目时，这一章提供的是“算子语义和后端实现分离”的判断标准：同一个 Linear 语义可以由 CPU reference、cuBLAS、自定义 CUDA kernel 或更高性能 backend 执行。
 
-更具体地说，这一章解决的不是“矩阵乘法怎么实现”，而是“矩阵乘法怎么变成一层稳定边界”。只要这个边界成立，后面的 decoder 结构、权重路径和量化路径都能复用它。
-
-## 2. 为什么它重要
-
-这一章真正要证明的不是“矩阵乘法能不能算”，而是“矩阵乘法能不能被封装成一个稳定边界，供 attention 和 FFN 反复复用”。
-
-如果没有这层边界，后续结构层的问题会和算子层的问题混在一起，排错成本会迅速上升。
-
-因此这一章其实在做两件事：
-
-- 给后续模型结构提供一个可依赖的算子契约
-- 给后续优化提供一个不会被破坏的正确性基线
-
-## 3. 背景回顾
-
-`chapter01` 提供了权重读取，`chapter02` 提供了 view-aware Tensor。  
-这一章把它们收束成一个稳定的数值算子边界，让上层只关心语义，不用直接面对裸数组或后端差异。
-
-## 4. 中间推导回顾
-
-从问题往下推，设计会自然收敛成这条路径：
-
-- 先统一算子语义
-- 再给出 CPU 参考实现
-- 再接入高性能 backend
-- 最后用 PyTorch 对照验证数值行为
-
-这里的关键转折点是：`MatMul` 不是直接等于 `GEMM`，前者是接口语义，后者是高性能实现方式。
-
-朴素循环作为正确性基线，cuBLAS 作为性能基线，这两条线并存，才能把正确性验证和性能优化之间的工程边界分开。`03.6` 解释了为什么这种“双基线”策略是合理的。
-
-这也意味着，后面任何优化如果要成立，都必须先回答两个问题：
-
-- 它有没有保持 `MatMulOp` 的语义不变
-- 它有没有在同样输入下保持和参考实现一致
-
-## 5. 学习后应能做什么
-
-- 解释为什么 `MatMulOp` 必须先于优化实现存在
-- 说明 CPU reference 为什么是最稳的 correctness baseline
-- 说明 cuBLAS 为什么可以作为后端而不是上层接口
-- 通过对照测试检查布局和数值是否一致
-
-如果这些关系能够讲清楚，就说明已经不只是会用 `MatMul`，而是已经能把它当成一层工程边界来思考。
-
-## 6. 边界说明
-
-这一章不负责替你证明所有性能细节，也不负责替你实现更多 backend 变体。
-
-它只负责把语义边界和实现边界分开：
-
-- 接口稳定
-- 布局明确
-- 参考路径可读
-- 高性能路径可替换
-
-这就是它和前两章的差异：`chapter01` 和 `chapter02` 主要在定义数据对象，`chapter03` 开始定义可复用的计算边界。
-
-## 7. 下一步是什么
+## 下一步
 
 进入 `chapter04_attention`，把 `MatMul` 用到多头注意力和前馈网络中，开始组装真正的 decoder 结构。
 
-如果对为什么参考实现要先写朴素循环还不够踏实，可以先补读 `06_complexity_intuition.md`，它专门解释这个设计选择。
+## 复盘路径
 
-## 8. 回看源码
-
-- 主实现：[`operator.cpp`](/code/chapter03_matmul)、[`matmul_op.cpp`](/code/chapter03_matmul)
-- 正确性基线：[`matrix.cpp`](/code/chapter03_matmul)
-- 验证入口：[`chapter03_matmul_test.cpp`](/code/chapter03_matmul)
-- 代码索引：[`chapter03_matmul 代码入口`](/code/chapter03_matmul)
-
-## 代码直达
-
-- [`src/operator.cpp`](/code/chapter03_matmul#operator-cpp)
-- [`src/matmul_op.cpp`](/code/chapter03_matmul#matmul-op-cpp)
-- [`src/matrix.cpp`](/code/chapter03_matmul#matrix-cpp)
-- [`tests/chapter03_matmul_test.cpp`](/code/chapter03_matmul#chapter03-matmul-test-cpp)
-
-## 9. 收口结论
-
-这一章的收口结论是：`MatMul` 已经从普通运算变成可复用、可验证、可加速的算子层边界。  
-下一章不再重新定义矩阵乘法，而是在这个边界上把 attention、FFN 和 residual 组合成真正的 decoder 结构。
-
-`chapter03` 不是终点，而是从“张量对象”走向“模型结构”的第一道稳定门槛。
+- 先看 <a href="../_code/chapter03_matmul/src/operator.cpp"><code>operator.cpp</code></a> 和 <a href="../_code/chapter03_matmul/src/matmul_op.cpp"><code>matmul_op.cpp</code></a>
+- 再看 <a href="../_code/chapter03_matmul/src/matrix.cpp"><code>matrix.cpp</code></a>
+- 最后看 <a href="../_code/chapter03_matmul/tests/chapter03_matmul_test.cpp"><code>chapter03_matmul_test.cpp</code></a>
+- 复盘整章时，回到 [`chapter03 导读`](./intro.md)

@@ -10,7 +10,7 @@
 
 - 前置阅读：[`05.3 Naive Generation`](./03_naive_generation.md)、[`05.2 N 层 Transformer 组装`](./02_transformer_assembly.md)
 - 源码直达：<a href="../_code/chapter05_generation/include/chapter05_generation/kv_cache.h"><code>kv_cache.h</code></a>、<a href="../_code/chapter05_generation/src/kv_cache.cpp"><code>kv_cache.cpp</code></a>、<a href="../_code/chapter05_generation/tests/kv_cache_test.cpp"><code>kv_cache_test.cpp</code></a>
-- 相关阅读：[`05.5 Scheduler`](./05_scheduler.md)、[`05.6 Sampler`](./05_sampler.md)、[`05.7 端到端生成测试`](./06_end_to_end_generation.md)
+- 相关阅读：[`05.5 Scheduler`](./05_scheduler.md)、[`05.6 Sampler`](./05_sampler.md)、[`推理引擎内存管理`](../reference/memory_management.md)、[`05.7 端到端生成测试`](./06_end_to_end_generation.md)
 
 ## 核心设计
 

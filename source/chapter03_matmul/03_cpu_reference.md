@@ -1,37 +1,29 @@
 # 03.3 CPU Reference Implementation CPU 参考实现
 
 
-## 1. 这一页要解决什么
+## 这一页要解决什么
 
 先实现一个正确的 CPU 版本 `MatMul`，作为后续 cuBLAS 版本的对照基线。  
 这一页的目标不是最快，而是最容易读懂、最容易验证。
 
-## 阅读入口
-
-- 前置阅读：[`Operator Base`](/chapter03_matmul/01_operator_base)、[`MatMulOp 设计`](/chapter03_matmul/02_matmul_design)
-- 源码直达：[`chapter03_matmul 代码入口`](/code/chapter03_matmul)
-- 相关阅读：[`cuBLAS 实现`](/chapter03_matmul/04_cublas_implement)、[`PyTorch 对照测试`](/chapter03_matmul/05_test_with_pytorch)
-
-## 代码直达
-
-- [`src/matrix.cpp`](/code/chapter03_matmul#matrix-cpp)
-- [`src/matmul_op.cpp`](/code/chapter03_matmul#matmul-op-cpp)
-- [`tests/chapter03_matmul_test.cpp`](/code/chapter03_matmul#chapter03-matmul-test-cpp)
-
-## 2. 读完后应能做什么
+读完后应能做到：
 
 - 理解为什么先做 CPU 参考实现
 - 理解如何用朴素实现验证数学正确性
 - 理解 correctness baseline 的意义
 
-## 3. 为什么这一步重要
+## 阅读入口
+
+- 前置阅读：[`Operator Base`](./01_operator_base.md)、[`MatMulOp 设计`](./02_matmul_design.md)
+- 源码直达：<a href="../_code/chapter03_matmul/src/matrix.cpp"><code>matrix.cpp</code></a>、<a href="../_code/chapter03_matmul/src/matmul_op.cpp"><code>matmul_op.cpp</code></a>、<a href="../_code/chapter03_matmul/tests/chapter03_matmul_test.cpp"><code>chapter03_matmul_test.cpp</code></a>
+- 相关阅读：[`cuBLAS 实现`](./04_cublas_implement.md)、[`PyTorch 对照测试`](./05_test_with_pytorch.md)
+
+## 核心实现
 
 高性能实现之前，必须先确认数学是对的。  
 CPU 参考实现通常最直观，也最适合用来定位布局、转置和维度错误。
 
 如果参考实现都不稳定，后面的 cuBLAS 路径就很难判断到底是优化引入了偏差，还是最初的数学定义就已经错了。
-
-## 4. 这页应该怎么写
 
 参考实现要尽量朴素：
 
@@ -50,11 +42,9 @@ assert(A.cols() == B.rows());
 Tensor C(A.rows(), B.cols());
 ```
 
-源码锚点：`code/chapter03_matmul/src/matmul_cpu.cpp`
+源码锚点：`code/chapter03_matmul/src/matmul_op.cpp`
 
 这样“边界检查”和“核心计算”就会同时出现在代码里，读者也更容易把形状错误和累加错误区分开。
-
-## 5. 为什么朴素实现更适合做基线
 
 朴素三重循环有两个优点：
 
@@ -64,7 +54,9 @@ Tensor C(A.rows(), B.cols());
 这也是为什么参考实现通常应该先写得“笨”一点。  
 当你需要验证 cuBLAS、转置或者布局映射时，最需要的是一个可以直接对照的小实现，而不是一个高度优化但难读的版本。
 
-## 6. 怎么验证
+## 验证与排查
+
+验证时重点看：
 
 - 与手工小矩阵结果一致
 - 与后续 cuBLAS 结果一致
@@ -87,11 +79,11 @@ for (std::size_t i = 0; i < M; ++i) {
 }
 ```
 
-源码锚点：`code/chapter03_matmul/src/matmul_cpu.cpp`
+源码锚点：`code/chapter03_matmul/src/matmul_op.cpp`
 
 这段循环的价值在于可读性，而不是性能。
 
-## 7. 常见问题
+常见问题：
 
 - 维度顺序搞反
 - 累加顺序错误

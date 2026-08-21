@@ -5,31 +5,23 @@
 
 从 `chapter01` 的模型加载结果中提取第一层权重，并验证前向传播的张量形状是否正确。
 
-## 阅读入口
-
-- 前置阅读：[`04.4 DecoderLayer`](/chapter04_attention/04_decoder_layer)、[`chapter01_tensor_loader`](/chapter01_tensor_loader/intro)
-- 源码直达：[`chapter04_attention 代码入口`](/code/chapter04_attention)
-- 相关阅读：[`04.7 本章小结`](/chapter04_attention/summary)、[`chapter05_generation`](/chapter05_generation/intro)
-
-## 代码直达
-
-- [`src/decoder_layer.cpp`](/code/chapter04_attention#decoder-layer-cpp)
-- [`src/linear_layer.cpp`](/code/chapter04_attention#linear-layer-cpp)
-- [`src/tensor.cpp`](/code/chapter04_attention#tensor-cpp)
-- [`src/model_loader.cpp`](/code/chapter01_tensor_loader#model-loader-cpp)
-- [`tests/chapter04_attention_test.cpp`](/code/chapter04_attention#chapter04-attention-test-cpp)
-
-## 读完后应能做什么
+读完后应能做到：
 
 - 理解如何把第 1 章的加载结果接入当前模块
 - 理解如何验证第一层权重是否真正可用
 - 理解为什么先只验证一层，而不是直接上完整模型
 
-## 为什么这一步重要
+## 阅读入口
+
+- 前置阅读：[`04.4 DecoderLayer`](./04_decoder_layer.md)、[`chapter01_tensor_loader`](../chapter01_tensor_loader/intro.md)
+- 源码直达：<a href="../_code/chapter04_attention/src/decoder_layer.cpp"><code>decoder_layer.cpp</code></a>、<a href="../_code/chapter01_tensor_loader/src/model_loader.cpp"><code>model_loader.cpp</code></a>、<a href="../_code/chapter04_attention/tests/chapter04_attention_test.cpp"><code>chapter04_attention_test.cpp</code></a>
+- 相关阅读：[`04.7 vLLM / nano-vLLM 结构阅读桥`](./07_vllm_nano_vllm_structure_bridge.md)、[`04.8 本章小结`](./summary.md)、[`chapter05_generation`](../chapter05_generation/intro.md)
+
+## 验证设计
 
 这一页把“能加载模型”进一步推进到“能用加载出来的权重跑前向”。它是从静态数据到动态推理的关键过渡。
 
-## 验证重点
+验证重点：
 
 - 权重名称可以对应上
 - shape 和模块定义一致
@@ -37,7 +29,7 @@
 
 这一页的重点不是把整个模型一次性接完，而是先把“加载出来的权重能真实驱动一层前向”这个问题解决掉。只要第一层对了，后面的层只是在重复同一个结构。
 
-### 数值验证的范围
+数值验证的范围：
 
 这一阶段的“数值验证”目标是有限的：
 
@@ -47,7 +39,7 @@
 
 这一页先解决的是“模块能跑通”，不是“数值证明完全正确”。更完整的 reference 对比会放到后续的验证流程里。
 
-## 实现建议
+实现建议：
 
 - 只加载第一层做验证
 - 先验证 shape，再验证数值
@@ -59,7 +51,7 @@
 
 一开始就尝试整层前向时，出现错误往往很难判断问题来自 loader、张量布局还是 attention 计算本身。
 
-### 权重缺失时怎么办
+权重缺失时怎么办：
 
 当 `loader.find()` 返回空指针时，教程主线建议先停下来检查映射，而不是直接跳过：
 
@@ -74,7 +66,7 @@
 
 但主线教程里更推荐先修复加载映射，因为随机权重很容易让 shape 看起来没问题、数值却完全偏掉，调试成本反而更高。
 
-### 不同模型的命名约定
+不同模型的命名约定：
 
 权重名称是模型特定的，不能假设所有模型都用同一套命名：
 
@@ -87,7 +79,7 @@
 
 本教程使用的是简化命名，目的是让“名称映射”和“模块接线”更便于理解。真实项目里通常需要根据具体模型文件调整解析逻辑。
 
-### 与 Chapter01 的衔接
+与 Chapter01 的衔接：
 
 `chapter01` 的 `ModelLoader` 负责把权重加载进一个按名称索引的容器里：
 
@@ -125,7 +117,9 @@ assert(weights->shape() == std::vector<int64_t>{hidden, hidden});
 
 先检查权重能否找到，再检查 shape，再做前向。
 
-## 常见问题
+## 验证与排查
+
+常见问题：
 
 - 权重名称映射不一致
 - 第一层 shape 和模块输入不匹配

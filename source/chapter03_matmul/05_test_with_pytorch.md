@@ -5,30 +5,23 @@
 
 随机生成矩阵，与 PyTorch 的结果对照，验证 `MatMul` 的数值正确性。
 
-## 阅读入口
-
-- 前置阅读：[`CPU Reference`](/chapter03_matmul/03_cpu_reference)、[`cuBLAS 实现`](/chapter03_matmul/04_cublas_implement)
-- 源码直达：[`chapter03_matmul 代码入口`](/code/chapter03_matmul)
-- 相关阅读：[`复杂度直觉`](/chapter03_matmul/06_complexity_intuition)、[`本章小结`](/chapter03_matmul/summary)
-
-## 代码直达
-
-- [`tests/chapter03_matmul_test.cpp`](/code/chapter03_matmul#chapter03-matmul-test-cpp)
-- [`src/matmul_op.cpp`](/code/chapter03_matmul#matmul-op-cpp)
-- [`src/matrix.cpp`](/code/chapter03_matmul#matrix-cpp)
-- [`examples/main_matmul.cpp`](/code/chapter03_matmul#main-matmul-cpp)
-
-## 读完后应能做什么
+读完后应能做到：
 
 - 理解为什么要做对照测试
 - 理解数值误差应该怎么判断
 - 理解 correctness test 和 performance test 的区别
 
-## 为什么这一步重要
+## 阅读入口
+
+- 前置阅读：[`CPU Reference`](./03_cpu_reference.md)、[`cuBLAS 实现`](./04_cublas_implement.md)
+- 源码直达：<a href="../_code/chapter03_matmul/tests/chapter03_matmul_test.cpp"><code>chapter03_matmul_test.cpp</code></a>、<a href="../_code/chapter03_matmul/src/matmul_op.cpp"><code>matmul_op.cpp</code></a>
+- 相关阅读：[`复杂度直觉`](./06_complexity_intuition.md)、[`本章小结`](./summary.md)
+
+## 测试设计
 
 矩阵乘法是很多后续模块的基础。一旦这里出现偏差，attention 和 FFN 的误差会被放大，所以必须有稳定的对照测试。
 
-## 测试策略
+测试策略：
 
 - 随机生成小矩阵
 - 分别跑 CPU 版本和 cuBLAS 版本
@@ -37,7 +30,7 @@
 
 建议把随机测试固定随机种子，这样一旦失败，输入可以复现。对于工程教程来说，可复现比“随机覆盖更多”更重要。
 
-### 测试复用关系
+测试复用关系：
 
 这套 PyTorch 对照测试可以直接复用 `03.3` 和 `03.4` 的测试入口：
 
@@ -54,7 +47,9 @@
 
 这样做的好处是，读者可以沿着同一组输入同时检查参考实现、GPU 实现和 PyTorch 基线，而不是为三者分别维护一套不同的测试逻辑。
 
-## 验证标准
+## 验证与排查
+
+验证标准：
 
 - 输出 shape 一致
 - 数值误差足够小
@@ -73,7 +68,7 @@ golden = A @ B
 
 然后把同样的输入送到本实现中，比较输出和 `golden` 的差异。
 
-## 常见问题
+常见问题：
 
 - 误差阈值设得过严
 - PyTorch 输入布局和本实现不一致

@@ -5,29 +5,23 @@
 
 实现 Transformer 中常用的 LayerNorm 和激活函数，为后续 FFN 和 DecoderLayer 提供基础模块。
 
-## 阅读入口
-
-- 前置阅读：[`chapter04 导读`](/chapter04_attention/intro)、[`04.1 Multi-head Attention`](/chapter04_attention/01_multihead_attention)
-- 源码直达：[`chapter04_attention 代码入口`](/code/chapter04_attention)
-- 相关阅读：[`04.3 Feed Forward Network`](/chapter04_attention/03_feedforward)、[`04.4 DecoderLayer`](/chapter04_attention/04_decoder_layer)
-
-## 代码直达
-
-- [`src/layer_norm.cpp`](/code/chapter04_attention#layer-norm-cpp)
-- [`src/tensor.cpp`](/code/chapter04_attention#tensor-cpp)
-- [`tests/chapter04_attention_test.cpp`](/code/chapter04_attention#chapter04-attention-test-cpp)
-
-## 读完后应能做什么
+读完后应能做到：
 
 - 理解 LayerNorm 的作用
 - 理解激活函数在非线性表达中的意义
 - 理解 SiLU 和 GELU 的使用场景
 
-## 为什么这一步重要
+## 阅读入口
+
+- 前置阅读：[`chapter04 导读`](./intro.md)、[`04.1 Multi-head Attention`](./01_multihead_attention.md)
+- 源码直达：<a href="../_code/chapter04_attention/src/layer_norm.cpp"><code>layer_norm.cpp</code></a>、<a href="../_code/chapter04_attention/tests/chapter04_attention_test.cpp"><code>chapter04_attention_test.cpp</code></a>
+- 相关阅读：[`04.3 Feed Forward Network`](./03_feedforward.md)、[`04.4 DecoderLayer`](./04_decoder_layer.md)
+
+## 核心实现
 
 LayerNorm 稳定训练和推理中的数值分布，激活函数引入非线性表达能力。它们虽然不是最“显眼”的模块，但对 Transformer 的稳定性很关键。
 
-## 这一页的核心内容
+这一页的核心内容：
 
 - LayerNorm 的均值和方差归一化
 - 可学习缩放和偏移参数
@@ -37,7 +31,7 @@ LayerNorm 的实现重点是归一化维度和数值稳定性，激活函数的�
 
 工程上建议把 LayerNorm 的参数、统计量计算和输出变换分开写清楚，这样后续复用更简单。
 
-### LayerNorm 的归一化维度
+LayerNorm 的归一化维度：
 
 Transformer 里的 LayerNorm 是对每个 token 的特征维度单独归一化：
 
@@ -59,7 +53,7 @@ y = (x - mean) / sqrt(var + eps) * gamma + beta   # [B, S, D]
 - BatchNorm 通常在 batch 维度上统计
 - LayerNorm 在特征维度上统计
 
-### SiLU 和 GELU
+SiLU 和 GELU：
 
 SiLU (Swish)：
 
@@ -81,7 +75,7 @@ GELU(x) = 0.5 * x * (1 + erf(x / sqrt(2)))
 
 教程实现时，最好把激活函数做成可配置的纯函数，后面 FFN 直接复用。GELU 如果想先做最小版本，也可以用常见近似式替代精确的 `erf` 计算。
 
-### 推理中的一致性
+推理中的一致性：
 
 LayerNorm 在训练和推理里的行为是一致的：
 
@@ -90,13 +84,15 @@ LayerNorm 在训练和推理里的行为是一致的：
 
 所以它不需要像 BatchNorm 那样维护 running mean / running var。对本教程来说，这意味着同一份 LayerNorm 实现可以直接用于推理路径。
 
-## 实现建议
+实现建议：
 
 - 先实现基础公式
 - 再关注数值稳定性
 - 保持接口和后续 FFN 可直接复用
 
-## 怎么验证
+## 验证与排查
+
+验证时重点看：
 
 - 输出形状不变
 - 归一化后数值分布合理
@@ -116,7 +112,7 @@ for (each token) {
 
 激活函数则可以单独作为纯函数实现，便于在 FFN 中复用。
 
-## 常见问题
+常见问题：
 
 - 归一化维度选错
 - 方差计算不稳定

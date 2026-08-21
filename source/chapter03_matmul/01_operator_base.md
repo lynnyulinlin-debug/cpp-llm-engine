@@ -1,34 +1,26 @@
 # 03.1 Operator Base 算子基类
 
 
-## 1. 这一页要解决什么
+## 这一页要解决什么
 
-定义所有前向算子都能继承的基础接口，让 `MatMul`、`LayerNorm`、`FFN` 这类模块能用同一种方式接入主流程。
+定义所有前向算子都能继承的基础接口，让本章的 `MatMul` 能先用同一种方式接入主流程。
 
-## 阅读入口
-
-- 前置阅读：[`chapter03 导读`](/chapter03_matmul/intro)、[`MatMulOp 设计`](/chapter03_matmul/02_matmul_design)
-- 源码直达：[`chapter03_matmul 代码入口`](/code/chapter03_matmul)
-- 相关阅读：[`CPU Reference`](/chapter03_matmul/03_cpu_reference)、[`cuBLAS 实现`](/chapter03_matmul/04_cublas_implement)
-
-## 代码直达
-
-- [`src/operator.cpp`](/code/chapter03_matmul#operator-cpp)
-- [`src/matmul_op.cpp`](/code/chapter03_matmul#matmul-op-cpp)
-- [`tests/chapter03_matmul_test.cpp`](/code/chapter03_matmul#chapter03-matmul-test-cpp)
-
-## 2. 读完后应能做什么
+读完后应能做到：
 
 - 理解为什么算子需要统一接口
 - 理解 `forward` 的职责边界
 - 理解算子如何和 `Tensor` 协作
 
-## 3. 为什么这一步重要
+## 阅读入口
+
+- 前置阅读：[`chapter03 导读`](./intro.md)、[`MatMulOp 设计`](./02_matmul_design.md)
+- 源码直达：<a href="../_code/chapter03_matmul/include/chapter03_matmul/operator.h"><code>operator.h</code></a>、<a href="../_code/chapter03_matmul/src/operator.cpp"><code>operator.cpp</code></a>
+- 相关阅读：[`CPU Reference`](./03_cpu_reference.md)、[`cuBLAS 实现`](./04_cublas_implement.md)
+
+## 核心设计
 
 当算子越来越多时，如果每个算子都用不同的入口形式，主流程就会变成一堆特例。  
 统一的基类不是为了“抽象得更漂亮”，而是为了让主线在接入新模块时保持稳定。
-
-## 4. 这个基类应该长什么样
 
 最小版本只需要一件事：定义 `forward`。
 
@@ -43,13 +35,13 @@ Tensor y = op.forward(x);
 
 源码锚点：`code/chapter03_matmul/include/chapter03_matmul/operator.h`
 
-这个接口默认适合“单输入 -> 单输出”的算子。对于需要多个独立输入的算子，比如后续的 Attention，如果继续保留这个窄接口，调用方就需要先把多个 Tensor 组合成一个结构再传入，或者在后续版本里把接口升级成 `forward(const std::vector<Tensor>&)`。  
-这是一种有意的取舍：接口越窄，基类越稳定，但上层组织输入的责任就越大。
+这个接口默认适合“单输入 -> 单输出”的算子。对当前这章来说，这已经足够支撑 `MatMul` 的最小边界。
+后续如果遇到多输入算子，再决定是组合输入结构，还是把接口升级成 `forward(const std::vector<Tensor>&)`。这是一种有意的取舍：接口越窄，基类越稳定，但上层组织输入的责任就越大。
 
 后面如果某个算子需要多个输入，再把接口扩展成接收输入张量列表，而不是提前把所有可能性都塞进去。  
 这样做的好处是：新算子只需要继承统一接口，主流程不需要为每个模块写新的分支。
 
-## 5. 最小示意
+最小示意：
 
 ```cpp
 class Operator {
@@ -59,13 +51,15 @@ public:
 };
 ```
 
-## 6. 怎么验证
+## 验证与排查
+
+验证时重点看：
 
 - 其他算子可以继承该基类
 - `forward` 接口可以统一调用
 - 基类不承担具体计算逻辑
 
-如果 `MatMulOp`、`LayerNormOp`、`FFNOp` 能放进同一套调用流程里，而不需要为每个算子写特殊分支，这个基类就已经起作用了。
+如果 `MatMulOp` 能放进统一调用流程里，而不需要为这一个核心算子单独写特殊分支，这个基类就已经起作用了。后续再把这种接口稳定性复用到更多算子上。
 
 ```cpp
 class Operator {
@@ -84,7 +78,7 @@ public:
 
 这说明基类只负责接口，不负责具体数学逻辑。
 
-## 7. 常见问题
+常见问题：
 
 - 基类设计过宽
 - 强行把所有算子参数塞进同一个接口
