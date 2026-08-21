@@ -7,30 +7,19 @@
 
 ## 阅读入口
 
-- 前置阅读：[`05.4 KV Cache`](/chapter05_generation/04_kv_cache)、[`05.5 Scheduler`](/chapter05_generation/05_scheduler)、[`05.6 Sampler`](/chapter05_generation/05_sampler)
-- 源码直达：[`chapter05_generation 代码入口`](/code/chapter05_generation)
-- 相关阅读：[`chapter05 小结`](/chapter05_generation/summary)、[`chapter06_quantization`](/chapter06_quantization/intro)
+- 前置阅读：[`05.4 KV Cache`](./04_kv_cache.md)、[`05.5 Scheduler`](./05_scheduler.md)、[`05.6 Sampler`](./05_sampler.md)
+- 源码直达：<a href="../_code/chapter05_generation/src/runtime.cpp"><code>runtime.cpp</code></a>、<a href="../_code/chapter05_generation/tests/chapter05_generation_test.cpp"><code>chapter05_generation_test.cpp</code></a>、<a href="../_code/chapter05_generation/tests/runtime_smoke_test.cpp"><code>runtime_smoke_test.cpp</code></a>
+- 相关阅读：[`chapter05 小结`](./summary.md)、[`chapter06_quantization`](../chapter06_quantization/intro.md)
 
-## 代码直达
-
-- [`src/runtime.cpp`](/code/chapter05_generation#runtime-cpp)
-- [`src/request.cpp`](/code/chapter05_generation#request-cpp)
-- [`src/kv_cache.cpp`](/code/chapter05_generation#kv-cache-cpp)
-- [`src/scheduler.cpp`](/code/chapter05_generation#scheduler-cpp)
-- [`src/sampler.cpp`](/code/chapter05_generation#sampler-cpp)
-- [`tests/chapter05_generation_test.cpp`](/code/chapter05_generation#chapter05-generation-test-cpp)
-
-## 2. 背景是什么
+## 测试设计
 
 前面的模块分别正确，并不代表组合起来也正确。端到端测试就是最终验收点。
 
 这一页要确认的是：输入能进、状态能走、cache 能复用、sampler 能出 token，最后还能稳定回到一个可检查的输出。
 
-## 3. 最小设计是什么
-
 最小测试只需要固定两件事：prompt 和生成 token 数量。这样就能把它当成一条稳定的回归基线，而不是一次性的手工演示。
 
-### 端到端测试的成功标准
+端到端测试的成功标准：
 
 | 标准 | 说明 |
 | --- | --- |
@@ -42,7 +31,7 @@
 
 最低通过标准是：输出非空且长度正确。进阶标准是：在 greedy 模式下，输出与记录过的黄金输出完全一致。
 
-### 黄金输出是什么
+黄金输出是什么：
 
 黄金输出（golden output）是用于回归测试的稳定参考：
 
@@ -63,8 +52,6 @@ EXPECT_EQ(new_output, expected);
 - 如果使用 temperature 采样，通常要固定 seed 才能复现
 - 模型更新后，黄金输出可能需要重新生成
 
-## 4. 中间推导是什么
-
 端到端测试之所以要放在 KV Cache 之后，是因为它验证的是整个 runtime contract：embedding 是否和 decoder 对齐、cache 是否真的复用了历史状态、sampler 是否把 logits 变成了下一步 token、输出数量和停止条件是否可控。
 
 如果这里失败，通常需要回头检查 embedding、decoder、cache 或 sampler 其中某一段。
@@ -80,7 +67,7 @@ EXPECT_EQ(output.size(), 16);
 
 这里的重点是“链路闭环”，不是生成质量。
 
-### Sampler 的集成验证
+Sampler 的集成验证：
 
 Sampler 的验证通常可以通过 greedy 模式来做：
 
@@ -96,7 +83,9 @@ EXPECT_EQ(output1, output2);
 
 如果两次输出不一致，说明 sampler 里还有非确定性因素，比如随机种子没有固定。
 
-## 5. 怎么验证
+## 验证与衔接
+
+验证时重点看：
 
 - 程序可以稳定生成 token
 - 输出数量达到预期
@@ -106,7 +95,7 @@ EXPECT_EQ(output1, output2);
 
 一个好的端到端测试应当能在固定输入下稳定复现同类行为，这样后续重构才有可比基线。
 
-### 失败时怎么排查
+失败时怎么排查：
 
 端到端测试失败时，可以按这个顺序往回查：
 
@@ -123,7 +112,7 @@ EXPECT_EQ(output1, output2);
    - embedding 输出应是 `[B, S, D]`
    - decoder 输入也应是 `[B, S, D]`
 
-## 6. 常见问题
+常见问题：
 
 - 生成数量配置错误
 - prompt 编码错误
@@ -132,7 +121,7 @@ EXPECT_EQ(output1, output2);
 - 把端到端测试当成质量评估，而不是链路闭环检查
 - 一旦结果异常，无法判断问题是出在 cache 还是 sampler
 
-## 7. 和前面的关系
+和前面的关系：
 
 这一页把前面的模块串成一个可回归闭环：
 

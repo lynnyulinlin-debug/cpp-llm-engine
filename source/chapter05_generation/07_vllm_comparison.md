@@ -7,7 +7,7 @@
 - 哪些是高吞吐 serving 的扩展做法
 - 哪些地方是 `vLLM` 真正做强的部分
 
-## 1. 本节概览
+## 本节概览
 
 | 本章里的东西 | `vLLM` 里的对应关注点 | 为什么重要 | 读的时候重点看什么 |
 | --- | --- | --- | --- |
@@ -17,15 +17,13 @@
 | `sampler` | token 级输出与 streaming | 生成必须能持续吐 token | token 如何在调度下持续输出 |
 | `Request state` | 多请求状态管理 | 多请求下必须先把上下文分开 | 每个请求的上下文怎样隔离、怎样复用 |
 
-## 代码直达
+## 阅读入口
 
-- [`src/runtime.cpp`](/code/chapter05_generation#runtime-cpp)
-- [`src/scheduler.cpp`](/code/chapter05_generation#scheduler-cpp)
-- [`src/kv_cache.cpp`](/code/chapter05_generation#kv-cache-cpp)
-- [`src/sampler.cpp`](/code/chapter05_generation#sampler-cpp)
-- [`tests/chapter05_generation_test.cpp`](/code/chapter05_generation#chapter05-generation-test-cpp)
+- 前置阅读：[`05.4 KV Cache`](./04_kv_cache.md)、[`05.5 Scheduler`](./05_scheduler.md)
+- 源码直达：<a href="../_code/chapter05_generation/src/runtime.cpp"><code>runtime.cpp</code></a>、<a href="../_code/chapter05_generation/src/scheduler.cpp"><code>scheduler.cpp</code></a>、<a href="../_code/chapter05_generation/src/kv_cache.cpp"><code>kv_cache.cpp</code></a>
+- 相关阅读：[`05.9 Request 生命周期`](./08_request_lifecycle.md)、[`05.10 Continuous Batching 入门`](./09_continuous_batching.md)、[`vLLM 生态对照`](../reference/ecosystem/vllm.md)
 
-## 2. 为什么它重要
+## 工程映射
 
 本章已经把 generation 做成了一条可观察、可验证的状态流：
 
@@ -37,8 +35,6 @@
 
 `vLLM` 把这条最小链路扩展成面向高并发服务的 runtime。  
 这里重点看的是，它把本章边界推到了哪里。
-
-## 3. vLLM 的核心映射
 
 核心对应关系如下：
 
@@ -57,8 +53,6 @@
 这些都不是本章里必须一次做完的东西，但都建立在本章已经立住的那条主线上。  
 把它们和本章对应起来，再看 `vLLM` 时就能看出它在解决什么问题。
 
-## 4. 中间推导是什么
-
 如果从“为什么 `vLLM` 要长成这样”倒推，通常会得到几个约束：
 
 - 单条请求不够，必须支持很多并发请求
@@ -72,7 +66,7 @@
 - 本章先把生成链路拆清楚
 - `vLLM` 再把同一条链路做成高吞吐 serving runtime
 
-## 5. 学习后应能做什么
+## 学习边界
 
 本节完成后，应当能够把下面几件事说清楚：
 
@@ -83,11 +77,9 @@
 
 把这些对应关系讲明白，就说明你已经能把本章的 runtime 组织方式放回真实 serving 语境里去看。
 
-## 6. 边界说明
-
 这一节不负责复刻 `vLLM` 的全部能力。
 
-它只负责把本章最小 runtime 和 `vLLM` 的工程关注点对齐，让你知道哪些概念已经在本章里出现，哪些设计只是把这些概念做得更完整。
+它只负责把本章最小 runtime 和 `vLLM` 的工程关注点对齐，区分本章已经出现的概念与真实系统中的扩展设计。
 
 所以这里的边界是：
 
@@ -95,7 +87,7 @@
 - `vLLM` 负责“高吞吐、高并发、低碎片”
 - 本节负责把两者之间的对应关系讲清楚
 
-## 7. 参考页
+参考页：
 
-- [vLLM](/reference/ecosystem/vllm)
-- [chapter05_generation 代码入口](/code/chapter05_generation)
+- [vLLM](../reference/ecosystem/vllm.md)
+- <a href="../_code/chapter05_generation/src/runtime.cpp"><code>runtime.cpp</code></a>、<a href="../_code/chapter05_generation/src/scheduler.cpp"><code>scheduler.cpp</code></a>、<a href="../_code/chapter05_generation/src/kv_cache.cpp"><code>kv_cache.cpp</code></a>

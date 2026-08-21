@@ -1,35 +1,25 @@
 # 05.2 N-layer Transformer Assembly N 层 Transformer 组装
 
 
-## 1. 这一页要解决什么
+## 这一页要解决什么
 
 把前面做好的单层 Decoder 组合成一个 N 层 Transformer，并让 forward 主流程稳定跑通。重点不是新算子，而是把“单层正确”变成“多层可堆叠”。
 
 ## 阅读入口
 
-- 前置阅读：[`05.1 Embedding 与位置编码`](/chapter05_generation/01_embedding_and_position)、[`chapter04_attention`](/chapter04_attention/intro)
-- 源码直达：[`chapter05_generation 代码入口`](/code/chapter05_generation)
-- 相关阅读：[`05.3 Naive Generation`](/chapter05_generation/03_naive_generation)、[`05.4 KV Cache`](/chapter05_generation/04_kv_cache)
+- 前置阅读：[`05.1 Embedding 与位置编码`](./01_embedding_and_position.md)、[`chapter04_attention`](../chapter04_attention/intro.md)
+- 源码直达：<a href="../_code/chapter05_generation/src/transformer.cpp"><code>transformer.cpp</code></a>、<a href="../_code/chapter05_generation/src/decoder_layer.cpp"><code>decoder_layer.cpp</code></a>、<a href="../_code/chapter05_generation/tests/runtime_smoke_test.cpp"><code>runtime_smoke_test.cpp</code></a>
+- 相关阅读：[`05.3 Naive Generation`](./03_naive_generation.md)、[`05.4 KV Cache`](./04_kv_cache.md)
 
-## 代码直达
-
-- [`src/transformer.cpp`](/code/chapter05_generation#transformer-cpp)
-- [`src/decoder_layer.cpp`](/code/chapter05_generation#decoder-layer-cpp)
-- [`src/runtime.cpp`](/code/chapter05_generation#runtime-cpp)
-- [`src/scheduler.cpp`](/code/chapter05_generation#scheduler-cpp)
-- [`tests/runtime_smoke_test.cpp`](/code/chapter05_generation#runtime-smoke-test-cpp)
-
-## 2. 为什么这一步重要
+## 核心设计
 
 单层正确只是基础，真正的生成模型需要多层堆叠。这里是从“模块”走向“模型”的关键一步。
 
 如果这一页写得太像配置清单，读者会只知道“要有几层”，却不容易理解“为什么层与层之间能直接复用同一条 hidden state”。
 
-## 3. 最小设计是什么
-
 最小组装只需要两件事：层与层之间传递同一种 hidden state，用固定层数把单层 forward 循环起来。只要每层输入输出 shape 一致，组装逻辑就主要变成循环和容器管理。
 
-### 每层独立权重
+每层独立权重：
 
 标准 Transformer 里，每一层 DecoderLayer 都有自己的独立参数：
 
@@ -41,7 +31,7 @@ for (std::size_t i = 0; i < num_layers; ++i) {
 
 这意味着第 0 层的 `Wq` 和第 1 层的 `Wq` 不是同一组参数，每层学习不同层次的表示，总参数量大致等于单层参数量乘以层数。本教程采用的是标准方案：每层独立权重。
 
-### 残差路径如何跨层传播
+残差路径如何跨层传播：
 
 单层 DecoderLayer 里的残差连接会把输入直接带到输出：
 
@@ -58,7 +48,7 @@ layer0 output -> layer1 input -> layer2 input -> ...
 
 这意味着输入信号可以通过残差路径一直传到更深层，是深层 Transformer 能稳定工作的关键。
 
-### Hidden state 在内存里怎么流转
+Hidden state 在内存里怎么流转：
 
 在 C++ 实现里，hidden state 通常就是一个 `Tensor`：
 
@@ -77,8 +67,6 @@ for (auto& layer : layers_) {
 
 这也是推理里很重要的工程点，因为它可以减少分配和拷贝。
 
-## 4. 为什么要先固定配置
-
 如果从工程实现倒推，先要把层配置固定下来：`num_layers`、`hidden_size`、`num_heads`、`ffn_hidden_size`。这些参数最好来自统一配置对象，这样后面切换模型规模时，组装代码不会跟着改。
 
 最小伪代码可以写成：
@@ -93,7 +81,9 @@ for (std::size_t i = 0; i < num_layers; ++i) {
 这一段先不处理 cache 和采样，只表达多层堆叠。  
 如果这里已经混进了 runtime 状态，后面的 generation 逻辑会更难拆开。
 
-## 5. 怎么验证
+## 验证与衔接
+
+验证时重点看：
 
 - 整体 forward 可以跑通
 - 每层输入输出 shape 正常
@@ -102,7 +92,7 @@ for (std::size_t i = 0; i < num_layers; ++i) {
 
 如果逐层打印 shape 后没有发现异常变化，这个组装过程就算可信。
 
-### 和 04 章怎么分工
+和 04 章怎么分工：
 
 `chapter04` 已经验证了：
 
@@ -116,12 +106,12 @@ for (std::size_t i = 0; i < num_layers; ++i) {
 
 这就是分层验证的原则：**本层只关注本层新增的逻辑，已经验证过的子模块不重复展开**。
 
-## 6. 常见问题
+常见问题：
 
 - 层数配置错误
 - 传递的 hidden state shape 不一致
 - 组装逻辑破坏了单层验证结果
 
-## 7. 和后续章节怎么接
+和后续章节怎么接：
 
 这一页把 decoder 组织成完整 forward，下一步才适合进入 `03_naive_generation`，把 forward 变成真正的生成循环。
