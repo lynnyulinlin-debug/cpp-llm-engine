@@ -67,8 +67,8 @@ flowchart TD
 
 ### 环境到 GPU 链路
 
-- `00.3`：环境层，判断 GPU 能不能用、runtime 能不能跑
-- `00.7`：库层，判断 GPU 上的 matmul、launch overhead、通信分别该用什么库
+- `F03`：环境层，判断 GPU 能不能用、runtime 能不能跑
+- `F07`：库层，判断 GPU 上的 matmul、launch overhead、通信分别该用什么库
 - `chapter03` 以后：把这些库选择落到实际代码和性能比较里
 
 这两条路径服务的是同一个目标：让读者顺利走通主线和 GPU 加速路径，只是解决的问题不同。
@@ -96,27 +96,29 @@ flowchart TD
 
 如果这些前提没有先对齐，后面的 `Tensor`、`ModelLoader`、`MatMul`、`Attention` 和 `Generation` 会变成概念堆叠，而不是工程教程。
 
-## 5. 你会补到什么
+## 5. Foundation 的产物与验证
 
-读完这一部分后，你应该能做到：
+完成对应基础页后，应能通过具体操作验证：
 
-- 看懂本教程里的基础 C++ 类和资源管理写法
-- 独立配置并构建一个小型 C++ 项目
-- 判断一个问题更像是环境问题、构建问题还是代码问题
-- 分清 CPU-first 学习路径和 CUDA 加速路径
-- 顺利进入 `chapter00_quickstart`
+- 能解释本教程基础 C++ 类的所有权和生命周期
+- 能独立配置并构建一个小型 C++ 项目
+- 能通过最小复现将问题归类为环境、构建或代码逻辑
+- 能区分 CPU-first 路径和 CUDA 加速路径
+- 能构建并运行 `chapter00_quickstart`
+
+Foundation 题库会把这些要求落实为可编译、可测试的小题，仓库入口为 `exercises/foundation/README.md`。
 
 ## 6. 推荐阅读顺序
 
-1. [F01 C++ basics](/foundation/01_cxx_basics)
-2. [F02 CMake and compilation basics](/foundation/02_cmake_build_basics)
-3. [F03 CUDA and environment basics](/foundation/03_cuda_environment_basics)
-4. [F04 Debugging and testing basics](/foundation/04_debugging_testing_basics)
-5. [F09 Build a minimal C++/CUDA project](/foundation/09_minimal_cpp_cuda_project)
-6. [F05 OOP and design basics](/foundation/05_oop_and_design_basics)
-7. [F06 Data structures and algorithm basics](/foundation/06_data_structure_algorithm_basics)
-8. [F07 CUDA common libraries](/foundation/07_cuda_common_libraries)
-9. [F08 PyTorch to C++ bridge](/foundation/08_pytorch_to_cpp_bridge)
+1. [F01 C++ basics](./01_cxx_basics.md)
+2. [F02 CMake and compilation basics](./02_cmake_build_basics.md)
+3. [F03 CUDA and environment basics](./03_cuda_environment_basics.md)
+4. [F04 Debugging and testing basics](./04_debugging_testing_basics.md)
+5. [F09 Build a minimal C++/CUDA project](./09_minimal_cpp_cuda_project.md)
+6. [F05 OOP and design basics](./05_oop_and_design_basics.md)
+7. [F06 Data structures and algorithm basics](./06_data_structure_algorithm_basics.md)
+8. [F07 CUDA common libraries](./07_cuda_common_libraries.md)
+9. [F08 PyTorch to C++ bridge](./08_pytorch_to_cpp_bridge.md)
 
 ## 7. 什么时候可以跳过
 
@@ -153,7 +155,7 @@ flowchart LR
 `foundation` 不是第二条主线，而是主线前的预备区。  
 准备够了就进主线，不够的地方就先补基础再回来。
 
-如果你在找 CPU / GPU 的分界线，主线第一处真正进入 GPU backend 的位置是 `chapter03_matmul/04_cublas_implement`；CUDA 环境说明则集中在 `guides/setup_cuda`。
+CPU / GPU 的分界线仍在 `chapter03_matmul/04_cublas_implement`；CUDA 环境说明集中在 `guides/setup_cuda`。Foundation 题库默认 CPU-first，CUDA 题单独标记为选修。
 
 ## 10. 这一部分的阅读策略
 
