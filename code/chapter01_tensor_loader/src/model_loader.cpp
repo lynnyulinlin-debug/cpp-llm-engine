@@ -1,3 +1,7 @@
+// Chapter 01：教学二进制模型 loader 实现
+// 职责：读取教程自定义 CIE1 文件的 tensor records 和 payload。
+// 契约：header、dtype、shape、byte size 和 payload 截断都必须校验。
+// 验证：chapter01_tensor_loader_test.cpp。
 #include "model_loader.h"
 
 #include <cstdint>
@@ -177,4 +181,3 @@ std::vector<std::string> ModelLoader::tensor_names() const {
 }
 
 }  // namespace chapter01
-

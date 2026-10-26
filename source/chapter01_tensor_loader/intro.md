@@ -1,60 +1,80 @@
 # 01.0 Model Weights and Tensor Objects 加载模型权重并统一表示
 
-这一章先回答一个基础问题：模型权重怎样安全地进入程序，并被统一表示成 `Tensor` 和 `ModelLoader` 这套对象模型？
+## 1. 本章位置与成功标准
 
-本章会实现一个可用的 `Tensor` 抽象，并把模型权重从自定义格式加载到程序中。
+本章把模型文件和用户文本送入 C++ 程序：`ModelLoader` 产生 `Tensor`，`Tokenizer` 产生 token IDs，metadata adapter 产生可校验的模型配置。
 
-## 本章和 vLLM / nano-vLLM 的联系
+```bash
+bash code/chapter01_tensor_loader/run.sh
+```
 
-在 vLLM 或 nano-vLLM 里，模型首先也要经过配置解析、权重加载、tensor metadata 校验和 shape contract 对齐。本章不直接实现这些项目的 loader，而是先建立最小的 `Tensor` 和 `ModelLoader` 语义，让后面读真实项目时能看懂“权重如何进入 runtime”这条入口链路。
+成功标准：Chapter 01 测试通过，加载后的 tensor 名称、shape 和 dtype 可检查；如果提供 Chapter 00 下载的 GGUF 文件，额外运行 `gguf_inspect` 检查 metadata、tensor index 和 `DecoderInput` mapping，并可运行 TinyLlama 22 层 token-to-logits CPU smoke。循环采样和文本生成仍由 Chapter 05 Runtime 承担。
 
-更具体地说，本章处在真实推理执行链的入口层：
+![Chapter 01 主图：权重与 Tensor 对象](../assets/diagrams/chapter01-main.svg)
 
-- 文件或外部权重先被描述成可解析格式
-- loader 再把这些静态内容转成运行时对象
-- 后面的 view、算子、attention 和 runtime 都只能建立在这套对象语义上继续往下走
+本章把静态权重转换成后续 view、算子和 runtime 可以消费的对象。
 
-学习本章时，最重要的不是把 `Tensor` 和 `ModelLoader` 当成独立组件，而是先建立一个判断：这一步解决的是“权重怎样进入程序”，而不是“权重进来以后怎样参与计算”。
+![Chapter 01 软件架构与输入边界](../assets/diagrams/chapter01-software-architecture.svg)
 
-## 本章概览
+读取链从外部格式开始，经过 adapter 和校验，最后得到内部对象；文本输入和权重加载在 Chapter 05 的 Request 中汇合。
 
-| 先看什么 | 这一节讲什么 | 为什么重要 | 对应小节 |
-| --- | --- | --- | --- |
-| `Tensor` 先表达什么 | shape、dtype、device 和 ownership | 先定输入对象语义 | [`01.1 Tensor Interface`](./01_tensor_interface.md) |
-| `Tensor` 怎么落到代码里 | 存储、构造和对象生命周期 | 先把对象边界写稳 | [`01.2 Tensor Implement`](./02_tensor_implement.md) |
-| 文件格式怎么设计 | 自定义二进制格式 | 先让权重能被稳定描述 | [`01.3 Custom Binary Format`](./03_custom_binary_format.md) |
-| 训练侧权重怎么导出 | Python converter | 先把训练侧和 C++ 侧接起来 | [`01.4 Python Converter`](./04_python_converter.md) |
-| C++ 怎么读回权重 | `ModelLoader` | 先把文件还原成运行时对象 | [`01.5 ModelLoader`](./05_model_loader.md) |
-| 怎么验证加载结果 | 打印名称和形状 | 先确认加载可信 | [`01.6 Verify and Print`](./06_verify_and_print.md) |
-| 本章怎么收口 | 输入语义和下一章入口 | 进入 view 语义前先固定加载链路 | [`01.7 本章小结`](./summary.md) |
+## 2. 内容地图
 
-## 阅读入口
+完成本章后，可以：
 
-- 前置阅读：[`chapter00_quickstart`](../chapter00_quickstart/intro.md)、[`foundation`](../foundation/README.md)
-- 源码直达：<a href="../_code/chapter01_tensor_loader/src/tensor.h"><code>tensor.h</code></a>、<a href="../_code/chapter01_tensor_loader/src/model_loader.cpp"><code>model_loader.cpp</code></a>、<a href="../_code/chapter01_tensor_loader/tests/chapter01_tensor_loader_test.cpp"><code>chapter01_tensor_loader_test.cpp</code></a>
-- 相关阅读：[`01.1 Tensor Interface`](./01_tensor_interface.md)、[`01.5 ModelLoader`](./05_model_loader.md)、[`推理引擎输入链路`](../reference/input_pipeline.md)、[`01.7 本章小结`](./summary.md)
+- 用 `Tensor` 表达 shape、dtype、storage 和基本 ownership
+- 用 `ModelLoader` 从文件恢复 tensor 名称、shape 和 payload
+- 用 tokenizer contract 把文本转换成 token IDs
+- 用 metadata adapter 把 GGUF / HuggingFace 信息归一化为 `ModelMetadata` / `ModelConfig`
+- 用 `ModelBuilder` 生成包含 Llama layer mapping 的 `DecoderInput`
+- 用真实 TinyLlama 的 Q4_K/Q6_K 权重贯通 22 层 Decoder、Final RMSNorm 和 LM Head，得到 32000 维 logits
+- 用公共 Decoder 契约把真实 Model/Context 交给 Engine，而不泄漏 GGUF 细节
 
-## 这章在解决什么
+本章只保留一张输入链表：
 
-这一章只做一件事：把模型权重安全地读进程序，并把输入语义固定住。它要把 `Tensor` 从“数据容器”推进到“运行时对象”，让后面的算子、view 语义和 runtime 都建立在同一套输入约定上。权重这一侧先定住，prompt、tokenizer 和 stop criteria 再在另一层展开。
+| 输入 | 本章代码 | 输出 |
+| --- | --- | --- |
+| GGUF、配置文件、文本 prompt | `GgufReader`、metadata/tokenizer adapter、`GgufTensorLoader` | metadata、tokenizer metadata、Tensor |
+| 已解析对象 | `ModelBuilder` / `LoadedModel` | Decoder 输入和 Llama layer mapping |
+| 真实权重和模型配置 | `RealLlamaCpuModel` / `RealLlamaCpuContext` | `DecoderModelContract` 和请求级执行 Context |
 
-它解决的不是“怎么写一个文件读取器”这么局部的问题。权重对象由本章固定，用户请求则由输入链路参考页固定，二者在 `chapter05` 的 `Request` 中汇合。后面真实推理链路因此能够同时做到：
+成熟框架会把相同输入职责拆到格式解析、权重装载、模型配置和执行对象中。本章对照这些职责，不照搬框架规模。
 
-- 权重名称、shape、dtype 有稳定语义
-- 文件内容可以按名称和 metadata 被恢复成对象
-- 后面的算子和 runtime 不必重新猜测输入对象是什么
+| 对照项 | 内容 |
+| --- | --- |
+| 本章教学对象 | GGUF metadata、权重 Tensor、Tokenizer、ModelConfig 和 Model/Context |
+| 主对照框架 | `llama.cpp` model loader、vLLM model loader |
+| 成熟组件 | 分片加载、设备放置、并行权重映射、延迟加载和多模型格式 |
+| 重点差异 | 本章以 TinyLlama GGUF 和 CPU 路径固定输入契约，成熟框架还要处理分布式和多后端 |
+| 深入入口 | [`01.9 Loader 框架对照`](./09_framework_loader_comparison.md) |
 
-## 这章怎么做
+## 3. 阅读与源码顺序
 
-最小设计不是一次性把所有格式都支持完，而是先建立两层职责：
+| 顺序 | 页面 | 读完后应看到什么 |
+| --- | --- | --- |
+| 1 | [`01.1 Tensor Interface`](./01_tensor_interface.md)、[`01.2 Tensor Implement`](./02_tensor_implement.md) | Tensor 的数据表示和生命周期 |
+| 2 | [`01.3 Custom Binary Format`](./03_custom_binary_format.md)、[`01.4 Python Converter`](./04_python_converter.md) | 文件布局和训练侧导出路径 |
+| 3 | [`01.5 ModelLoader`](./05_model_loader.md)、[`01.6 Verify and Print`](./06_verify_and_print.md) | 文件如何恢复成可检查的 Tensor |
+| 4 | [`01.7 Input Contract and Tokenizer`](./07_input_contract_and_tokenizer.md) | 文本如何变成 token IDs |
+| 5 | [`01.8 Model Metadata and GGUF Boundary`](./08_model_metadata_and_gguf_boundary.md) | 外部 metadata 如何进入内部配置 |
+| 6 | [`01.9 Loader 框架对照`](./09_framework_loader_comparison.md) | 从教学加载链定位成熟框架源码 |
 
-- `Tensor` 负责把数据表示成清晰对象
-- `ModelLoader` 负责把文件内容转成这些对象
+源码先看 <a href="../_code/chapter01_tensor_loader/src/tensor.h"><code>tensor.h</code></a>、<a href="../_code/chapter01_tensor_loader/src/model_loader.cpp"><code>model_loader.cpp</code></a> 和 <a href="../_code/chapter01_tensor_loader/tests/chapter01_tensor_loader_test.cpp"><code>chapter01_tensor_loader_test.cpp</code></a>。前置阅读是 [`chapter00_quickstart`](../chapter00_quickstart/intro.md)；输入侧扩展见 [`推理引擎输入链路`](../reference/input_pipeline.md)。
 
-这样一来，数据结构选择和对象设计就不会和加载流程缠在一起。
+## 4. 验证
 
-## 收口与下一步
+本章验证以下结果：
 
-这一章留下的结果很直接：你知道文件里有什么、loader 读到了什么、最后打印出来的 tensor 名称和形状为什么可信。它把“模型状态如何进入程序”这道门固定住了，后面的 view 语义、算子输入和生成 runtime 都会在这套对象模型上继续往下走。
+1. shape、dtype、storage size 和 offset 不越界
+2. loader 能恢复 tensor 名称和 shape
+3. tokenizer 输出落在词表范围内，特殊 token 和长度约束可检查
+4. GGUF reader 能读取 header、metadata、tensor index 和对齐后的 payload offset
+5. 缺失 tensor、错误 shape 或不兼容 metadata 会明确失败
+6. 完整 22 层 logits 与 llama.cpp reference 的 cosine、RMSE 和 top-k 对照达到验收门槛
+7. 同一 prompt 的 4-token greedy 序列与 llama.cpp 一致，并能通过可选真实模型 CTest 固定结果
+8. 同一个只读 Model 创建的两个请求 Context 分别维护 position 和分层 K/V，输出不互相污染
+9. 教学 Decoder 与真实 Model 都能输出合法结构契约，真实 Context 能通过公共执行接口完成 prefill/decode
 
-下一步进入 `chapter02_tensor_ops`，在已经可用的 `Tensor` 基础上增加 `reshape` 和 `slice` 这种 view 语义。
+不要把 toy tokenizer 当作 TinyLlama 的真实 tokenizer；Chapter 00 的真实 tokenizer 由 `llama.cpp` 提供，本章同时验证真实 tokenizer adapter 和 layer-0 权重进入 CPU 计算前的边界。
+
+**下一章：**程序已经知道模型里有什么、用户输入是什么；Chapter 02 在不复制 storage 的情况下实现 `reshape` 和 `slice`。

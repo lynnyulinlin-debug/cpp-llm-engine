@@ -1,0 +1,31 @@
+// Chapter 01：模型 metadata 对象接口
+// 职责：保存与文件格式无关的模型架构和 tokenizer 关键字段。
+// 契约：对象是 ModelConfig、ModelSchema 和 tokenizer adapter 的输入。
+// 验证：chapter01_tensor_loader_test.cpp。
+#pragma once
+
+#include "tokenizer.h"
+
+#include <cstddef>
+#include <string>
+
+namespace chapter01 {
+
+struct ModelMetadata {
+    std::string architecture;
+    std::size_t vocab_size = 0;
+    std::size_t hidden_size = 0;
+    std::size_t max_position = 0;
+    std::size_t layer_count = 0;
+    std::size_t attention_head_count = 0;
+    std::size_t attention_head_count_kv = 0;
+    std::size_t rope_dimension_count = 0;
+    float rope_freq_base = 10000.0f;
+    float rms_norm_epsilon = 1.0e-5f;
+    TokenId bos_token_id = -1;
+    TokenId eos_token_id = -1;
+
+    bool valid() const;
+};
+
+}  // namespace chapter01
