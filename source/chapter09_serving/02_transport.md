@@ -2,6 +2,12 @@
 
 HTTP/SSE 通过 Transport Adapter 接入 Chapter09。网络库处理连接、请求解析、响应写出和连接事件，`ServiceCore` 处理请求状态、metrics 和 streaming contract。
 
+**学习入口**
+
+- 前置阅读：[`09.1 C++ Service Core`](./01_service_core.md)
+- 源码直达：<a href="../_code/chapter09_serving/include/chapter09_serving/response_writer.h"><code>response_writer.h</code></a>、<a href="../_code/chapter09_serving/src/http_adapter.cpp"><code>http_adapter.cpp</code></a>、<a href="../_code/chapter09_serving/src/cpp_httplib_transport.cpp"><code>cpp_httplib_transport.cpp</code></a>
+- 测试直达：<a href="../_code/chapter09_serving/tests/http_adapter_writer_test.cpp"><code>http_adapter_writer_test.cpp</code></a>、<a href="../_code/chapter09_serving/scripts/run_cpp_httplib_loopback.sh"><code>run_cpp_httplib_loopback.sh</code></a>
+
 ## 传输层边界
 
 当前 `HttpAdapter::handle()` 继续返回完整响应对象，兼容同步测试；`handle_stream()` 通过 `ResponseWriter` 写出 token event。可选 cpp-httplib transport 已完成真实 loopback socket 验证，默认构建仍只运行 transport-neutral 测试。网络库只实现 writer 和请求解析，不把网络库类型传入 ServiceCore。

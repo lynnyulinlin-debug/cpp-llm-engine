@@ -4,7 +4,7 @@
 
 本章实现最小 C++ Service Core，覆盖 admission、waiting/running 队列、batch 上限、取消/超时、在线延迟指标和完成后 KV Cache/Executor 回收。可选真实模型测试由 `code/engine` 提供 Factory，为同步和 SSE 请求分别创建独立 Context。
 
-网络库评估和 transport 接入边界见 [`Chapter 09 Transport`](/chapter09_serving/02_transport)。
+正文从 [`Chapter 09 导读`](/chapter09_serving/intro) 进入；网络库评估和 transport 接入见 [`Chapter 09 Transport`](/chapter09_serving/02_transport)。
 
 ## 资产
 

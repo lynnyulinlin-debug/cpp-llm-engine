@@ -37,18 +37,21 @@ function walk(dir) {
 
 const sourceMarkdownFiles = []
 
-function walkMarkdown(dir) {
+function walkMarkdown(dir, output = sourceMarkdownFiles) {
   for (const entry of readdirSync(dir)) {
     const path = join(dir, entry)
     if (statSync(path).isDirectory()) {
-      walkMarkdown(path)
+      walkMarkdown(path, output)
     } else if (path.endsWith('.md')) {
-      sourceMarkdownFiles.push(path)
+      output.push(path)
     }
   }
 }
 
 walkMarkdown(sourceDir)
+
+const codeIndexMarkdownFiles = []
+walkMarkdown('docs/code', codeIndexMarkdownFiles)
 
 const sourceMissing = []
 const markdownImagePattern = /!\[[^\]]*\]\(([^)\s]+)(?:\s+[^)]*)?\)/g
@@ -69,6 +72,34 @@ for (const file of sourceMarkdownFiles) {
 if (sourceMissing.length > 0) {
   console.error('\nBroken source Markdown images:')
   for (const item of sourceMissing) {
+    console.error(`- ${item}`)
+  }
+  process.exit(1)
+}
+
+const codeLinkMissing = []
+const codeLinkPattern = /href="(?:\.\.\/|\/)\_code\/([^"#?]+)(?:[?#][^"]*)?"/g
+const codeLinkMarkdownFiles = [
+  ...sourceMarkdownFiles.filter((file) => !file.startsWith('source/maintenance/')),
+  ...codeIndexMarkdownFiles,
+]
+let checkedCodeLinks = 0
+
+for (const file of codeLinkMarkdownFiles) {
+  const markdown = readFileSync(file, 'utf8')
+  for (const match of markdown.matchAll(codeLinkPattern)) {
+    checkedCodeLinks += 1
+    const linkedPath = decodeURIComponent(match[1])
+    const target = resolve('code', linkedPath)
+    if (!existsSync(target)) {
+      codeLinkMissing.push(`${file}: /_code/${linkedPath} -> ${target}`)
+    }
+  }
+}
+
+if (codeLinkMissing.length > 0) {
+  console.error('\nBroken source-code links:')
+  for (const item of codeLinkMissing) {
     console.error(`- ${item}`)
   }
   process.exit(1)
@@ -124,5 +155,5 @@ if (missing.length > 0) {
 }
 
 console.log(
-  `Checked ${sourceMarkdownFiles.length} source Markdown files and ${htmlFiles.length} generated HTML files for internal links.`,
+  `Checked ${sourceMarkdownFiles.length} source Markdown files, ${checkedCodeLinks} source-code links, and ${htmlFiles.length} generated HTML files.`,
 )

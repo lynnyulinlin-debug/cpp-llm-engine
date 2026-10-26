@@ -1,6 +1,6 @@
 # Chapter 09：Serving Extensions 服务化扩展
 
-本目录实现最小 C++ Service Core，把 Chapter 05 的 `Request`、`Runtime`、`Scheduler`、`RequestModelExecutor`、`KVCache` 和 `KvBlockPool` 接到 admission、等待/运行队列和完成后资源回收。HTTP adapter 和可选 cpp-httplib loopback 已完成；Python Gateway、分层 K/V block payload 和生产级限流器仍未实现。
+本目录把 Chapter 05 的 `Request`、`Runtime`、`Scheduler`、`RequestModelExecutor`、`KVCache` 和 `KvBlockPool` 接到 admission、等待/运行队列、HTTP/SSE 和完成后资源回收。完整学习说明见 [`source/chapter09_serving`](../../source/chapter09_serving/intro.md)。
 
 ## 资产总览
 
@@ -14,7 +14,6 @@
 | `include/chapter09_serving/cpp_httplib_transport.h` | 可选 cpp-httplib server 适配器 |
 | `src/cpp_httplib_transport.cpp` | HTTP endpoint、chunked SSE 和 ResponseWriter 适配 |
 | `examples/main_cpp_httplib.cpp` | 可选真实 HTTP server 启动入口 |
-| `02_transport.md` | 网络库选择、`ResponseWriter` 边界和接入顺序 |
 | `examples/main_serving.cpp` | 两轮 batch dispatch 演示 |
 | `tests/chapter09_serving_test.cpp` | 容量、终态、两个请求 executor 和资源隔离测试 |
 | `tests/http_adapter_test.cpp` | endpoint、状态码、completion 和 metrics 测试 |

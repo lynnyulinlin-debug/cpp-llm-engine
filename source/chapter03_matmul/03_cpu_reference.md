@@ -44,7 +44,7 @@ assert(A.cols() == B.rows());
 Tensor C(A.rows(), B.cols());
 ```
 
-源码锚点：`code/chapter03_matmul/src/cpu_kernel.cpp`
+源码锚点：<a href="../_code/chapter03_matmul/src/cpu_kernel.cpp"><code>cpu_kernel.cpp</code></a>
 
 这样“边界检查”和“核心计算”就会同时出现在代码里，读者也更容易把形状错误和累加错误区分开。
 
@@ -82,7 +82,7 @@ for (std::size_t i = 0; i < M; ++i) {
 }
 ```
 
-源码锚点：`code/chapter03_matmul/src/cpu_kernel.cpp`
+源码锚点：<a href="../_code/chapter03_matmul/src/cpu_kernel.cpp"><code>cpu_kernel.cpp</code></a>
 
 这段循环的价值在于可读性，而不是性能。
 

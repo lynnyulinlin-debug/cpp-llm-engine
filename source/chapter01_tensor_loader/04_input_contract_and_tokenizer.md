@@ -29,7 +29,7 @@ Tokenizer 不负责加载权重，ModelLoader 也不负责理解用户 prompt。
 
 ### 最小接口
 
-代码入口：`code/chapter01_tensor_loader/src/tokenizer.h`
+代码入口：<a href="../_code/chapter01_tensor_loader/src/tokenizer.h"><code>tokenizer.h</code></a>
 
 ```cpp
 class Tokenizer {
@@ -66,7 +66,7 @@ bash code/chapter01_tensor_loader/run_real_tokenizer.sh
 
 ## 配置与 Request
 
-代码入口：`code/chapter01_tensor_loader/src/model_config.h`
+代码入口：<a href="../_code/chapter01_tensor_loader/src/model_config.h"><code>model_config.h</code></a>
 
 `ModelConfig` 先保存后续结构和输入需要的最小静态约束：`vocab_size`、`hidden_size`、`max_position`、`layer_count` 和 `max_new_tokens`。
 

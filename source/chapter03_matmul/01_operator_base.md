@@ -33,7 +33,7 @@
 Tensor y = op.forward(x);
 ```
 
-源码锚点：`code/chapter03_matmul/include/chapter03_matmul/operator.h`
+源码锚点：<a href="../_code/chapter03_matmul/include/chapter03_matmul/operator.h"><code>operator.h</code></a>
 
 这个接口默认适合“单输入 -> 单输出”的算子。对当前这章来说，这已经足够支撑 `MatMul` 的最小边界。
 后续如果遇到多输入算子，再决定是组合输入结构，还是把接口升级成 `forward(const std::vector<Tensor>&)`。这是一种有意的取舍：接口越窄，基类越稳定，但上层组织输入的责任就越大。
@@ -74,7 +74,7 @@ public:
 };
 ```
 
-源码锚点：`code/chapter03_matmul/src/operator.cpp`
+源码锚点：<a href="../_code/chapter03_matmul/src/operator.cpp"><code>operator.cpp</code></a>
 
 这说明基类只负责接口，不负责具体数学逻辑。
 

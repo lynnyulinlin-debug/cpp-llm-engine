@@ -33,9 +33,9 @@
 
 本教程的最小实现采用全局标量 `scale`（对称量化）。对于更复杂的量化格式，比如每通道或分组量化，`scale` 应该作为 `Tensor` 传入，与 `q` 的形状或分组结构对齐，并在逐元素反量化时正确索引。接口可以先保持为 `dequantize(q, scale)`，只是 `scale` 的类型从 `float` 扩展为 `Tensor`。
 
-真实 TinyLlama 使用的 GGUF Q4_K 不是简单的 int8 加标量 scale，而是每 256 个元素一个 144 字节 super-block。对应的 CPU reference 实现位于 `code/chapter06_quantization/src/q4k_dequantize.cpp`，负责读取 half scale、minimum、分组 scales 和 4-bit quants。它与前面的 INT8 `DequantizeOp` 并列存在，不替换 INT8 教学路径。
+真实 TinyLlama 使用的 GGUF Q4_K 不是简单的 int8 加标量 scale，而是每 256 个元素一个 144 字节 super-block。对应的 CPU reference 实现见 <a href="../_code/chapter06_quantization/src/q4k_dequantize.cpp"><code>q4k_dequantize.cpp</code></a>，负责读取 half scale、minimum、分组 scales 和 4-bit quants。它与前面的 INT8 `DequantizeOp` 并列存在，不替换 INT8 教学路径。
 
-源码锚点：`code/chapter06_quantization/src/dequantize_op.cpp`
+源码锚点：<a href="../_code/chapter06_quantization/src/dequantize_op.cpp"><code>dequantize_op.cpp</code></a>
 
 把它写成独立算子的好处是，你可以单独验证“反量化公式是否正确”，然后再把它接到 Linear 或其他算子上。这样一旦误差不对，你不会同时怀疑好几层逻辑。
 

@@ -5,8 +5,9 @@
 ## 阅读顺序
 
 1. 先看 `src/tensor.h` 和 `src/tensor.cpp`
-2. 再看 `src/model_loader.h` 和 `src/model_loader.cpp`
-3. 最后看测试文件
+2. 再沿 `gguf_reader -> metadata/tokenizer adapter -> gguf_tensor_loader -> model_builder` 阅读真实模型加载链
+3. 选读 `model_loader.*`，理解 CIE1 教学格式和错误处理
+4. 最后运行 `gguf_inspect` 并查看测试文件
 
 ## 输入语义
 

@@ -79,7 +79,7 @@ Tensor y = matmul_op.forward(x, w);
 // 内部再根据 backend 选择 CPU reference 或 cuBLAS 路径
 ```
 
-源码锚点：`code/chapter03_matmul/include/chapter03_matmul/matmul_op.h`
+源码锚点：<a href="../_code/chapter03_matmul/include/chapter03_matmul/matmul_op.h"><code>matmul_op.h</code></a>
 
 这个例子展示稳定前端接口与可替换后端执行之间的分工。
 

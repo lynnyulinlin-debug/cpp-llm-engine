@@ -117,7 +117,7 @@ y = y + attention(layernorm1(y));
 y = y + ffn(layernorm2(y));
 ```
 
-源码锚点：`code/chapter04_attention/src/decoder_layer.cpp`
+源码锚点：<a href="../_code/chapter04_attention/src/decoder_layer.cpp"><code>decoder_layer.cpp</code></a>
 
 这段代码把 Pre-LN、Residual 和两个子模块的组合关系表达得很直接。
 
