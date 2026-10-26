@@ -1,0 +1,49 @@
+# 实验与验证资产索引
+
+本索引回答“某个性能结论或正确性结论由哪份证据支持”。结果文件是事实来源，采集脚本定义复现条件，教程正文负责解释结论；表中不复制完整样本，避免同一实验出现多份不同数字。
+
+实验 ID 保持稳定。重新采集同一 workload 时更新原结果及环境字段；模型、输入、测量区间或正确性标准变化时分配新 ID。`EXP` 表示性能实验，`VAL` 表示数值或结构验证资产。
+
+## CPU Runtime、Decoder 与服务实验
+
+CPU 主线先用教学 Runtime 固定结果结构，再进入真实 TinyLlama 服务、Decoder 子阶段和单变量 Backend A/B。所有 A/B 都先检查 golden、计时闭合、Context/KV 隔离和 terminal release；`KEEP` 只适用于表中记录的机器与 workload。
+
+| ID | 回答的问题 | 固定 workload | 原始结果 | 复现入口与结论边界 |
+| --- | --- | --- | --- | --- |
+| <a id="exp-cpu-01"></a>EXP-CPU-01 | 多请求数量如何影响教学 Runtime | 1/2/4 请求，warmup 1，测量 3 轮 | <a href="../_code/chapter07_benchmark/results/chapter07_cpu_baseline.json"><code>chapter07_cpu_baseline.json</code></a> | <a href="../_code/chapter07_benchmark/scripts/run.sh"><code>Chapter07 run.sh</code></a>；用于教学趋势，不代表真实模型吞吐 |
+| <a id="exp-cpu-02"></a>EXP-CPU-02 | 真实 ServiceCore 时间花在哪里 | TinyLlama Q4_K_M，双请求，各生成 4 token | <a href="../_code/chapter09_serving/results/tinyllama_service_cpu_baseline.json"><code>tinyllama_service_cpu_baseline.json</code></a> | <a href="../_code/engine/scripts/run_real_serving_benchmark.sh"><code>run_real_serving_benchmark.sh</code></a>；只比较相同 CPU、编译和 policy |
+| <a id="exp-cpu-03"></a>EXP-CPU-03 | 当前工作树是否保持真实服务基线 | 与 EXP-CPU-02 相同，baseline/experiment 各 3 轮 | <a href="../_code/chapter08_profiling/results/tinyllama_service_repeatability_experiment.json"><code>experiment.json</code></a>、<a href="../_code/chapter08_profiling/results/tinyllama_service_repeatability_ab.txt"><code>A/B report</code></a> | <a href="../_code/chapter08_profiling/scripts/run_real_service_ab.sh"><code>run_real_service_ab.sh</code></a>；这是回归比较，不是单变量优化实验 |
+| <a id="exp-cpu-04"></a>EXP-CPU-04 | Decoder 内部哪个阶段占时 | TinyLlama prompt + 4 个生成 token，3 轮 | <a href="../_code/chapter08_profiling/results/tinyllama_decoder_phase_profile.txt"><code>decoder_phase_profile.txt</code></a> | <a href="../_code/engine/scripts/run_real_decoder_profile.sh"><code>run_real_decoder_profile.sh</code></a>；代码内计时，不替代符号级 CPU sampling |
+| <a id="exp-cpu-05"></a>EXP-CPU-05 | Q6_K FFN down AVX2 是否值得保留 | 只切换 FFN down，scalar/AVX2 各 3 轮 | <a href="../_code/chapter08_profiling/results/tinyllama_q6k_down_ab.txt"><code>Q6_K A/B report</code></a> | <a href="../_code/chapter08_profiling/scripts/run_real_q6k_down_ab.sh"><code>run_real_q6k_down_ab.sh</code></a>；结论不外推到其他 CPU ISA |
+| <a id="exp-cpu-06"></a>EXP-CPU-06 | Q4_K FFN gate/up AVX2 是否值得保留 | 只切换 gate/up，scalar/AVX2 各 3 轮 | <a href="../_code/chapter08_profiling/results/tinyllama_q4k_ffn_ab.txt"><code>Q4_K FFN A/B report</code></a> | <a href="../_code/chapter08_profiling/scripts/run_real_q4k_ffn_ab.sh"><code>run_real_q4k_ffn_ab.sh</code></a>；不改变 Attention、down 或 LM Head |
+| <a id="exp-cpu-07"></a>EXP-CPU-07 | Q4_K Attention projection AVX2 是否值得保留 | 只切换 Q/K/V/out，scalar/AVX2 各 3 轮 | <a href="../_code/chapter08_profiling/results/tinyllama_q4k_attention_ab.txt"><code>Q4_K Attention A/B report</code></a> | <a href="../_code/chapter08_profiling/scripts/run_real_q4k_attention_ab.sh"><code>run_real_q4k_attention_ab.sh</code></a>；Attention softmax 本体不在切换范围 |
+| <a id="exp-cpu-08"></a>EXP-CPU-08 | 已验证 AVX2 作用域组合后是否仍有端到端收益 | Q4 Attention + Q4 FFN + Q6 down，Decoder 与双请求服务 | <a href="../_code/chapter08_profiling/results/tinyllama_optimized_policy_ab.txt"><code>combined A/B report</code></a>、<a href="../_code/chapter08_profiling/results/tinyllama_optimized_service_avx2.json"><code>service experiment</code></a> | <a href="../_code/chapter08_profiling/scripts/run_real_optimized_policy_ab.sh"><code>run_real_optimized_policy_ab.sh</code></a>；优化 policy 仍需显式选择 |
+
+## 多模态、CUDA 与正确性资产
+
+多模态 golden 固定模型、mmproj 和输入 hash，逐步验证 Block、Encoder、Projector、图文序列和完整 Decoder。性能实验另行登记；CUDA 的 event 计时目前随设备 CTest 输出，没有归档结果文件，因而只能支持本机运行时观察。
+
+| ID | 类型与对象 | 事实来源 | 复现入口 | 可支持的结论 |
+| --- | --- | --- | --- | --- |
+| <a id="val-mm-01"></a>VAL-MM-01 | SigLIP 单 Block golden | <a href="../_code/multimodal/results/siglip_block_q8_0_golden.json"><code>siglip_block_q8_0_golden.json</code></a> | <a href="../_code/multimodal/reference/verify_siglip_block_golden.py"><code>verify_siglip_block_golden.py</code></a> | 单 Block C++ 与 NumPy 数值一致性 |
+| <a id="val-mm-02"></a>VAL-MM-02 | 12 层 Vision Encoder golden | <a href="../_code/multimodal/results/siglip_encoder_q8_0_golden.json"><code>siglip_encoder_q8_0_golden.json</code></a> | <a href="../_code/multimodal/reference/verify_siglip_encoder_golden.py"><code>verify_siglip_encoder_golden.py</code></a> | 逐层 shape、checksum 和 post norm |
+| <a id="val-mm-03"></a>VAL-MM-03 | IDEFICS3 Projector golden | <a href="../_code/multimodal/results/idefics3_projector_q8_0_golden.json"><code>idefics3_projector_q8_0_golden.json</code></a> | <a href="../_code/multimodal/reference/verify_idefics3_projector_golden.py"><code>verify_idefics3_projector_golden.py</code></a> | merge 顺序、Q8_0 Linear 和输出 width |
+| <a id="val-mm-04"></a>VAL-MM-04 | 图文 embedding 与一层 Decoder | <a href="../_code/multimodal/results/multimodal_input_q8_0_golden.json"><code>multimodal_input_q8_0_golden.json</code></a> | <a href="../_code/multimodal/reference/verify_multimodal_input_golden.py"><code>verify_multimodal_input_golden.py</code></a> | embedding-prefill 与一层 logits |
+| <a id="val-mm-05"></a>VAL-MM-05 | 32 层最小图文 Decoder | <a href="../_code/multimodal/results/multimodal_decoder_32_layer_q8_0_golden.json"><code>32-layer golden</code></a> | <a href="../_code/multimodal/reference/verify_multimodal_decoder_32_layer_golden.py"><code>32-layer verifier</code></a> | 完整层数、top-1 和 logits checksum |
+| <a id="val-mm-06"></a>VAL-MM-06 | 真实 chat template 与 overview prompt | <a href="../_code/multimodal/results/smolvlm_prompt_overview_q8_0_golden.json"><code>prompt golden</code></a> | <a href="../_code/multimodal/reference/verify_smolvlm_prompt_golden.py"><code>prompt verifier</code></a> | BPE、视觉占位与 prompt 顺序 |
+| <a id="val-mm-07"></a>VAL-MM-07 | 单个完整视觉 tile | <a href="../_code/multimodal/results/smolvlm_single_tile_q8_0_golden.json"><code>single-tile golden</code></a> | <a href="../_code/multimodal/reference/verify_smolvlm_single_tile_golden.py"><code>single-tile verifier</code></a> | 1024 patch、64 visual rows 与 32 层 Decoder |
+| <a id="val-mm-08"></a>VAL-MM-08 | 动态 tiles 与服务 smoke | <a href="../_code/multimodal/results/smolvlm_dynamic_tiles_q8_0_golden.json"><code>dynamic-tiles golden</code></a> | <a href="../_code/multimodal/reference/verify_smolvlm_service_golden.py"><code>service verifier</code></a> | `2x3 + overview`、同步/SSE token 与资源释放 |
+| <a id="exp-mm-01"></a>EXP-MM-01 | 真实动态图片服务重复 benchmark | <a href="../_code/multimodal/results/smolvlm_service_cpu_benchmark.json"><code>service benchmark JSON</code></a> | <a href="../_code/multimodal/scripts/run_real_service_benchmark.sh"><code>run_real_service_benchmark.sh</code></a> | 两轮最小重复闭环；不外推长期稳态或其他机器 |
+| <a id="exp-gpu-01"></a>EXP-GPU-01 | CUDA Vector Add、cuBLAS MatMul、量化 Linear、RoPE 与 GQA device 计时 | 暂无版本化结果；输出来自设备 CTest | <a href="../_code/cuda/scripts/run.sh"><code>CUDA run.sh</code></a> | CPU/CUDA golden 与本机 kernel/event 时间，不构成发布基线 |
+
+## 登记与引用规则
+
+新增实验先确定它回答的问题，再固定 workload、环境、正确性闸门和测量区间。正文引用实验 ID 和稳定结论，原始样本留在 `code/*/results`；只有可由脚本重新生成或离线校验的文件才能登记为归档实验。
+
+| 资产 | 必填内容 | 更新条件 |
+| --- | --- | --- |
+| 采集脚本 | 固定输入、warmup、iterations、环境参数和失败退出 | workload 或工具改变时更新 |
+| 原始结果 | schema、环境、样本、汇总和 correctness | 同一实验重新采集时更新 |
+| A/B 报告 | baseline/experiment、单变量范围和判定理由 | 任一输入结果更新时重算 |
+| 教程正文 | 实验 ID、关键解释、适用条件和限制 | 结论或教学解释改变时更新 |
+| 实验索引 | 稳定 ID、事实来源、复现入口和结论边界 | 新增实验或资产路径改变时更新 |

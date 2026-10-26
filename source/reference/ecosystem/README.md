@@ -1,87 +1,34 @@
-# 生态对照
+# 推理生态项目索引
 
-这个目录只做一件事：把常见推理 / serving 方案放到同一张图里，方便读者快速判断该看谁、为什么看、和教程哪一章对照。
+这里是框架对照的项目卡片层。先在[训练框架、推理引擎与推理服务](../framework_comparison.md)确定当前问题所在的系统位置，再选择一个项目下钻；项目卡不组成第二条学习主线。
 
-先理解教程主线时，优先看 [docs/README.md](/README) 和 [阅读指南](/guide)。
-这里是查阅层，不是第二条阅读主线。
+## 按问题选择项目
 
-教程主线里的各章会在导读和小结里直接挂到这里，方便读者按章节回看对应的生态参考。
+同一个项目可能跨越多层，但每张卡只保留它对本教程最有价值的阅读角度。模型家族和交付工具单独列出，避免与推理引擎混为一类。
 
-## 怎么和主线一起读
+| 当前问题 | 优先阅读 | 补充阅读 |
+| --- | --- | --- |
+| 本地真实模型与 GGUF | [llama.cpp](./llama_cpp.md) | [Gemma](./gemma.md) |
+| C++/CUDA 纵向实现 | [Tiny-VLLM](./tiny_vllm.md) | [TensorRT-LLM](./tensorrt_llm.md) |
+| 可读的模型与 Runtime 算法 | [nano-vLLM](./nano_vllm.md) | [vLLM](./vllm.md) |
+| Continuous Batching 与 Block KV | [vLLM](./vllm.md) | [Mini-SGLang](./mini_sglang.md) |
+| Radix Cache、LPM 与前缀复用 | [Mini-SGLang](./mini_sglang.md) | [SGLang](./sglang.md) |
+| GPU kernel、量化和 engine build | [TensorRT-LLM](./tensorrt_llm.md) | [Tiny-VLLM](./tiny_vllm.md) |
+| 大规模阶段分离与联合优化 | [DeepInfer](./deepinfer.md) | [SGLang](./sglang.md) |
+| 本地产品交付 | [Ollama](./ollama.md) | [llama.cpp](./llama_cpp.md) |
 
-如果你已经在读主线，可以按下面的节奏把这里当作对照层：
+## 项目类型
 
-- 先完成对应章节，再回来看一个项目
-- 先看“这个项目解决什么问题”，再看“它和主线哪一章对应”
-- 先对照 `llama.cpp`、`vLLM`、`SGLang`、`TensorRT-LLM`、`Ollama` 的分工，再去看更细的页面
+分类只用于避免误读，不代表项目只能承担一种职责。
 
-如果你是从单个项目倒回来读，也可以反向使用这页：
+| 类型 | 项目 | 阅读目的 |
+| --- | --- | --- |
+| 本地 C++ baseline | llama.cpp | 建立真实推理、GGUF 和 CPU 路径坐标 |
+| 教学型实现 | Tiny-VLLM、nano-vLLM、Mini-SGLang | 观察被压缩后的 kernel、模型或 Runtime 骨架 |
+| 生产推理框架 | vLLM、SGLang、TensorRT-LLM、DeepInfer | 观察规模扩大后的执行、调度、缓存和部署约束 |
+| 模型家族 | Gemma | 观察模型结构怎样影响 loader、shape 和量化 |
+| 交付工具 | Ollama | 观察推理能力怎样包装为本地产品 |
 
-- 想看最小本地推理，就从 `llama.cpp` 开始
-- 想看高吞吐 serving，就从 `vLLM` 开始
-- 想看结构化编排，就从 `SGLang` 开始
-- 想看 GPU engine 和部署，就从 `TensorRT-LLM` 开始
-- 想看本地交付，就从 `Ollama` 开始
+## 卡片写作规则
 
-## 一张表看懂借鉴关系
-
-| 对象 | 类型 | 最强项 | 本教程最值得借鉴的点 | 对应章节 |
-| --- | --- | --- | --- | --- |
-| `llama.cpp` | 本地推理 baseline | 小、轻、可移植，适合先把模型跑起来 | 先做最小可用链路，先验证环境、加载和首次推理，再谈扩展 | `chapter00_quickstart`、`chapter01_tensor_loader`、`chapter05_generation` |
-| `gemma.cpp` | 具体模型的 C++ 示例 | 作用域更窄，路径更短，适合初学者跟读 | 用一个具体模型家族看懂“模型如何映射到 C++ 推理流程” | `chapter01_tensor_loader`、`chapter02_tensor_ops`、`chapter04_attention` |
-| `vLLM` | 高吞吐 serving runtime | continuous batching、scheduler、KV cache 管理、streaming | 学它的调度思想、缓存组织和吞吐/延迟平衡 | `chapter05_generation`、`chapter07_benchmark` |
-| `SGLang` | 应用编排 / structured serving | 多步流程、结构化生成、上层 workflow 组织 | 学它的“把推理能力组织成应用运行时”的思路 | `chapter05_generation`、`chapter07_benchmark` |
-| `TensorRT-LLM` | GPU engine / deployment reference | engine build、runtime 分层、GPU kernel 和量化部署 | 学它如何把“算子层 -> runtime -> 部署”串成一条高性能工程线 | `chapter03_matmul`、`chapter04_attention`、`chapter06_quantization`、`chapter07_benchmark` |
-| `Gemma` | 模型家族 | 具体模型结构、兼容性和验证对象 | 学它作为“被推理的对象”如何影响 loader、shape、quantization 和 benchmark | `chapter01_tensor_loader`、`chapter04_attention`、`chapter06_quantization`、`chapter07_benchmark` |
-| `Ollama` | 本地打包 / 分发层 | 交付简单、上手快、分发友好 | 学它如何把推理能力包装成更容易使用的本地产品 | `chapter00_quickstart`、`chapter05_generation` |
-
-## 需要区分的两种对象
-
-为了避免混淆，这里把两类对象分开：
-
-- **模型家族**：`Gemma`
-  - 它是“被推理的对象”
-  - 用来验证 loader、shape、quantization 和 benchmark
-- **推理 / serving 参考**：`llama.cpp`、`gemma.cpp`、`vLLM`、`SGLang`、`TensorRT-LLM`
-  - 它们是“怎么推理、怎么服务、怎么组织运行时”的参考
-
-## 学习顺序建议
-
-沿着本教程主线学习时，建议按这个顺序看：
-
-1. `llama.cpp`
-   - 先建立最小本地推理直觉
-2. `gemma.cpp`
-   - 再看一个更具体、路径更短的 C++ 实现案例
-3. `vLLM`
-   - 然后看高吞吐 runtime 如何做调度和缓存
-4. `TensorRT-LLM`
-   - 再看高性能 GPU engine 如何分层
-5. `SGLang`
-   - 最后看上层应用编排
-
-这个顺序和教程主线是对齐的：
-
-- `chapter00_quickstart` 最适合先看 `llama.cpp`
-- `chapter01_tensor_loader` 到 `chapter04_attention` 很适合看 `gemma.cpp` 和 `TensorRT-LLM`
-- `chapter05_generation` 和 `chapter07_benchmark` 最适合看 `vLLM` 和 `SGLang`
-
-## 参考文件
-
-- `llama_cpp.md`
-- `gemma.md`
-- `tensorrt_llm.md`
-- `vllm.md`
-- `sglang.md`
-- `ollama.md`
-- `gemma.md`
-
-## 写作规则
-
-每一页都尽量短，直接回答三个问题：
-
-- 它解决什么问题
-- 它最值得借鉴的工程选择是什么
-- 它和教程哪一章对应
-
-每一页保持参考页风格，不展开成主线正文。
+项目卡固定回答三个问题：为什么现在读、重点看哪些对象、与教程哪些章节对应。项目版本快速变化时只维护官方入口和稳定概念，不在卡片中复制大段源码或短期 benchmark 数字。

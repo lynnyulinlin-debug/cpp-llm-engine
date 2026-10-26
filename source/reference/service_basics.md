@@ -1,14 +1,14 @@
 # 推理引擎服务化基础
 
-这一页专门讲“推理引擎什么时候开始不只是本地程序，而是一个持续服务”。  
-主线在 `chapter05_generation` 和 `chapter07_benchmark` 里已经碰到一些服务化语义，这一页把它们收成最基础的运行规则。
+服务化基础讲清推理引擎如何从本地程序进入持续服务。
+主线在 `chapter05_generation` 和 `chapter07_benchmark` 里已经碰到一些服务化语义，服务化基础把它们收成最基础的运行规则。
 
 ## 1. 这页要解决什么
 
 如果系统已经有多请求、流式输出和资源复用，那么它就不再只是一个 demo。  
 这时就必须开始回答服务化问题。
 
-这一页只回答一个问题：最基础的服务化能力有哪些，以及它们如何落到 `Request`、`Scheduler` 和资源回收边界上。
+服务化基础聚焦最基础的服务化能力，以及它们如何落到 `Request`、`Scheduler` 和资源回收上。
 
 ## 2. 服务化最小集合
 
@@ -65,7 +65,7 @@ SLA 解决的是“系统承诺的响应边界是什么”。
 - 已经占住的资源可以释放
 - 取消后不会把 cache 和队列状态弄乱
 
-如果取消和资源回收没打通，系统就会出现“逻辑上已经结束，资源上还在占着”的问题。
+如果取消路径没有释放资源，系统就会出现“逻辑上已经结束，资源上还在占着”的问题。
 
 ## 5. 健康检查、日志和指标
 
@@ -86,7 +86,7 @@ SLA 解决的是“系统承诺的响应边界是什么”。
 | `chapter07_benchmark` | 验证、对照和结果收口 | 服务化场景下如何读结果 |
 | `reference/runtime_systems.md` | 请求生命周期、continuous batching、backpressure | 面向外部服务的最小规则 |
 
-这页不是要把完整 production serving 写完，而是先把最基础的服务语义说清楚。
+服务化基础先固定 production serving 的基础语义。
 
 相关阅读：[`05.9 Request 生命周期`](../chapter05_generation/08_request_lifecycle.md)、[`05.10 Continuous Batching 入门`](../chapter05_generation/09_continuous_batching.md)、[`推理引擎内存管理`](./memory_management.md)、[`推理引擎回归测试`](./regression_testing.md)
 
@@ -94,7 +94,7 @@ SLA 解决的是“系统承诺的响应边界是什么”。
 
 - 先看 `reference/runtime_systems.md`
 - 再看 `reference/inference_engine_systems.md`
-- 系统开始对外接请求后，用这一页检查服务边界是否清楚
+- 系统开始对外接请求后，用服务化基础检查服务规则是否清楚
 
 如果只保留一句话：  
 服务化基础决定了引擎是不是能持续对外工作。

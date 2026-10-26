@@ -1,7 +1,7 @@
 # 推理引擎运行时
 
-这一页专门讲“推理引擎和单次 `forward` 到底差在哪里”。  
-主线在 `chapter05_generation` 已经把最小生成 runtime 立住了，这一页把它往更接近真实 serving runtime 的方向再收紧一层。
+运行时系统参考讲清推理引擎和单次 `forward` 的差异。
+主线在 `chapter05_generation` 已经把最小生成 runtime 立住了，运行时系统参考把它往更接近真实 serving runtime 的方向推进。
 
 ## 1. 这页要解决什么
 
@@ -90,17 +90,18 @@ backpressure 解决的是：
 - 公平性
 - 可观察性
 
-当前教程的最小实现采用 FIFO 和显式状态，不实现完整优先级队列。后续引入优先级时，必须补公平性、饥饿保护、取消后的队列清理和可验证的 token budget，否则优先级只会改变顺序，不能证明服务质量改善。
+教程实现采用 FIFO、显式状态和最少 prefill 进度优先。生产系统如果引入业务优先级，还必须同时定义公平性、饥饿保护、取消后的队列清理和可验证的 token budget，否则优先级只会改变顺序，不能证明服务质量改善。
 
 ## 7. 和章节主线的关系
 
-| 章节 | 已经给出什么 | 运行时页继续补什么 |
+| 章节 | 教程实现 | 生产系统常见扩展 |
 | --- | --- | --- |
-| `chapter05_generation` | 最小 generation runtime | 多请求、连续批处理、backpressure、取消、流式输出 |
+| `chapter05_generation` | generation runtime、chunked prefill、基础公平性、token/block-budget batch | 抢占、优先级和并行 batch executor |
 | `chapter06_quantization` | 稳定 runtime 上的表示变化 | 资源边界和调度边界继续保持清楚 |
 | `chapter07_benchmark` | 验证和证据收口 | 运行时缺口对应的性能和稳定性问题 |
+| `chapter09_serving` | waiting/running 队列、`dispatch_step()`、Block KV ownership、终态释放 | device K/V payload、抢占和业务优先级 |
 
-这页不是替代主线，而是把主线已经建立的 runtime 骨架继续往外扩。
+运行时系统参考页在主线 runtime 骨架上继续补充服务化能力。
 
 ## 8. 使用顺序
 
@@ -109,4 +110,4 @@ backpressure 解决的是：
 - 再根据系统缺口决定后续先补调度、内存还是服务化
 
 如果只想抓最关键的结论，记住一句话就够了：  
-`chapter05` 解决“能持续生成”，这一页解决“能持续服务”。
+`chapter05` 解决“能持续生成”，运行时系统参考页补充“能持续服务”。

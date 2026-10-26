@@ -1,7 +1,7 @@
 # 推理引擎 Profiling
 
-这一页专门讲“benchmark 之后为什么还需要 profiling”。  
-`chapter07_benchmark` 已经把正确性和性能收口成证据链，`chapter08_profiling` 会把这部分内容放进主线；本页负责作为 reference，把证据背后的瓶颈解释再集中收束一次。
+Profiling 参考页讲清 benchmark 之后如何使用 profiling。
+`chapter07_benchmark` 已经把正确性和性能收口成证据链，`chapter08_profiling` 会把这部分内容放进主线；Profiling 参考页集中解释证据背后的瓶颈。
 
 ## 1. 这页要解决什么
 
@@ -73,7 +73,7 @@ benchmark 是证据，profiling 是证据说明书。
 
 profiling 是把 benchmark 的结论变成下一步优化动作的桥梁。
 
-## 7. 读者应该如何使用这一页
+## 7. 如何使用 profiling 参考页
 
 - 先用 `chapter07_benchmark` 确认结果可信
 - 再读 [`chapter08_profiling`](../chapter08_profiling/intro.md) 建立 profiling 和 A/B 对比流程

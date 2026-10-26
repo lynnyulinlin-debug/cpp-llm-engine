@@ -1,14 +1,14 @@
 # 推理引擎输入链路
 
-这一页专门讲“用户请求怎样变成引擎内部稳定处理的输入”。  
-主线在 `chapter01_tensor_loader` 和 `chapter05_generation` 已经把权重、`Tensor`、embedding、位置编码和最小生成流程讲清楚了，这一页把请求输入侧的契约再单独收紧一层。
+输入链路参考页讲清用户请求如何变成引擎内部可处理的输入。
+主线在 `chapter01_tensor_loader` 和 `chapter05_generation` 已经把权重、`Tensor`、embedding、位置编码和最小生成流程讲清楚了，输入链路参考页进一步固定请求输入侧的契约。
 
 ## 1. 这页要解决什么
 
 推理引擎不只接收模型权重，也接收用户请求。  
 如果只讲权重怎么进程序，还不算完整输入链路。
 
-这一页只回答一个问题：文本请求进入引擎之前，到底要经过哪些稳定化步骤。它不替代 tokenizer 实现或 serving API，而是固定输入契约和主线边界。
+输入链路参考页按 tokenizer、模板、特殊 token 和长度检查说明文本请求进入引擎前的处理步骤。
 
 ## 2. 输入链路的基本步骤
 
@@ -17,7 +17,7 @@
 1. 文本进入系统
 2. tokenizer 把文本切成 token ids
 3. prompt template 把请求整理成统一格式
-4. special tokens 补齐系统约定
+4. special tokens 补充系统约定
 5. stop criteria 定义什么时候结束
 6. max length 约束上下文长度
 7. pad / truncation 处理 batch 中的长度差异
@@ -77,16 +77,16 @@ prompt template 的作用，是把不同来源的请求整理成统一结构。
 | `chapter05_generation` | embedding、位置编码、生成 runtime | 请求契约如何进入 runtime |
 | `chapter07_benchmark` | 测试和性能收口 | 不同输入契约如何影响比较结果 |
 
-这一页的核心作用，是把“输入长什么样”从 runtime 里单独拎出来。
+输入链路的核心作用，是把“输入长什么样”从 runtime 中单独列出。
 
-最小桥接顺序是：`chapter00` 先用固定 prompt 跑通外部输入，`chapter01` 固定权重和 `Tensor` 对象，`chapter05` 再把 token ids、停止条件和长度限制放进 `Request`。这样输入链路不会和模型加载、生成调度互相重复定义。
+最小学习顺序是：`chapter00` 先用固定 prompt 跑通外部输入，`chapter01` 固定权重和 `Tensor` 对象，`chapter05` 再把 token ids、停止条件和长度限制放进 `Request`。这样输入链路与模型加载、生成调度各自保持清楚。
 
 相关阅读：[`00.4 First Inference`](../chapter00_quickstart/04_first_inference.md)、[`01.0 Model Weights and Tensor Objects`](../chapter01_tensor_loader/intro.md)、[`05.9 Request 生命周期`](../chapter05_generation/08_request_lifecycle.md)、[`推理引擎回归测试`](./regression_testing.md)
 
-## 7. 读者应该如何使用这一页
+## 7. 如何使用输入链路参考页
 
 - 先看 `chapter05_generation/01_embedding_and_position`
-- 再回到这里补齐 tokenizer 和请求契约
+- 再回到这里补充 tokenizer 和请求契约
 - 如果后面看起来像模型有问题，先检查输入链路是否已经统一
 
 如果只保留一句话：  

@@ -1,8 +1,8 @@
 # 推理引擎内存管理
 
-这一页把 `Tensor`、view、KV Cache 和执行临时空间放到同一个资源生命周期里。目标不是实现一个完整 allocator，而是先明确：谁拥有内存、谁只观察内存、谁负责复用、谁负责释放。
+内存管理参考页把 `Tensor`、view、KV Cache 和执行临时空间放到同一个资源生命周期里，明确谁拥有内存、谁只观察内存、谁负责复用、谁负责释放。
 
-## 1. 这一页解决什么
+## 1. 资源生命周期解决什么
 
 推理引擎的内存问题通常不是“有没有分配成功”，而是以下边界是否清楚：
 
@@ -44,18 +44,16 @@ view 保存的是 shape、offset、stride 和 storage handle，不应该单独�
 
 - `chapter01` 定义权重和 Tensor 的 storage 入口
 - `chapter02` 定义 view、reshape、slice 和共享存储
-- `chapter05` 将相同的生命周期思想扩展到请求级 KV Cache
+- `chapter05` 将相同的生命周期思想扩展到 Request token history、模型 Context 和 block ownership
 
-## 4. 请求级 KV Cache
+## 4. 请求级历史状态
 
-KV Cache 不是普通的全局临时数组。它至少要绑定请求、层和逻辑 token 位置：
+生成历史不能放在全局临时数组中。需要分别管理 Request token history、每层 K/V 数值和逻辑 token 的物理位置：
 
 ```text
-Request
-  -> Cache Handle
-      -> Layer 0 KV blocks
-      -> Layer 1 KV blocks
-      -> ...
+Request -> token history
+        -> Model Context -> Layer 0..N K/V
+        -> BlockTable -> physical block IDs
 ```
 
 最小实现可以按请求分配连续 cache。随着 continuous batching 和 block KV cache 引入，cache manager 需要进一步负责：
@@ -66,7 +64,7 @@ Request
 - 不同请求之间的隔离
 - 长上下文下的容量上限
 
-因此，`Request` 持有的是 cache 的逻辑句柄；物理内存的分配和复用可以下沉到 cache manager 或 memory pool。
+教程中的 `Request` 直接持有 token history；真实 K/V 由请求级 Model Context 持有；`BlockTable` 只负责逻辑位置和物理 block ownership。生产 cache engine 可以进一步把 BlockTable 绑定到真实 device K/V allocation。
 
 ## 5. workspace 和 staging
 
@@ -145,4 +143,4 @@ sequenceDiagram
 - `chapter07` 验证分配与释放是否影响结果和性能
 - `chapter08` 解释内存和带宽是否成为瓶颈
 
-如果后续实现 allocator、memory pool 或 block manager，接口设计应先回到本页检查所有权、复用和释放边界。
+如果后续实现 allocator、memory pool 或 block manager，接口设计应先回到内存管理参考页检查所有权、复用和释放规则。

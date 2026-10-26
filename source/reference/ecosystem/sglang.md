@@ -1,26 +1,20 @@
-# SGLang 应用编排
+# SGLang 前缀缓存与生产调度
 
-## 解决什么问题
+## 为什么读
 
-`SGLang` 主要解决的是更高层的应用编排和结构化 serving 问题。它适合回答这样一个问题：如何把模型调用组织成一个更复杂、更可控的应用运行时。
+[SGLang](https://github.com/sgl-project/sglang) 同时覆盖推理 Runtime、结构化生成和服务系统。对本教程最有价值的是前缀 KV 复用怎样影响请求排序、缓存生命周期和资源预算，而不只是上层应用 workflow。
 
-## 工程策略
+## 重点看什么
 
-- 强调应用级编排
-- 支持结构化生成和多步运行逻辑
-- 关注模型调用与上层 workflow 的衔接
+- RadixAttention/Radix Cache 怎样表示和复用可变长度共享前缀
+- LPM 怎样把前缀命中信息用于等待队列排序
+- Chunked Prefill 怎样和 token、KV、延迟预算共同工作
+- HiCache 怎样把前缀 KV 扩展到 GPU、主机和外部存储层级
 
-## 什么时候选它
-
-如果关注的不是单纯吞吐，而是“如何把多个模型调用步骤组织成一个更高层的服务流程”，就可以优先看 `SGLang`：
-
-- 需要更强的应用编排能力
-- 需要结构化生成
-- 需要把 serving 和应用 workflow 连起来
+LPM 是调度策略，Radix Cache 是缓存与索引机制，HiCache 是多级存储扩展；三者相互协作，但不能写成同一个算法。本教程先保证请求级 K/V、block ownership 和释放语义正确，再讨论跨请求复用。
 
 ## 对应教程章节
 
-`SGLang` 主要对应教程里的这些章节：
-
-- `chapter05_generation`
-- `chapter07_benchmark`
+- Chapter05：Prefill/Decode、Chunked Prefill、Scheduler 和 Block KV
+- Chapter07-08：前缀命中 workload、TTFT 和资源成本
+- Chapter09：admission、前缀复用、缓存回收和服务指标

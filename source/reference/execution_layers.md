@@ -1,22 +1,25 @@
-# 算子、Backend、Executor 与 Runtime
+# Model、算子、Backend、Context 与 Runtime
 
-这一页专门把推理引擎里最容易混在一起的四层边界拆开：`operator`、`backend`、`executor`、`runtime`。  
-主线已经分别在 `chapter03_matmul` 和 `chapter05_generation` 里碰到这些概念，但如果不把它们显式拆开，读者很容易把“能跑”与“该放在哪一层”混成一件事。
+执行路径从只读 Model 开始，经过 operator/backend 完成数值计算，由请求 Context 保存状态，再由 executor/runtime 推进生成。
 
 ## 1. 这页要解决什么
 
-这页只回答一个问题：一个推理引擎里，谁负责语义，谁负责执行，谁负责调度，谁负责持续服务。
+目标是确定模型结构、数值计算、请求状态和调度分别放在哪里。
 
 如果四层边界不清楚，后面最容易出现的问题是：
 
-- 上层直接依赖具体实现
-- 后端和上层语义绑死
-- 调度逻辑散进算子里
-- runtime 里混进了太多实现细节
+- Model 和 Context 共享可变请求状态
+- Runtime 直接依赖 GGUF loader 或具体 Decoder 类型
+- backend 改变 operator 语义
+- 调度逻辑进入算子和 kernel
 
-完整系统中的位置见 [推理引擎系统补强图](./inference_engine_systems.md)。本页只展开其中的计算与执行边界。
+完整系统中的位置见 [推理引擎系统补强图](./inference_engine_systems.md)。执行层参考展开其中的计算与执行路径。
 
-## 2. 四层分别是什么
+## 2. 六个执行对象
+
+### model
+
+`model` 持有模型配置和只读权重，并创建请求 Context。`DecoderModelContract` 让 Engine 在不读取 GGUF 的情况下检查词表、层数、上下文长度和单层结构。
 
 ### operator
 
@@ -54,7 +57,11 @@ backend 不应该改写上层语义，只应该实现同一套语义。
 - 输出怎么拿出来
 - 这次执行的资源边界是什么
 
-你可以把它理解成语义和运行之间的中间层，它把“我要做什么”变成“这一次具体怎么做”。
+教程中的 Engine adapter 把 Core `DecoderExecutionContext` 转为 Chapter05 `RequestModelExecutor`，不复制 Decoder 数学。
+
+### context
+
+`context` 保存一次请求的 position、分层 K/V 和临时统计。`DecoderExecutionContext` 提供 `reset`、完整 `prefill_tokens`、增量 `prefill_chunk`、`decode_token` 和 `token_count`；中间 chunk 只追加状态，final chunk 才返回 logits。每个运行中请求独占一个 Context。
 
 ### runtime
 
@@ -72,31 +79,28 @@ runtime 关心的是系统，不只是单次执行。
 
 ## 3. 一条最小分工链
 
-| 层 | 主要职责 | 典型问题 |
+| 对象 | 主要职责 | 典型问题 |
 | --- | --- | --- |
+| `model` | 持有只读权重和结构 | 这个模型能创建什么 Context |
 | `operator` | 定义语义边界 | 这一步算的是什么 |
 | `backend` | 实现具体计算 | 这一步怎么高效算 |
-| `executor` | 执行一次任务 | 这一步用哪条路径跑 |
+| `context` | 保存请求级执行状态 | 当前请求执行到哪个 token |
+| `executor` | 适配 Runtime 调用 | Runtime 如何取得下一步 logits |
 | `runtime` | 持续推进请求 | 系统怎么一直服务下去 |
-
-这四层不是等价替代，而是从“抽象”往“运行”逐层落地。
 
 ## 4. 和主线章节的关系
 
-| 章节 | 已经做了什么 | 这四层里更偏哪一层 |
+| 章节 | 已经做了什么 | 主要执行对象 |
 | --- | --- | --- |
+| `chapter01_tensor_loader` | GGUF、真实 Model/Context、TinyLlama 对照 | `model` + `context` 实现 |
 | `chapter03_matmul` | 算子边界、CPU reference、cuBLAS | `operator` + `backend` |
+| `chapter04_attention` | Attention、FFN、单层 Decoder、结构契约 | `operator` + 模型结构 |
 | `chapter05_generation` | 生成链路、request、scheduler、cache | `runtime` |
+| `code/engine` | Core Context 到 Runtime executor 的适配 | `executor` |
 | `chapter07_benchmark` | 正确性和性能收口 | `executor` + `runtime` 的验证结果 |
 
-如果再往回看，`chapter03` 解决的是“语义怎么固定”，`chapter05` 解决的是“系统怎么持续推进”。  
-这页补的是两者之间的层次感：谁该放在哪一层。
+## 5. 如何使用执行层参考页
 
-## 5. 读者应该如何使用这一页
-
-- 先把 `chapter03_matmul` 和 `chapter05_generation` 读完
-- 再回到这里看哪些概念其实不是同一层
-- 如果后续要扩展 backend、executor 或 runtime，就先对齐这一页的分工
-
-如果只保留一句话：  
-`operator` 定义做什么，`backend` 定义怎么做，`executor` 定义这次怎么跑，`runtime` 定义系统怎么持续跑。
+- 学完 Chapter04 后，用 `DecoderLayerContract` 对照教学层和真实 TinyLlama 的结构差异。
+- 学完 Chapter05 后，沿 `Model -> Context -> Engine adapter -> Runtime` 跟踪一次请求。
+- 扩展 CPU/GPU kernel 时只替换 backend；扩展调度时保持 Context 执行接口稳定。
