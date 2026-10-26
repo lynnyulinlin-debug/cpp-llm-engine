@@ -1,132 +1,49 @@
 # F01 C++ Basics C++ 基础
 
-## 目标
+Foundation 的 C++ 内容只补主线会反复使用的对象语义：所有权、生命周期、移动和容器选择。目标不是复习全部语法，而是能读懂 `Tensor`、`Workspace` 和 `Request` 的资源关系。
 
-补齐主教程中会用到的 C++ 基础，重点放在所有权、对象生命周期，以及一个小型推理引擎会用到的代码组织方式。
+## 1. 主线位置与目标
 
-## 读完你应该能做什么
+| 读完后 | 在主线中的用途 |
+| --- | --- |
+| 能区分拥有资源和借用资源 | `Tensor` storage、workspace 和 view |
+| 能解释构造、析构、移动的结果 | 避免 buffer 重复释放和隐式复制 |
+| 能按访问方式选择容器 | 参数表、连续数据和请求队列 |
 
-- 理解类、构造函数、析构函数和 RAII
-- 理解引用、指针和所有权的基本概念
-- 理解 `std::vector`、`std::string` 和智能指针
-- 理解头文件、源文件和命名空间
-- 能在实际场景下理解拷贝和移动语义
+## 2. 核心语义
 
-## 为什么重要
-
-主教程使用的是现代 C++。这意味着代码关心的不只是语法，还包括清晰的所有权、可预测的对象生命周期，以及便于调试和扩展的小抽象。
-
-如果这些基础不扎实，后面的 `Tensor`、`ModelLoader`、算子封装和 KV Cache 管理都会变得难懂。
-
-更具体一点说，这套教程默认你能读懂一个小类，知道谁拥有内存，并能在对象被拷贝、移动或销毁时预测会发生什么。否则，后面很多 bug 看起来像“模型问题”，实际上只是所有权问题。
-
-## 后面会用到什么
-
-- `Tensor` 的设计
-- 内存管理
-- 算子和模型加载器实现
-- 共享权重和缓存 buffer
-- 测试与 benchmark 辅助代码
-
-## 这一页的核心内容
-
-### 1. 类的布局和封装
-
-当数据和行为属于同一件事时，就用类。让公开接口尽量小，把所有权写清楚。
-
-在这套教程里，一个好类不只是“写得整齐”，它还负责把 tensor 元数据、loader 状态和 runtime cache 分开，避免混成一堆无关字段。
-
-### 2. 构造和析构
-
-用构造函数建立有效状态，用析构函数释放资源。这就是 RAII 的基础。
-
-推理代码里这点很重要，因为 buffer、模型文件和运行时状态都有自己的生命周期。如果对象构造后不是有效状态、析构时不能干净释放资源，后面的章节就会很难测试，也很难推理。
-
-### 3. 拷贝和移动语义
-
-拷贝复制数据或所有权，移动转移所有权。对于大 buffer 和 tensor 来说，移动语义常常就是“能接受”和“不能接受”的性能分界线。
-
-这也是教程第一次把性能故事讲清楚的地方：当你看到按值返回或者向容器里 `push` 时，要知道这里是允许拷贝、期望移动，还是有意做共享所有权。
-
-### 4. 智能指针
-
-| 所有权类型 | 工具 | 典型场景 |
+| 语义 | 默认做法 | 推理引擎中的例子 |
 | --- | --- | --- |
-| 单一所有权 | 直接持有 / `unique_ptr` | `Tensor` 的数据 buffer、独占资源、明确生命周期 |
-| 共享所有权 | `shared_ptr` | 后续章节里显式共享同一块 buffer 的对象 |
-| 非拥有式观察 | `weak_ptr` / 裸指针 | 临时访问、观察关系、不延长生命周期 |
+| 单一所有权 | RAII、`std::unique_ptr` | buffer、workspace |
+| 借用数据 | 引用、指针或 view，不释放底层 storage | Tensor slice |
+| 大对象转移 | 删除复制，支持移动 | 返回 Tensor、交接 request |
+| 连续数值数据 | `std::vector` 或专用 buffer | Tensor payload |
+| 名称到对象 | `std::unordered_map<std::string, T>` | 权重和 metadata 查找 |
 
-在这套教程里，`Tensor` 的默认形态是单一所有权；`shared_ptr` 只在后续需要共享 storage 时再引入。
-
-`02 Tensor Ops` 会更自然地讨论 view 语义、slice 和共享 buffer，那时再看 `shared_ptr` 会更顺。
-
-### 5. STL 容器
-
-- `vector` 适合连续 buffer 和随机访问
-- `string` 适合文本元数据和名称
-- `unordered_map` 适合查找密集的元数据表
-
-容器选择本身就是设计的一部分，不是实现细节。在这套教程里，`vector` 常常意味着连续存储，`unordered_map` 常常意味着名称到 tensor 的查找，`string` 常常意味着需要跨加载和验证步骤保存的元数据。
-
-### 6. 命名空间和文件组织
-
-把接口放在头文件，把实现放在源文件。随着项目变大，用命名空间避免符号冲突。
-
-## 最小示例
+## 3. 最小例子
 
 ```cpp
-#include <vector>
-#include <string>
+class Buffer {
+ public:
+  explicit Buffer(std::size_t n) : data_(std::make_unique<float[]>(n)), size_(n) {}
+  Buffer(const Buffer&) = delete;
+  Buffer& operator=(const Buffer&) = delete;
+  Buffer(Buffer&&) noexcept = default;
 
-class Tensor {
-public:
-    Tensor(std::string name, std::size_t size)
-        : name_(std::move(name)), data_(size) {}
-
-    const std::string& name() const { return name_; }
-    std::vector<float>& data() { return data_; }
-    const std::vector<float>& data() const { return data_; }
-
-private:
-    std::string name_;
-    std::vector<float> data_;
+ private:
+  std::unique_ptr<float[]> data_;
+  std::size_t size_;
 };
-
-Tensor make_tensor() {
-    Tensor t("weight", 1024);
-    t.data()[0] = 1.0f;
-    return t;  // move 或 NRVO
-}
 ```
 
-这个例子说明了几件事：
+复制被禁止，移动表示所有权转移；析构自动释放。view 不应拥有 `data_`，否则一个 storage 会被释放多次。
 
-- 所有权是显式的
-- tensor payload 由 RAII 管理
-- 返回一个大对象不需要手写 `new` / `delete`
-- 这里默认的是单一所有权，而不是共享所有权
+## 4. 验证与练习
 
-## 怎么验证
+验证时回答三个问题：资源由谁释放？移动后源对象是什么状态？返回大对象是否需要手写 `new/delete`？
 
-- 解释 tensor storage 归谁所有
-- 解释为什么返回对象不会泄漏内存
-- 解释什么时候用移动而不是拷贝
-- 解释为什么这里不用 `shared_ptr` 也能完成目标
+对应练习见 [Foundation 正文与练习映射](./exercise_map.md)，直接完成 `FQ01`；工程收口再完成 `FQ17`。
 
-## 常见问题
+## 5. 总结
 
-- 用裸指针表达所有权
-- 不小心复制大 buffer
-- 用含糊的接口隐藏资源所有权
-- 头文件里写太多逻辑，没有明确理由
-- 把共享所有权当成默认设计
-- 看到 `Tensor` 就先想到 `shared_ptr`
-- 提前把视图语义和基础 Tensor 混在一起
-
-如果后面真的踩到这些坑，问题通常不在数学层，而在这里建立的对象设计层。
-
-## 总结
-
-这一章是给主教程的 C++ 代码打底。读完后，读者应该能看懂引擎代码，而不至于卡在基础所有权和生命周期上。
-
-实用标准很简单：如果你能解释为什么一个 `Tensor` 要明确拥有它的 storage，并且不用跑代码就能预测拷贝和移动的效果，那么这一章就完成任务了。
+后续看到一个 C++ 类，先找资源字段、复制操作、移动操作和析构行为，再判断它是 owner 还是 view。这套判断会贯穿 Tensor、算子和 Runtime。

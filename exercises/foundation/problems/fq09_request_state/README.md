@@ -2,7 +2,7 @@
 
 ## 任务
 
-实现一个最小请求状态机，表达 generation runtime 中 `waiting -> prefill -> running -> finished/aborted` 的合法迁移。
+实现一个最小请求状态机，表达 generation runtime 中 `waiting -> prefill -> running -> finished/aborted` 的合法迁移。重点是请求何时允许进入下一阶段，以及终态如何拒绝后续操作。
 
 ## 完成标准
 

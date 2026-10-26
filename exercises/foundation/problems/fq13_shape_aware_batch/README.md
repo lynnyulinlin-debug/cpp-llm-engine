@@ -1,0 +1,27 @@
+# FQ13 Shape-aware Batch
+
+## 任务
+
+根据一组 request 的 sequence length，计算一次 batch 的最大长度、有效 token 数、padding 后的 token 数，以及每一行在连续 batch buffer 中的起始 offset。
+
+## 完成标准
+
+- 拒绝长度为零的 request。
+- 按容量限制接收 request。
+- 能区分 `active_tokens` 和 `padded_tokens`。
+- 能根据 batch 行号计算连续 buffer offset。
+- 越界行号明确失败。
+
+## 验证
+
+运行 `bash exercises/foundation/run_all.sh`，重点检查 `fq13_shape_aware_batch`。
+
+## 提示
+
+- L0：先保存每个 request 的 sequence length。
+- L1：`max_sequence_length` 决定每一行的 stride。
+- L2：`active_tokens` 用于真实工作量，`padded_tokens` 用于 dense batch buffer 的容量估算。
+
+## 主线映射
+
+对应 [`chapter05 generation runtime`](/chapter05_generation/intro)、[`Request 生命周期`](/chapter05_generation/08_request_lifecycle) 和 [`continuous batching`](/chapter05_generation/09_continuous_batching)。

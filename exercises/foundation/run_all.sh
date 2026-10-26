@@ -2,7 +2,8 @@
 set -euo pipefail
 
 root_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-build_dir="${root_dir}/build"
+# Keep exercise verification independent from caches created in another checkout.
+build_dir="${FOUNDATION_BUILD_DIR:-$(mktemp -d /tmp/cpp-llm-engine-foundation.XXXXXX)}"
 
 cmake -S "${root_dir}" -B "${build_dir}"
 cmake --build "${build_dir}"
