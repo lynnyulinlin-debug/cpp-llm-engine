@@ -1,3 +1,6 @@
+// Chapter 05：实现教学 Runtime 使用的 request-owned token-history cache。
+// 边界：当前只表达 append 和 lifecycle ownership，不实现生产级 paged allocation。
+// 验证：KV Cache 测试覆盖 append、clear 和独立 request state。
 #include "chapter05_generation/kv_cache.h"
 
 namespace chapter05_generation {

@@ -1,12 +1,12 @@
 # 05.5 Scheduler 调度器
 
 
-## 这一页要解决什么
+## 决定下一个 Request
 
 把“谁先推进、谁后推进、什么时候推进”从 runtime 的隐式行为，变成显式的调度规则。  
-这一页先定义最小调度器，不展开复杂批处理。
+先定义最小调度器，不展开复杂批处理。
 
-## 阅读入口
+**阅读入口**
 
 - 前置阅读：[`05.4 KV Cache`](./04_kv_cache.md)、[`05.3 Naive Generation`](./03_naive_generation.md)
 - 源码直达：<a href="../_code/chapter05_generation/src/scheduler.cpp"><code>scheduler.cpp</code></a>、<a href="../_code/chapter05_generation/src/request.cpp"><code>request.cpp</code></a>、<a href="../_code/chapter05_generation/tests/chapter05_scheduler_test.cpp"><code>chapter05_scheduler_test.cpp</code></a>
@@ -27,18 +27,33 @@
 - 调度器选择一个请求推进
 - 推进结束后决定是否重新入队
 
-最小伪代码可以写成：
+下面的 Python 镜像对应当前 `RoundRobinScheduler::run_with_stats()`，只表达状态推进，不拥有 Request、Executor 或 KV 资源：
 
-```cpp
-Request* pick_next(std::deque<Request*>& active) {
-    if (active.empty()) return nullptr;
-    Request* req = active.front();
-    active.pop_front();
-    return req;
-}
+```python
+def run_round_robin(runtime, scheduled_requests, stream_token):
+    for item in scheduled_requests:
+        if item.request is not None and item.executor is None:
+            runtime.prefill(item.request)
+
+    progress = True
+    while progress:
+        progress = False
+        for item in scheduled_requests:
+            request = item.request
+            if request is None or item.sampler is None or request.terminal():
+                continue
+
+            generated_before = request.generated_size()
+            decoded = runtime.decode_one(request, item.sampler, item.executor)
+            if decoded == 0:
+                continue
+
+            progress = True
+            if request.generated_size() > generated_before:
+                stream_token(item.request_id, request.generated[-1])
 ```
 
-这一页不追求复杂策略，只先把“推进顺序可观察、可测试”立住。
+最小调度器不追求复杂策略，只先把“推进顺序可观察、可测试”立住。
 
 ## Admission 和优先级边界
 
@@ -59,8 +74,9 @@ Request* pick_next(std::deque<Request*>& active) {
 这样可以把职责拆开：
 
 - `Request` 保存状态
-- `KV Cache` 保存历史
+- `Request::cache()` 保存 token ID 历史
 - `Scheduler` 决定推进顺序
+- `RequestModelExecutor` 保存单个请求的模型 Context、分层 K/V 并提供 logits
 - `Sampler` 决定下一步 token
 
 如果这四件事混在一起，后面很难做单独验证。
@@ -74,6 +90,31 @@ Request* pick_next(std::deque<Request*>& active) {
 
 这个策略的优点是容易理解、容易验证，也容易和单请求路径对照。  
 它不是最终优化方案，但足够作为第一个可观察调度模型。
+
+## 每请求 Model Executor
+
+真实多请求不能让 Scheduler 反复调用同一个带状态 Decoder。`ScheduledRequest` 可以携带一个可选的 `shared_ptr<RequestModelExecutor>`；ServiceCore 从 admission 持有它，Scheduler 只在该 Request 被选中时调用它，terminal cleanup 后随 entry 一起释放。
+
+| 调度阶段 | Runtime 动作 | Executor 动作 |
+| --- | --- | --- |
+| 首次推进 | 校验 context budget，写入 prompt token history | `prefill(prompt)`，建立所属 Context 的分层 K/V |
+| 后续推进 | 更新 Request、调用 Sampler、检查 EOS/长度 | `decode(last_token)`，只推进所属 Context |
+| 执行错误 | Request 进入 `Failed`，停止调度 | 返回错误，不产生占位 token |
+| terminal cleanup | 清理 Request cache，ServiceCore 移除 entry | `shared_ptr` 释放请求 Context |
+
+### 算法对象映射
+
+Python 镜像中的对象与 C++ 接口保持一一对应，方便从控制流回到 ownership 和错误路径。
+
+| Python 对象或条件 | C++ 对应物 | 测试证据 |
+| --- | --- | --- |
+| `scheduled_requests` | `std::vector<ScheduledRequest>` | 多请求输入顺序固定 |
+| `request.terminal()` | `Request::terminal()` | 完成、取消、失败请求不再推进 |
+| `runtime.decode_one(...)` | `Runtime::decode_one()` | prefill/decode 与 Executor 隔离 |
+| `decoded == 0` | 无进展分支 | 不产生虚假 token，不触发 streaming |
+| `progress` | 外层 round-robin 终止条件 | 全部请求无进展时退出 |
+
+### 与 Runtime 的窄接口
 
 和 runtime 的接口：
 
@@ -99,6 +140,8 @@ public:
 - 单个请求结束后不会再被调度
 - 调度顺序和预期一致
 - scheduler 不会改写请求内部内容
+- 两个 executor 的 prefill/decode 次数、输出 token 和 Context 互不污染
+- executor 返回错误时 Request 进入 `Failed`，不会把空 logits 采样成 token `0`
 
 能够通过测试确认“请求推进顺序稳定、结束请求不会再被选中”，这页就算成立。
 
@@ -113,5 +156,5 @@ public:
 
 和后续章节怎么接：
 
-这一页把“谁先推进”说清楚了。  
+最小调度器把“谁先推进”说清楚了。
 下一页再把 sampler 接上去，就能把“推进请求”变成“推进请求并产出 token”。

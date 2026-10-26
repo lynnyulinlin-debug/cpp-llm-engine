@@ -1,21 +1,21 @@
 # 05.7 End-to-End Generation Testing 端到端生成测试
 
 
-## 这一页要解决什么
+## 验证完整生成链路
 
 完成一次端到端生成测试：输入 prompt，输出固定数量的 token，确认生成链路完整可用。
 
-## 阅读入口
+**阅读入口**
 
 - 前置阅读：[`05.4 KV Cache`](./04_kv_cache.md)、[`05.5 Scheduler`](./05_scheduler.md)、[`05.6 Sampler`](./05_sampler.md)
 - 源码直达：<a href="../_code/chapter05_generation/src/runtime.cpp"><code>runtime.cpp</code></a>、<a href="../_code/chapter05_generation/tests/chapter05_generation_test.cpp"><code>chapter05_generation_test.cpp</code></a>、<a href="../_code/chapter05_generation/tests/runtime_smoke_test.cpp"><code>runtime_smoke_test.cpp</code></a>
-- 相关阅读：[`chapter05 小结`](./summary.md)、[`chapter06_quantization`](../chapter06_quantization/intro.md)
+- 相关阅读：[`章节导读`](./intro.md)、[`chapter06_quantization`](../chapter06_quantization/intro.md)
 
 ## 测试设计
 
 前面的模块分别正确，并不代表组合起来也正确。端到端测试就是最终验收点。
 
-这一页要确认的是：输入能进、状态能走、cache 能复用、sampler 能出 token，最后还能稳定回到一个可检查的输出。
+端到端测试要确认：输入能进、Request 状态能走、token history 能检查、真实 Context 能隔离分层 K/V、sampler 能出 token，最后还能稳定回到一个可检查的输出。
 
 最小测试只需要固定两件事：prompt 和生成 token 数量。这样就能把它当成一条稳定的回归基线，而不是一次性的手工演示。
 
@@ -33,7 +33,7 @@
 
 黄金输出是什么：
 
-黄金输出（golden output）是用于回归测试的稳定参考：
+黄金输出（golden output）是用于回归测试的稳定参考。下面使用 GoogleTest 风格断言表达测试意图，不是仓库现有测试框架的可直接编译代码；仓库测试使用标准 `assert` 和 CTest：
 
 ```cpp
 // 第一次运行：记录输出
@@ -52,11 +52,11 @@ EXPECT_EQ(new_output, expected);
 - 如果使用 temperature 采样，通常要固定 seed 才能复现
 - 模型更新后，黄金输出可能需要重新生成
 
-端到端测试之所以要放在 KV Cache 之后，是因为它验证的是整个 runtime contract：embedding 是否和 decoder 对齐、cache 是否真的复用了历史状态、sampler 是否把 logits 变成了下一步 token、输出数量和停止条件是否可控。
+端到端测试放在缓存对象说明之后，因为它需要同时验证教学 Runtime 的 token history 和真实 Executor Context 的分层 K/V。前者证明 Request 状态可检查，后者证明 prefill/decode 能增量推进且请求互不污染。
 
 如果这里失败，通常需要回头检查 embedding、decoder、cache 或 sampler 其中某一段。
 
-最小测试流程可以写成：
+最小测试流程也用概念断言表示：
 
 ```cpp
 std::string prompt = "Hello";
@@ -69,7 +69,7 @@ EXPECT_EQ(output.size(), 16);
 
 Sampler 的集成验证：
 
-Sampler 的验证通常可以通过 greedy 模式来做：
+Sampler 的验证通常可以通过 greedy 模式来做。下面的 `Config` 和 `generate` 是接口形状伪代码；实际接口请以 `GenerationConfig`、`Request`、`GreedySampler` 和 `Runtime::generate()` 为准：
 
 ```cpp
 auto config = Config();
@@ -82,6 +82,40 @@ EXPECT_EQ(output1, output2);
 ```
 
 如果两次输出不一致，说明 sampler 里还有非确定性因素，比如随机种子没有固定。
+
+## 真实 TinyLlama 生成验证
+
+教学测试稳定后，再用同一个 `Runtime::generate` 接口替换 logits 来源。`RealTokenizerBackend` 负责文本与 token 的转换，`RealLlamaExecutorFactory` 持有共享的 22 层 `RealLlamaCpuModel`，每次生成创建的 `RealLlamaCpuContext` 负责 prefill/decode 和分层 K/V；`Runtime` 负责 Request 状态、greedy sampling、EOS 和 token budget。
+
+从仓库根目录执行：
+
+```bash
+cmake -S code/engine -B /tmp/cpp-llm-engine-real-generation \
+  -DCHAPTER01_ENABLE_LLAMA_CPP=ON \
+  -DLLAMA_CPP_ROOT="$PWD/llama.cpp" \
+  -DCHAPTER06_SOURCE_DIR="$PWD/code/chapter06_quantization" \
+  -DCPP_LLM_ENGINE_REAL_MODEL="$PWD/llama.cpp/models/tinyllama-1.1b-chat-v1.0.Q4_K_M.gguf" \
+  -DCMAKE_BUILD_TYPE=Release
+cmake --build /tmp/cpp-llm-engine-real-generation \
+  --target real_tinyllama_generation_smoke -j2
+/tmp/cpp-llm-engine-real-generation/real_tinyllama_generation_smoke \
+  llama.cpp/models/tinyllama-1.1b-chat-v1.0.Q4_K_M.gguf \
+  4 "Hello TinyLlama"
+ctest --test-dir /tmp/cpp-llm-engine-real-generation \
+  -R real_tinyllama_generation_test --output-on-failure
+```
+
+当前 smoke 是单请求 CPU 正确性验证，不测并发吞吐，也不经过 Chapter09 HTTP transport。固定模型文件与 prompt 后，greedy 输出可作为后续重构的回归记录；同一 Factory 接入 ServiceCore 的双请求验证见 [`Chapter09 Service Core`](../chapter09_serving/01_service_core.md)。
+
+| 检查项 | 固定结果 |
+| --- | --- |
+| prompt | `Hello TinyLlama` |
+| prompt token 数 | `6` |
+| 生成 token | `29892 306 29915 29885` |
+| detokenize 文本 | `, I'm` |
+| golden CTest | `golden_tokens_match: true` |
+| 连续请求隔离 | `context_isolation_match: true` |
+| 停止条件 | 达到 `max_new_tokens=4`；若先生成 EOS 则提前停止 |
 
 ## 验证与衔接
 
@@ -123,10 +157,10 @@ EXPECT_EQ(output1, output2);
 
 和前面的关系：
 
-这一页把前面的模块串成一个可回归闭环：
+端到端测试把前面的模块串成一个可回归闭环：
 
 - `01_embedding_and_position` 负责输入如何进入模型
 - `04_kv_cache` 负责历史状态如何保存和复用
-- 这一页负责验证链路是否真的闭合
+- 端到端测试负责验证链路是否真的闭合
 
-如果这一页不稳定，说明 generation runtime 还不能算稳定闭合。
+如果端到端测试不稳定，说明 generation runtime 还不能算稳定闭合。

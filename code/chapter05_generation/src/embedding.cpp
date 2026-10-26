@@ -1,3 +1,6 @@
+// Chapter 05：实现 token ID 到 model vector 的确定性 CPU embedding lookup。
+// 职责：提供 prefill 和 decode 消费的输入表示。
+// 验证：Runtime 测试通过 assembled Transformer 覆盖 lookup path。
 #include "chapter05_generation/embedding.h"
 
 namespace chapter05_generation {

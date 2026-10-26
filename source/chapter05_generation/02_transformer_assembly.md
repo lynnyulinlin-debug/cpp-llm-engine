@@ -1,117 +1,69 @@
 # 05.2 N-layer Transformer Assembly N 层 Transformer 组装
 
+## 把单层计算扩展为模型执行
 
-## 这一页要解决什么
+多层 Decoder 共享 hidden state 的输入输出契约，但每层持有独立参数。Chapter05 需要验证 runtime 能循环调用多层模型；真实 TinyLlama 的 22 层参数和数学计算由 Chapter01 的 CPU model/context 实现。
 
-把前面做好的单层 Decoder 组合成一个 N 层 Transformer，并让 forward 主流程稳定跑通。重点不是新算子，而是把“单层正确”变成“多层可堆叠”。
+读完后应能做到：
+
+- 说明多层 Decoder 的 hidden state 如何逐层传递
+- 区分 Chapter05 smoke `Transformer` 与真实 22 层 Decoder
+- 理解 runtime 为什么依赖 `RequestModelExecutor` 而不是具体模型类
 
 ## 阅读入口
 
-- 前置阅读：[`05.1 Embedding 与位置编码`](./01_embedding_and_position.md)、[`chapter04_attention`](../chapter04_attention/intro.md)
-- 源码直达：<a href="../_code/chapter05_generation/src/transformer.cpp"><code>transformer.cpp</code></a>、<a href="../_code/chapter05_generation/src/decoder_layer.cpp"><code>decoder_layer.cpp</code></a>、<a href="../_code/chapter05_generation/tests/runtime_smoke_test.cpp"><code>runtime_smoke_test.cpp</code></a>
+- 前置阅读：[`05.1 Embedding 与位置信息`](./01_embedding_and_position.md)、[`Chapter04 Attention`](../chapter04_attention/intro.md)
+- 源码直达：<a href="../_code/chapter05_generation/src/transformer.cpp"><code>transformer.cpp</code></a>、<a href="../_code/chapter05_generation/include/chapter05_generation/model_executor.h"><code>model_executor.h</code></a>、<a href="../_code/chapter01_tensor_loader/src/real_llama_cpu_decoder.cpp"><code>real_llama_cpu_decoder.cpp</code></a>
 - 相关阅读：[`05.3 Naive Generation`](./03_naive_generation.md)、[`05.4 KV Cache`](./04_kv_cache.md)
 
-## 核心设计
+## 标准多层结构
 
-单层正确只是基础，真正的生成模型需要多层堆叠。这里是从“模块”走向“模型”的关键一步。
-
-如果这一页写得太像配置清单，读者会只知道“要有几层”，却不容易理解“为什么层与层之间能直接复用同一条 hidden state”。
-
-最小组装只需要两件事：层与层之间传递同一种 hidden state，用固定层数把单层 forward 循环起来。只要每层输入输出 shape 一致，组装逻辑就主要变成循环和容器管理。
-
-每层独立权重：
-
-标准 Transformer 里，每一层 DecoderLayer 都有自己的独立参数：
-
-```cpp
-for (std::size_t i = 0; i < num_layers; ++i) {
-    layers_.emplace_back(config);  // 每层独立初始化
-}
-```
-
-这意味着第 0 层的 `Wq` 和第 1 层的 `Wq` 不是同一组参数，每层学习不同层次的表示，总参数量大致等于单层参数量乘以层数。本教程采用的是标准方案：每层独立权重。
-
-残差路径如何跨层传播：
-
-单层 DecoderLayer 里的残差连接会把输入直接带到输出：
+标准 Transformer 的每层都有独立的 norm、Attention 和 FFN 权重，但输入输出 hidden shape 保持一致。第 0 层输出直接成为第 1 层输入，依次通过全部层；残差连接位于每个 DecoderLayer 内部。
 
 ```text
-hidden = x + attention(layernorm(x))
-hidden = hidden + ffn(layernorm(hidden))
+embedding
+  -> layer 0: RMSNorm -> Attention -> residual -> RMSNorm -> FFN -> residual
+  -> layer 1: RMSNorm -> Attention -> residual -> RMSNorm -> FFN -> residual
+  -> ...
+  -> final norm -> LM Head -> logits
 ```
 
-在 N 层堆叠里，这条路径会继续跨层传播：
+这条结构解释了两项工程约束：每层权重不能共享，临时 hidden buffer 可以在层间复用。TinyLlama 的 22 层都是同一种结构，不是 22 种不同算子。
 
-```text
-layer0 output -> layer1 input -> layer2 input -> ...
-```
+## 两种可执行模型
 
-这意味着输入信号可以通过残差路径一直传到更深层，是深层 Transformer 能稳定工作的关键。
+Chapter05 smoke `Transformer` 创建 N 个只保存 `layer_index` 的 `DecoderLayer`。每层给向量增加一个确定性 bias，用于证明循环顺序和输出推进；它没有 QKV、RMSNorm、FFN 或模型权重，不能作为模型数值实现。
 
-Hidden state 在内存里怎么流转：
+真实路径的 `RealLlamaCpuModel` 共享 GGUF 权重，`RealLlamaCpuContext` 保存请求独占的 position 和 22 层 K/V。Engine adapter 把该 Context 暴露为 `RequestModelExecutor`，Chapter05 `Runtime` 只调用 `prefill_chunk()` 和 `decode()`。
 
-在 C++ 实现里，hidden state 通常就是一个 `Tensor`：
+| 层次 | Chapter05 smoke model | TinyLlama CPU model |
+| --- | --- | --- |
+| 层对象 | `DecoderLayer(layer_index)` | 每层九个 GGUF 权重 |
+| 层计算 | 对每个值增加确定性 bias | RMSNorm、GQA Attention、SwiGLU FFN、残差 |
+| 状态 | Request token history | position 与 22 层 K/V |
+| 目的 | 验证 runtime 编排 | 验证真实模型生成 |
+
+## Runtime 接口
+
+模型实现通过窄接口进入 generation runtime。支持 chunked prefill 的 Executor 可以分段消费 prompt，只有 final chunk 返回 logits；decode 每次消费上一个 token，并推进同一个请求 Context。
 
 ```cpp
-Tensor hidden = input;
-for (auto& layer : layers_) {
-    hidden = layer.forward(hidden);
-}
+class RequestModelExecutor {
+public:
+    virtual bool prefill_chunk(/* chunk and boundary flags */) = 0;
+    virtual bool decode(TokenId token, Logits* logits, std::string* error) = 0;
+};
 ```
 
-从内存角度看：
+上面的代码省略了完整参数，接口定义以 `model_executor.h` 为准。关键设计是 Runtime 编排生命周期，Executor 负责模型计算；替换模型实现不改变 Request、Sampler 和 Scheduler。
 
-- 每层输出会变成下一层输入
-- 前一层的临时结果在下一层计算结束后可以释放或复用
-- 不需要为每一层保留独立副本
+## 验证
 
-这也是推理里很重要的工程点，因为它可以减少分配和拷贝。
+smoke 测试检查两层对象确实被循环调用，并验证 prefill、decode、EOS 和 token budget。真实模型测试检查固定 TinyLlama GGUF 的 22 层输出、golden token、分层 K/V 增长和请求 Context 隔离。
 
-如果从工程实现倒推，先要把层配置固定下来：`num_layers`、`hidden_size`、`num_heads`、`ffn_hidden_size`。这些参数最好来自统一配置对象，这样后面切换模型规模时，组装代码不会跟着改。
-
-最小伪代码可以写成：
-
-```cpp
-Tensor hidden = input;
-for (std::size_t i = 0; i < num_layers; ++i) {
-    hidden = layers[i].forward(hidden);
-}
-```
-
-这一段先不处理 cache 和采样，只表达多层堆叠。  
-如果这里已经混进了 runtime 状态，后面的 generation 逻辑会更难拆开。
-
-## 验证与衔接
-
-验证时重点看：
-
-- 整体 forward 可以跑通
-- 每层输入输出 shape 正常
-- 组装后没有破坏单层接口
-- 不需要重新验证 04 章里已经确认过的单层内部计算
-
-如果逐层打印 shape 后没有发现异常变化，这个组装过程就算可信。
-
-和 04 章怎么分工：
-
-`chapter04` 已经验证了：
-
-- 单层 DecoderLayer 的 forward 正确性
-- 单层的 shape 一致性
-
-`05.2` 只需要验证：
-
-- 多层循环是否正确
-- 每层的输入输出是否正确传递
-
-这就是分层验证的原则：**本层只关注本层新增的逻辑，已经验证过的子模块不重复展开**。
-
-常见问题：
-
-- 层数配置错误
-- 传递的 hidden state shape 不一致
-- 组装逻辑破坏了单层验证结果
-
-和后续章节怎么接：
-
-这一页把 decoder 组织成完整 forward，下一步才适合进入 `03_naive_generation`，把 forward 变成真正的生成循环。
+| 检查项 | 对应证据 |
+| --- | --- |
+| N 层循环和组件 ready | `chapter05_generation_test.cpp` |
+| Runtime 与模型实现解耦 | `model_executor.h`、`runtime.cpp` |
+| 22 层真实 Decoder | `real_llama_cpu_decoder.cpp` |
+| 固定 prompt 的真实生成 | `real_tinyllama_generation_smoke` |

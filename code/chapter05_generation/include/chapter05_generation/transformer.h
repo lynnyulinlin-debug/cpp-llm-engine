@@ -1,3 +1,6 @@
+// Chapter 05：声明 CPU Generation Runtime 使用的教学 Transformer assembly。
+// 职责：组合 embedding、position encoding、decoder layer 和 logits production。
+// 验证：generation 测试检查 assembled model 的 prefill/decode shape flow。
 #pragma once
 
 #include "chapter05_generation/decoder_layer.h"

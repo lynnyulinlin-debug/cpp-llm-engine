@@ -1,3 +1,6 @@
+// Chapter 05：运行非 streaming 的 Generation Core 演示。
+// 输出：Request phase、generated step 和 request-owned cache state。
+// 验证：使用 scripts/run.sh 执行可重复构建、测试和输出检查。
 #include "chapter05_generation/runtime.h"
 #include "chapter05_generation/transformer.h"
 #include "chapter05_generation/sampler.h"
@@ -22,7 +25,7 @@ int main() {
     std::cout << "[chapter05] ready: " << std::boolalpha << runtime.ready() << "\n";
     std::cout << "[chapter05] prefills: " << prefills << "\n";
     std::cout << "[chapter05] generated steps: " << generated << "\n";
-    std::cout << "[chapter05] cache size: " << runtime.cache().size() << "\n";
+    std::cout << "[chapter05] request cache size: " << request.cache().size() << "\n";
     std::cout << "[chapter05] request prefilled: " << std::boolalpha << request.prefilled() << "\n";
     std::cout << "[chapter05] request phase: " << chapter05_generation::request_phase_name(request.phase()) << "\n";
     std::cout << "[chapter05] request finished: " << std::boolalpha << request.finished() << "\n";

@@ -1,84 +1,76 @@
 # 05.0 Generation Runtime and Serving Basics 构建生成运行时
 
-这一章先回答一个系统问题：怎么把 `forward` 变成真正能逐 token 输出的 runtime？
+## 1. 本章位置与成功标准
 
-本章沿用本教程一贯的工程写法：先定问题，再拆边界，最后用测试把链路闭起来。先把 runtime 转折点做成一个可验证、可继续演进的最小骨架。
+`chapter04` 已经能执行单层 decoder；本章把它接到逐 token 生成循环，让一个请求完成 `prefill -> decode -> output`。
 
-## 本章和 vLLM / nano-vLLM 的联系
-
-vLLM 和 nano-vLLM 的核心不是“会调用一次模型”，而是持续管理请求、KV cache、prefill / decode 和调度。本章先做最小 generation runtime，再用 Request 生命周期、Continuous Batching 和 Block KV Cache 三个小节，把读者带到真实 serving 项目的主要工程坐标上。
-
-```mermaid
-flowchart LR
-    P[prompt] --> PF[prefill]
-    PF --> KS[KV Cache]
-    PF --> D[decode]
-    D --> S[sampler]
-    S --> O[output token]
-    O --> D
-    D --> F[finished]
-    R[request state] --- PF
-    R --- D
-    Q[scheduler] --> PF
-    Q --> D
+```bash
+bash code/chapter05_generation/scripts/run.sh
 ```
 
-## 本章概览
+成功标准：Chapter 05 的测试通过，generation 和 streaming 演示都能完成，Request 能因 EOS 或 token budget 进入完成状态。仓库级 CPU First Success 还可以运行：
 
-| 先看什么 | 这一节讲什么 | 为什么重要 | 对应小节 |
-| --- | --- | --- | --- |
-| Embedding 怎么进入 runtime | token 到向量、位置编码 | 先把输入接到模型结构 | [`05.1 Embedding 与位置编码`](./01_embedding_and_position.md) |
-| 多层 Transformer 怎么组装 | N 层 decoder 串接 | 先把单层结构扩成主干 | [`05.2 N 层 Transformer 组装`](./02_transformer_assembly.md) |
-| 朴素生成怎么跑通 | token-by-token 生成循环 | 先把 forward 推成生成流程 | [`05.3 Naive Generation`](./03_naive_generation.md) |
-| KV Cache 怎么复用状态 | prefill / decode 的缓存边界 | 先避免每步重复计算历史 token | [`05.4 KV Cache`](./04_kv_cache.md) |
-| Scheduler 怎么推进请求 | 请求状态和调度规则 | 先让 runtime 边界显式化 | [`05.5 Scheduler`](./05_scheduler.md) |
-| Sampler 怎么产生 token | logits 到下一步 token | 先把模型输出接回生成循环 | [`05.6 Sampler`](./05_sampler.md) |
-| 怎么端到端验证 | 完整生成链路测试 | 先确认 runtime 能重复运行 | [`05.7 端到端生成测试`](./06_end_to_end_generation.md) |
-| 怎么对照真实 serving | vLLM 的调度和 cache 视角 | 先把最小 runtime 放回工程坐标 | [`05.8 vLLM 对照`](./07_vllm_comparison.md) |
-| 请求怎么活在 runtime 里 | request 生命周期和状态迁移 | 先看懂 scheduler 调度的对象 | [`05.9 Request 生命周期`](./08_request_lifecycle.md) |
-| 为什么需要连续批处理 | decode step、等待队列和吞吐 | 先理解 vLLM 的 serving 核心动机 | [`05.10 Continuous Batching 入门`](./09_continuous_batching.md) |
-| KV Cache 如何工程化 | block table、slot 和 PagedAttention 入口 | 先理解 nano-vLLM / vLLM 的 cache 组织 | [`05.11 Block KV Cache 阅读入口`](./10_block_kv_cache.md) |
-| 本章怎么收口 | runtime 边界和下一章入口 | 进入量化前先固定生成链路 | [`05.12 本章小结`](./summary.md) |
+```bash
+bash code/engine/scripts/run.sh
+```
 
-## 阅读入口
+默认 Engine 把 toy prompt、Request、Decoder、Generation Runtime 和输出串起来；可选的 `real_tinyllama_generation_smoke` 会让同一 Runtime 驱动 TinyLlama 的真实 tokenizer、22 层 CPU Decoder 和 LM Head。本章不实现 GPU kernel 或完整 HTTP 服务。
 
-- 前置阅读：[`chapter04_attention`](../chapter04_attention/intro.md)、[`chapter04 小结`](../chapter04_attention/summary.md)
-- 源码直达：<a href="../_code/chapter05_generation/src/runtime.cpp"><code>runtime.cpp</code></a>、<a href="../_code/chapter05_generation/src/scheduler.cpp"><code>scheduler.cpp</code></a>、<a href="../_code/chapter05_generation/src/kv_cache.cpp"><code>kv_cache.cpp</code></a>
-- 相关阅读：正文页按上面的 `本章概览` 顺序阅读；系统总图见 [推理引擎系统补强图](../reference/inference_engine_systems.md)，扩展视角见 [推理引擎输入链路](../reference/input_pipeline.md)、[推理引擎服务化基础](../reference/service_basics.md)
+![Chapter 05 主图：Generation Runtime](../assets/diagrams/chapter05-main.svg)
 
-## 这章在解决什么
+## 2. 运行时如何闭环
 
-`chapter04` 已经把单层 decoder 做稳了，但还没有把它放进生成循环。这一章要做的，就是把 decoder 接到 runtime 里，做出一条可重复运行的最小生成链路。
+本章位于模型结构和持续服务之间：模型执行器计算 logits，Generation Runtime 保存 Request 状态并推进下一步，Sampler 从 logits 选择 token。模型执行器可以是本章的教学 Transformer，也可以通过每请求 `RequestModelExecutor` 接入真实 TinyLlama CPU Decoder 或预计算 embedding。
 
-一旦进入生成场景，问题就会从“结构是否站得住”变成“结构如何进入 runtime”。后面的量化和 benchmark 只有建立在稳定 runtime 上，才有可比的基线。
+图中的 Request Cache 保存教学 Runtime 可见的 token 历史；真实 Model KV 保存各 Decoder 层的 key/value tensor。两者生命周期都跟随请求，但数据布局和所有者不同。更完整的 API、限流和服务资源管理由 Chapter09 的 Service Core 承接。
 
-生成式模型和一次性前向计算最大的区别，不在于“有没有输出”，而在于“输出是不是一 token 一 token 地长出来”。进入生成场景后，系统就会多出三个新问题：请求状态怎么保存、缓存怎么复用、调度怎么推进。
+![Chapter 05 Runtime 状态与资源生命周期](../assets/diagrams/chapter05-runtime-state.svg)
 
-`chapter05` 讲的是推理引擎的运行时核心；推理服务会把这层核心组织成持续服务，推理框架再往上封装请求编排和部署能力。
+## 3. 三种阅读深度
 
-## 这章怎么做
+完成本章后，可以：
 
-这一章先把最小 runtime 骨架搭出来：请求进入后先走 `prefill`，再进入 `decode`；每个请求都有自己的状态和 cache 视图，调度器只负责决定下一步推进谁。
+- 创建一个 Request，并检查它从排队到完成的状态变化
+- 区分 Request token history、真实模型分层 K/V 与 BlockTable
+- 用 Sampler 把 logits 接回生成循环，逐 token 产生输出
+- 用端到端测试确认多个请求不会互相污染，终态资源能够回收
+- 用 token/block budget 组织混合 prefill/decode step，分段推进长 prompt，并观察物理 block 的提交和释放
 
-如果从“怎样把 `forward` 变成 runtime”倒推，输出必须变成逐 token 的，状态必须显式保存，`prefill` 和 `decode` 必须分开，KV Cache 和调度器也必须显式出现。关键点是把一次性函数调用改造成可持续运行的状态流转。
+第一次学习只完成单请求生成和 Request 状态闭环，不需要同时掌握 block allocator 与 vLLM 调度。准备进入服务系统时再学习 Serving Preview；阅读成熟框架源码时再进入生态对照。
 
-## 收口与下一步
+| 深度 | 阅读范围 | 完成标志 |
+| --- | --- | --- |
+| 首轮必读 | [`Generation Core`](./part_a_generation_core.md) 中的 Naive Generation、KV Cache、Scheduler、Sampler、端到端测试和 Request 生命周期 | 能解释并运行 `prefill -> decode -> sample -> terminal` |
+| 第二轮进阶 | [`Serving Preview`](./part_b_serving_preview.md) 中的 continuous batching、chunked prefill 和 Block KV | 能解释 token/block budget、回滚与资源释放 |
+| 按需选读 | Embedding/教学 Transformer 组装、[`vLLM 对照`](./07_vllm_comparison.md) | 需要研究模型适配或成熟框架时再读 |
 
-- 先确认单条 prompt 能得到稳定输出
-- 再确认加入 KV Cache 后输出行为仍然正确
-- 最后确认端到端链路能够重复运行并产生日志或文本结果
+## 4. 阅读与源码顺序
 
-这一章把 `chapter04` 已经站稳的单层 decoder 接到生成流程里，做出一条可重复运行的最小 runtime：`prefill` 先建状态，`decode` 再逐 token 推进，`Request`、`KV Cache` 和 `Scheduler` 全部显式化。
+首轮源码只看 <a href="../_code/chapter05_generation/src/runtime.cpp"><code>runtime.cpp</code></a>、<a href="../_code/chapter05_generation/src/request.cpp"><code>request.cpp</code></a> 和 <a href="../_code/chapter05_generation/src/sampler.cpp"><code>sampler.cpp</code></a>。进入第二轮后再看 scheduler、serving preview 和 block pool。前置阅读是 [`Chapter04`](../chapter04_attention/intro.md)；KV payload 与 Greedy/Temperature 定义见 [`F-KV-01`](../reference/formulas.md#f-kv-01) 和 [`F-SAMPLE-01`](../reference/formulas.md#f-sample-01)。
 
-常见风险集中在这些边界上：
+| 顺序 | 页面 | 读完后应看到什么 |
+| --- | --- | --- |
+| 1，必读 | [`05.3 Naive Generation`](./03_naive_generation.md) | forward 怎样变成逐 token 循环 |
+| 2，必读 | [`05.4 KV Cache`](./04_kv_cache.md) | 区分 token history、分层 K/V 和 block ownership |
+| 3，必读 | [`05.5 Scheduler`](./05_scheduler.md)、[`05.6 Sampler`](./05_sampler.md) | 谁推进请求，谁选择 token |
+| 4，必读 | [`05.7 端到端生成测试`](./06_end_to_end_generation.md)、[`05.9 Request 生命周期`](./08_request_lifecycle.md) | 固定输出、终态和请求隔离 |
+| 5，进阶 | [`05.10 Continuous Batching`](./09_continuous_batching.md)、[`05.11 Block KV Cache`](./10_block_kv_cache.md) | token/block budget、chunk 和回收 |
+| 6，选读 | [`05.1 Embedding`](./01_embedding_and_position.md)、[`05.2 Transformer`](./02_transformer_assembly.md)、[`05.8 vLLM 对照`](./07_vllm_comparison.md) | 教学模型组装与成熟框架映射 |
 
-- 把 generation 当成一次性 forward，忽略了状态流转
-- 只按单请求写代码，结果一旦出现多个请求就互相污染
-- `prefill` 和 `decode` 没有分开，导致 cache 边界模糊
-- cache 只会增长不会被观察，最后内存压力说不清楚
-- scheduler 只是隐式地选一个请求，但没有把推进规则显式化
+## 5. 验证
 
-下一步有两条主线：
+本章验证以下九件事：
 
-- `chapter06_quantization`：换掉权重表示和计算路径，但保留 runtime 组织方式
-- `chapter07_benchmark`：把 runtime 放到统一测试和性能框架里，验证它是否真的可比较、可回归、可优化
+1. 单条 prompt 能完成 `prefill` 和多步 `decode`
+2. Request token history 与真实模型分层 K/V 不混用，真实增量执行仍与固定 golden 一致
+3. 两个请求交替推进时，Request、Model Context 和 block ownership 不互相覆盖
+4. 取消、超时、执行失败和超出 context budget 的请求进入 terminal 状态后不会再次 prefill/decode
+5. 每个请求只写入自己的 cache，正常完成和拒绝路径都能检查资源归属
+6. 两个 ScheduledRequest 只推进各自的 executor，真实 TinyLlama 路径能完成 tokenizer、22 层 Decoder、greedy sampling 和 detokenize
+7. 一个 step 不超过 token budget，decode 与 prefill 可以混合，新加入和终态请求在下一 step 正确进出 batch
+8. block 容量不足时不执行请求，终态释放后同一物理 block ID 可以由后续请求复用
+9. 长 prompt 能按 budget 分段追加，只有 final chunk 产生 logits；多个长 prompt 不会被固定顺序长期饿死
+
+Chapter 05 脚本会构建并运行 CTest、generation demo 和 streaming demo。真实模型验证命令见 [`05.7 端到端生成测试`](./06_end_to_end_generation.md)。排查时先看 Request 状态迁移，再看 `prefill/decode` 分支，最后分别检查 token 历史与模型分层 K/V；不要先从 benchmark 数字判断生成逻辑是否正确。
+
+**后续：**本章把 `chapter04` 的 decoder 变成可持续推进的 CPU Generation Runtime；Chapter 06 只替换权重表示和 Linear 计算路径，Chapter 07-08 负责测量与归因，Chapter09 再接收 API、限流和服务级多请求扩展。

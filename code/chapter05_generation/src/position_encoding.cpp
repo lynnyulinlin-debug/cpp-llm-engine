@@ -1,3 +1,6 @@
+// Chapter 05：实现教学 Transformer 的确定性 position encoding。
+// 职责：显式表达 prefill 和 decode step 的 position progression。
+// 验证：Runtime 测试检查最终 sequence flow。
 #include "chapter05_generation/position_encoding.h"
 
 namespace chapter05_generation {

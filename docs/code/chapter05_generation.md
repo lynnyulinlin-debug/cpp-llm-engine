@@ -2,6 +2,11 @@
 
 这一页用于定位 generation runtime 的请求、调度、KV cache、采样和端到端测试。
 
+## 两部分入口
+
+- [A. Generation Core](../chapter05_generation/part_a_generation_core.md)
+- [B. Serving Preview](../chapter05_generation/part_b_serving_preview.md)
+
 ## 阅读顺序
 
 1. 先看 `request.cpp` 和 `runtime.cpp`
@@ -34,7 +39,6 @@
 ## 对应文档
 
 - [chapter05 导读](../chapter05_generation/intro.md)
-- [chapter05 小结](../chapter05_generation/summary.md)
 
 ## 说明
 

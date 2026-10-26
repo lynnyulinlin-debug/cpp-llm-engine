@@ -1,3 +1,6 @@
+// Chapter 05：声明确定性和可配置的 logits -> token sampling policy。
+// 契约：Sampler 与 model execution 分离，使 Request output decision 可以独立测试。
+// 验证：Sampler 测试检查 greedy、temperature、top-k 和 top-p 行为。
 #pragma once
 
 #include "chapter05_generation/generation_types.h"

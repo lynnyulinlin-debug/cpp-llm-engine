@@ -1,25 +1,24 @@
 # 05.6 Sampler 采样器
 
 
-## 这一页要解决什么
+## 把 Logits 变成 Token
 
-实现常用采样策略，把模型输出的 logits 转成实际 token。  
-这一步是生成链路的最后一层决策，不属于模型本身。
+先用 Greedy 把模型输出的 logits 转成 token，再理解 Temperature、Top-K 和 Top-p 的扩展位置。采样是生成链路的最后一项决策，不改变模型前向。
 
-## 阅读入口
+**阅读入口**
 
 - 前置阅读：[`05.5 Scheduler`](./05_scheduler.md)、[`05.4 KV Cache`](./04_kv_cache.md)、[`05.3 Naive Generation`](./03_naive_generation.md)
 - 源码直达：<a href="../_code/chapter05_generation/src/sampler.cpp"><code>sampler.cpp</code></a>、<a href="../_code/chapter05_generation/src/runtime.cpp"><code>runtime.cpp</code></a>、<a href="../_code/chapter05_generation/tests/sampler_test.cpp"><code>sampler_test.cpp</code></a>
-- 相关阅读：[`05.7 端到端生成测试`](./06_end_to_end_generation.md)、[`chapter05 小结`](./summary.md)
+- 相关阅读：[`05.7 端到端生成测试`](./06_end_to_end_generation.md)、[`章节导读`](./intro.md)
 
 ## 核心设计
 
 模型前向只会产生分数，真正输出哪个 token 还需要采样策略决定。  
 Sampler 是生成链路的最后一步之一，也最容易把“模型输出”和“系统决策”混在一起。
 
-如果不把这一层单独拎出来，调试时很容易把采样策略造成的差异误判成模型问题。
+如果不把 `Sampler` 单独拎出来，调试时很容易把采样策略造成的差异误判成模型问题。
 
-采样模块应当保持小而独立，先做 Greedy，再扩展 Top-K 和 Temperature。
+采样模块应当保持小而独立。仓库可执行实现是 `GreedySampler`；Temperature、Top-K 和 Top-p 用于解释后续接口设计，不属于当前测试覆盖。
 
 最小伪代码可以写成：
 
@@ -81,11 +80,9 @@ Top-K 的候选集大小固定，Top-p 的候选集会随分布变化。
 这对调试很重要，因为很多看起来像模型问题的现象，实际上只是采样策略不同。
 
 `Greedy` 先把最简单的决策跑通。
-等这一层稳定后，再引入 `Top-K` 和 `Temperature`，就能更清楚地看见参数如何影响输出分布。
+等 `Greedy` 稳定后，再引入 `Top-K` 和 `Temperature`，就能更清楚地看见参数如何影响输出分布。
 
-Sampler 与请求绑定：
-
-Sampler 的配置通常也应该和请求绑定，因为不同请求可能想要不同的随机性：
+请求级采样配置可以设计成下面的接口形状，使不同请求采用不同随机性。该片段用于说明所有权，不是仓库现有 `Request` 的字段定义；当前代码只实现 `GreedySampler`，`Request` 保存 token history 和生命周期状态。
 
 ```cpp
 struct SamplerConfig {
@@ -101,14 +98,12 @@ struct GenerationRequest {
 };
 ```
 
-这样系统就可以同时服务不同采样偏好的请求，比如：
+实现请求级配置后，系统可以同时服务不同采样偏好的请求，比如：
 
 - 一个请求走 greedy，追求确定性
 - 另一个请求走 top-p，追求多样性
 
-和生成循环怎么集成：
-
-采样器是生成循环的最后一步：
+采样器位于生成循环的最后一步。下面是概念伪代码；仓库中的可执行入口是 `Runtime::generate(Request&, const Sampler&, RequestModelExecutor&)`。
 
 ```cpp
 Sampler sampler(config);
@@ -125,13 +120,13 @@ while (!finished) {
 
 ## 验证与衔接
 
-验证时重点看：
+现有测试重点看：
 
 - 可以从 logits 中选出 token
-- 不同策略输出行为不同
-- 参数变化会影响结果分布
+- 最大 logit 对应的 token id 正确
+- 相同 logits 的结果可重复
 
-如果调高 temperature 后输出变得更发散，而 Top-K 能稳定限制候选范围，说明 sampler 的参数已经在起作用。
+扩展 Temperature、Top-K 或 Top-p 时，再增加固定随机种子、候选集和分布边界测试。
 
 常见问题：
 
@@ -141,5 +136,5 @@ while (!finished) {
 
 和后续章节怎么接：
 
-这一页负责把分数变成 token。  
+`Sampler` 负责把分数变成 token。
 下一页就可以把 embedding、Transformer、KV Cache、Scheduler 和 sampler 串成完整的端到端测试。

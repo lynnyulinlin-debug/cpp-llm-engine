@@ -1,3 +1,6 @@
+// Chapter 05：实现 logits -> token 的 sampling policy。
+// 职责：把 sampling decision 与 Transformer、Runtime state mutation 分离。
+// 验证：Sampler 测试检查确定性和配置化选择行为。
 #include "chapter05_generation/sampler.h"
 
 #include <algorithm>

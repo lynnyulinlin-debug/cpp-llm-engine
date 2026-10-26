@@ -1,3 +1,6 @@
+// Chapter 05：实现 token-step path 使用的教学 DecoderLayer。
+// 职责：保留 Chapter 04 结构边界，供 Runtime 组合调用。
+// 验证：Chapter 05 generation 测试检查集成行为，不作为生产精度证明。
 #include "chapter05_generation/decoder_layer.h"
 
 namespace chapter05_generation {

@@ -1,11 +1,11 @@
 # 05.3 Naive Generation 朴素生成
 
 
-## 这一页要解决什么
+## 先让单请求生成跑通
 
-这一页要把“能生成”先做出来，而且是用最朴素、最容易理解的方式做出来。先不要 KV Cache、复杂调度或流式输出，只先确认生成闭环能跑通。
+先用最朴素、最容易理解的方式把“能生成”做出来。暂时不引入 KV Cache、复杂调度或流式输出，只确认生成闭环能跑通。
 
-## 阅读入口
+**阅读入口**
 
 - 前置阅读：[`05.2 N 层 Transformer 组装`](./02_transformer_assembly.md)、[`chapter04_attention`](../chapter04_attention/intro.md)
 - 源码直达：<a href="../_code/chapter05_generation/src/runtime.cpp"><code>runtime.cpp</code></a>、<a href="../_code/chapter05_generation/src/sampler.cpp"><code>sampler.cpp</code></a>、<a href="../_code/chapter05_generation/examples/main_generation.cpp"><code>main_generation.cpp</code></a>
@@ -23,7 +23,7 @@
 - 不缓存历史 K/V
 - 用最简单的循环确认链路正确
 
-这个版本可以慢，但不能乱。只要它能稳定地产生 token，后面的 KV Cache 优化就有了比较对象。
+这个版本可以慢，但不能乱。只要它能稳定地产生 token，后面真实模型 Context 的 K/V 增量执行就有了比较对象。Chapter05 的 `KVCache` 类只记录 token history，不承担这项数值优化。
 
 生成停止条件：
 
@@ -95,10 +95,10 @@ for (int step = 0; step < max_new_tokens; ++step) {
 100^2 + 101^2 + 102^2 + ... + 149^2
 ```
 
-而 KV Cache 版本只需要对新 token 做增量计算，历史部分不再重复算。  
+而保存真实分层 K/V 的模型 Context 只需要对新 token 做增量计算，历史部分不再重复算。
 当序列更长时，这个差异会迅速放大，所以 naive generation 的作用是提供基线，不是提供性能。
 
-这一层和 runtime 状态怎么接：
+生成循环和 runtime 状态的连接方式：
 
 朴素生成不是一个孤立循环，它实际上是 runtime 的最小闭环：
 
@@ -121,7 +121,7 @@ while (!request.finished()) {
 
 这一步真正要讲清楚的是：生成循环围绕 `request` 进行，`sampler` 只负责选 token，`scheduler` 只负责决定推进顺序，`runtime` 只负责一次 forward。
 
-这样后面引入 KV Cache 时，读者就能清楚知道“优化的是哪一段”，而不是把生成看成一个黑盒 while loop。
+这样后面引入真实模型 K/V 状态时，读者就能清楚知道“优化的是哪一段”，而不是把生成看成一个黑盒 while loop。
 
 ## 验证与衔接
 
@@ -141,7 +141,7 @@ while (!request.finished()) {
 
 和后续章节怎么接：
 
-这一页把生成循环先跑通，下一页才能引入 KV Cache。  
-KV Cache 要解决的具体问题是：在朴素生成里，每一步都会重新计算历史 token 的 K/V；而在缓存版里，历史 K/V 可以保留，只对新 token 做增量计算。
+生成循环先跑通，后续才能让请求级 Model Context 保存 K/V。
+真实 K/V Cache 要解决的具体问题是：在朴素生成里，每一步都会重新计算历史 token 的 K/V；而在增量执行里，历史 K/V 保留在 Context 中，只计算新 token。
 
 只要 baseline 立住，后面的优化就有了可比较的起点。

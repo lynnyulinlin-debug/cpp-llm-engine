@@ -1,3 +1,6 @@
+// Chapter 05：定义 Request phase、token 类型、生成限制和 logits callback。
+// 契约：这些类型由 Request、Runtime、Scheduler 和 Sampler 共享。
+// 验证：Chapter 05 测试检查 terminal state、context admission 和 callback 行为。
 #pragma once
 
 #include <cstddef>
@@ -19,6 +22,10 @@ enum class RequestPhase {
     Prefilled,
     Decoding,
     Finished,
+    Cancelled,
+    TimedOut,
+    Rejected,
+    Failed,
 };
 
 inline std::string_view request_phase_name(RequestPhase phase) {
@@ -31,6 +38,14 @@ inline std::string_view request_phase_name(RequestPhase phase) {
         return "decoding";
     case RequestPhase::Finished:
         return "finished";
+    case RequestPhase::Cancelled:
+        return "cancelled";
+    case RequestPhase::TimedOut:
+        return "timed_out";
+    case RequestPhase::Rejected:
+        return "rejected";
+    case RequestPhase::Failed:
+        return "failed";
     }
 
     return "unknown";
@@ -38,6 +53,8 @@ inline std::string_view request_phase_name(RequestPhase phase) {
 
 struct GenerationConfig {
     std::size_t max_new_tokens = 1;
+    std::size_t max_context_tokens = 0;  // 0 means no tutorial admission limit.
+    TokenId eos_token_id = -1;
     bool use_kv_cache = true;
 };
 

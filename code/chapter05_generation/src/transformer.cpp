@@ -1,3 +1,6 @@
+// Chapter 05：实现 CPU Generation Runtime 使用的教学 multi-layer Transformer。
+// 职责：将 token representation 经过 position encoding 和 decoder layer 送到 logits。
+// 验证：generation 测试检查 assembled prefill 和 decode path。
 #include "chapter05_generation/transformer.h"
 
 #include <utility>

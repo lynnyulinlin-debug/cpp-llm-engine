@@ -1,9 +1,13 @@
+// Chapter 05：声明教学 round-robin Scheduler 和 token streaming callback。
+// 职责：选择 runnable Request，不负责 model computation 或 KV Cache storage。
+// 验证：Scheduler 测试检查 ordering、terminal skipping 和 per-request output accounting。
 #pragma once
 
 #include "chapter05_generation/generation_types.h"
 
 #include <cstddef>
 #include <functional>
+#include <memory>
 #include <vector>
 
 namespace chapter05_generation {
@@ -11,11 +15,13 @@ namespace chapter05_generation {
 class Request;
 class Runtime;
 class Sampler;
+class RequestModelExecutor;
 
 struct ScheduledRequest {
     std::size_t request_id = 0;
     Request* request = nullptr;
     const Sampler* sampler = nullptr;
+    std::shared_ptr<RequestModelExecutor> executor;
 };
 
 struct SchedulerStats {

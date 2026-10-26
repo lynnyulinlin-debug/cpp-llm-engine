@@ -1,140 +1,72 @@
-# 05.4 KV Cache 缓存
+# 05.4 KV Cache：分清历史 token、真实 K/V 与 BlockTable
 
+生成过程需要保存历史状态，但仓库里有四个名称相近、用途不同的对象。阅读本节时先确认讨论的是 token history、K/V 数值，还是物理 block ownership。
 
-## 这一页要解决什么
+## 四种缓存对象
 
-这一页要把 KV Cache 变成生成 runtime 里的显式状态。
-它的直接目标是减少增量推理中的重复计算。
+Chapter05 的 `KVCache` 只保存 Request 已消费和生成的 token ID。它让教学 Runtime 可以检查请求历史和生命周期，但不保存 Attention 的 key/value tensor。
 
-## 阅读入口
-
-- 前置阅读：[`05.3 Naive Generation`](./03_naive_generation.md)、[`05.2 N 层 Transformer 组装`](./02_transformer_assembly.md)
-- 源码直达：<a href="../_code/chapter05_generation/include/chapter05_generation/kv_cache.h"><code>kv_cache.h</code></a>、<a href="../_code/chapter05_generation/src/kv_cache.cpp"><code>kv_cache.cpp</code></a>、<a href="../_code/chapter05_generation/tests/kv_cache_test.cpp"><code>kv_cache_test.cpp</code></a>
-- 相关阅读：[`05.5 Scheduler`](./05_scheduler.md)、[`05.6 Sampler`](./05_sampler.md)、[`推理引擎内存管理`](../reference/memory_management.md)、[`05.7 端到端生成测试`](./06_end_to_end_generation.md)
-
-## 核心设计
-
-KV Cache 是生成性能里最关键的优化点之一。  
-它让 decode 阶段只处理新增 token，而不是每一步都重算历史上下文。
-
-同时，它把“生成 runtime 的状态”变成了可显式管理的对象，历史 K/V 也就成了可复用的运行时资产。
-
-最小 cache 只需要把两件事说清楚：
-
-- 每层缓存历史 K/V
-- 新 token 只追加到缓存
-
-最小结构可以写成：
-
-```cpp
-struct KVCache {
-    std::vector<Tensor> key_per_layer;
-    std::vector<Tensor> value_per_layer;
-};
-```
-
-然后每次 decode 时，只追加新 token 对应的 K/V。  
-源码锚点：<a href="../_code/chapter05_generation/src/kv_cache.cpp"><code>kv_cache.cpp</code></a>
-
-这不是为了省一个循环，而是为了把“复用历史状态”这件事变成显式行为。
-
-cache 的维度布局：
-
-KV Cache 的张量布局通常有两种常见写法：
-
-- `[S, H, D]`：序列维度在前，便于按 token 追加
-- `[H, S, D]`：head 维度在前，便于和某些 attention kernel 对齐
-
-本教程建议先采用 `[S, H, D]`，原因是：
-
-- `push_back` 语义清晰
-- 按 token 位置索引直观
-- 更容易和“追加缓存”这个概念对应起来
-
-prefill 和 decode 的 cache 契约：
-
-| 阶段 | Cache 状态 | 输入 | 输出 |
+| 对象 | 保存内容 | 所有者 | 代码入口 |
 | --- | --- | --- | --- |
-| Prefill | 空 -> 完整 | 完整 prompt `[1, S]` | 填充 cache + logits |
-| Decode | 完整 -> 追加 | 新 token `[1, 1]` | 追加 cache + logits |
+| Chapter05 `KVCache` | `TokenSequence`，即 token ID 历史 | `Request` | <a href="../_code/chapter05_generation/include/chapter05_generation/kv_cache.h"><code>kv_cache.h</code></a> |
+| Chapter04 `KvCache` | 单层连续 `float` key/value，布局为 `[tokens, heads, head_dim]` | Attention 教学测试 | <a href="../_code/chapter04_attention/include/chapter04_attention/kv_cache.h"><code>kv_cache.h</code></a> |
+| `RealLlamaCpuContext` | 每层真实 K/V 数值、position 和执行统计 | 单个真实模型请求 | <a href="../_code/chapter01_tensor_loader/src/real_llama_cpu_decoder.h"><code>real_llama_cpu_decoder.h</code></a> |
+| `KvBlockPool` / `BlockTable` | 物理 block ID、逻辑 token 到 block/slot 的映射 | Scheduler / ServiceCore | <a href="../_code/chapter05_generation/include/chapter05_generation/serving_preview.h"><code>serving_preview.h</code></a> |
 
-关键区别是：
+## Chapter05 的实际接口
 
-- Prefill 一次性计算完整 prompt 的 K/V
-- Decode 每一步只计算一个新 token 的 K/V
-
-对应接口可以理解为：
-
-```cpp
-Tensor prefill(const std::vector<int>& prompt, KVCache& cache);
-Tensor decode(int token, KVCache& cache);
-```
-
-源码锚点：<a href="../_code/chapter05_generation/src/kv_cache.cpp"><code>kv_cache.cpp</code></a>
-
-从工程角度倒推，KV Cache 必须和请求绑定，而不是和全局绑定，原因很直接：
-
-- 每个请求的上下文不同
-- 每个请求的 decode 长度不同
-- 每个请求的结束时机不同
-- 多请求并发时，cache 必须能区分归属
-
-所以这一页要建立的不是“一个 cache 容器”，而是“cache 如何和请求、层、token 生命周期对齐”的约束。
-如果 cache 全局共享但没有请求隔离，多请求场景就会互相污染历史状态。
-
-如果要顺着代码看，先看 <a href="../_code/chapter05_generation/include/chapter05_generation/kv_cache.h"><code>kv_cache.h</code></a> 和 <a href="../_code/chapter05_generation/src/kv_cache.cpp"><code>kv_cache.cpp</code></a>，再看 <a href="../_code/chapter05_generation/src/request.cpp"><code>request.cpp</code></a> 是怎样把 cache 绑到请求上的，最后用 <a href="../_code/chapter05_generation/tests/kv_cache_test.cpp"><code>kv_cache_test.cpp</code></a> 验证追加和隔离行为。
-
-请求隔离怎么做：
-
-每个生成请求都应该拥有自己独立的 cache：
+教学 `KVCache` 的公开操作只有追加 token、清空、读取长度和读取 token 序列。下面代码对应仓库中的真实接口，不代表分层 K/V tensor。
 
 ```cpp
-class GenerationRequest {
-    std::vector<int> prompt_;
-    KVCache cache_;
-    std::vector<int> generated_;
-    bool finished_;
-};
+KVCache cache;
+cache.append(token_id);
+const TokenSequence& history = cache.tokens();
+cache.clear();
 ```
 
-这样 scheduler 在推进某个请求时，只会操作它自己的 cache，不会把别的请求的历史状态混进来。
+`Request` 持有这个对象。Runtime 成功推进后更新 token history；请求结束、取消、超时或失败后，ServiceCore 的统一释放路径会清空它。
 
-cache 的内存管理：
+## 真实模型怎样保存 K/V
 
-每个请求的 KVCache 在长上下文场景里会占用不少内存，所以工程上通常要考虑：
+`RealLlamaCpuModel` 只保存共享只读权重。每个请求通过 `create_context()` 获得独立的 `RealLlamaCpuContext`，Context 为每层保存 key/value 数值并维护当前位置。
 
-1. 按需分配，只分配当前需要的 `max_seq_len`
-2. 内存池复用，减少反复申请和释放
-3. 量化存储，后续可以考虑用更小精度存 K/V
+| 操作 | Context 行为 | logits 行为 |
+| --- | --- | --- |
+| 首个 prefill chunk | `reset()` 后逐 token 写入各层 K/V | 只有 final chunk 请求最后一个 token 的 logits |
+| 后续 prefill chunk | 在已有 position 和分层 K/V 后追加 | 中间 chunk 不产生 logits |
+| decode | 读取历史 K/V，追加一个 token 的 K/V | 产生下一次采样所需 logits |
+| reset / 请求释放 | position 归零并清空每层 key/value | 不保留上一个请求状态 |
 
-从内存视角看，cache 的生命周期应该和请求生命周期绑定：
+## BlockTable 管理什么
 
-- 请求开始时分配
-- 请求进行时追加
-- 请求结束时释放或回收
+`KvBlockPool` 根据 token 数预留物理 block ID，`BlockTable` 把逻辑 token 位置映射成 `{physical_block, slot}`。当前对象只管理容量和 ownership，不存储 `RealLlamaCpuContext` 中的 K/V 数值。
 
-## 验证与衔接
+| 操作 | 作用 | 失败时要求 |
+| --- | --- | --- |
+| `reserve(request_id, total_tokens)` | 为目标 token 数预留足够 block | 容量不足时不做部分修改 |
+| `commit_tokens(...)` | 提交已经成功执行的 token 数 | 不能超过已预留容量 |
+| `trim_to_tokens(...)` | executor 未推进时撤销多余预留 | 保留已提交 token 对应 block |
+| `locate(...)` | 返回逻辑 token 的物理 block 和 slot | 越界必须明确失败 |
+| `release(request_id)` | 请求终态时归还全部 block | 不影响其他请求的 block table |
 
-验证时重点看：
+## Prefill 与 Decode 的状态变化
 
-- 历史 K/V 能正确保存
-- 新 token 只处理增量部分
-- 与 naive generation 结果一致或接近
+Runtime 同时更新 Request 可见状态和真实 Context，但两者承担不同职责。Scheduler 只决定本 step 推进哪些 token，不直接读写 K/V 数值。
 
-这里“接近”是指在相同输入和相同采样策略下，KV Cache 版和 naive 版应该保持一致的生成逻辑，只是前者少算历史部分。
+| 阶段 | Request token history | 真实 Model Context | BlockTable |
+| --- | --- | --- | --- |
+| Prefill 开始 | 保存已提交 prompt token | 建立各层 K/V 和 position | 预留并提交 prompt token 容量 |
+| Chunked prefill | `prefill_offset` 逐段前进 | 在原 Context 后追加 K/V | 每段成功后提交 token count |
+| Decode | 追加采样得到的 token | 用历史 K/V 计算并追加新 K/V | 为新 token 提交位置 |
+| 终态释放 | `clear()` | Executor/Context 析构或 reset | `release()` 归还物理 block |
 
-常见问题：
+## 阅读和验证
 
-- cache 维度和层数对不上
-- 历史状态覆盖错误
-- 缓存逻辑和模型前向耦合过深
-- request 隔离不清，导致多请求场景互相污染
-- prefill 和 decode 使用了不同的 cache contract
-- cache 生命周期和请求生命周期没有绑在一起
+按“请求状态 → 单层 K/V 数值 → 真实分层 Context → block ownership”的顺序阅读，避免从 `KVCache` 名称推断对象内容。
 
-和后续章节怎么接：
-
-这一页把 decoder 的历史状态显式化，下一页才能继续接到 sampler 和端到端测试上。
-它不是附属优化，而是 generation runtime 从“能跑”走向“可持续运行”的关键台阶。
-
-复盘这一页时，优先看 <a href="../_code/chapter05_generation/src/kv_cache.cpp"><code>kv_cache.cpp</code></a>，然后回到 <a href="../_code/chapter05_generation/src/runtime.cpp"><code>runtime.cpp</code></a> 看它如何被 runtime 消费，最后用 <a href="../_code/chapter05_generation/tests/kv_cache_test.cpp"><code>kv_cache_test.cpp</code></a> 收口。
+| 验证对象 | 测试入口 | 通过标准 |
+| --- | --- | --- |
+| Chapter05 token history | <a href="../_code/chapter05_generation/tests/kv_cache_test.cpp"><code>kv_cache_test.cpp</code></a> | append、size、tokens 和 clear 正确 |
+| Chapter04 连续 K/V | <a href="../_code/chapter04_attention/tests/chapter04_attention_test.cpp"><code>chapter04_attention_test.cpp</code></a> | append、容量拒绝、decode offset 和 clear 正确 |
+| `KvBlockPool` | <a href="../_code/chapter05_generation/tests/serving_preview_test.cpp"><code>serving_preview_test.cpp</code></a> | reserve、commit、rollback、locate 和 release 正确 |
+| 真实分层 K/V | `real_tinyllama_generation_test`、`real_tinyllama_serving_test` | golden token、chunked prefill、Context 隔离和终态释放同时通过 |
