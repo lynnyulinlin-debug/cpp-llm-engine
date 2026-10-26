@@ -10,7 +10,7 @@
 
 ## Decoder 子阶段
 
-系统禁止普通用户使用 `perf`，`/proc/sys/kernel/perf_event_paranoid=4`。因此本教程不写未经采集的函数热点，而是在 Decoder 内加入默认关闭的分段计时；只有 `real_tinyllama_decoder_profile` 显式开启。固定 `Hello TinyLlama`、4 个生成 token、三轮运行，每轮实际 forward 6 个 prompt token 和 3 个已采样 token。
+当前采集环境的 `/proc/sys/kernel/perf_event_paranoid=4`，普通用户无法使用 `perf`。Decoder 因此提供默认关闭的分段计时，由 `real_tinyllama_decoder_profile` 显式开启。固定输入为 `Hello TinyLlama`、4 个生成 token 和三轮运行，每轮实际 forward 6 个 prompt token 和 3 个已采样 token。
 
 ```bash
 bash code/engine/scripts/run_real_decoder_profile.sh
@@ -38,7 +38,11 @@ TinyLlama Q4_K_M 中，gate/up 使用 Q4_K 权重，down 使用 Q6_K 权重。�
 | Residual | `0.08 ms` | `0.0021%` | 当前无需优先优化 |
 | 未归因 | `0.07 ms` | `0.0019%` | 子项闭合通过 |
 
-## 真实回归 A/B
+## 从回归门到组合优化
+
+实验按三步推进：先用服务回归确认结果可比较，再分别切换 Q6_K down、Q4_K FFN 和 Q4_K Attention，最后组合已经通过的 backend。每一步都保留 scalar 对照、正确性闸门和原始结果文件。
+
+### 真实回归 A/B
 
 `run_real_service_ab.sh` 用归档 JSON 作为 baseline，在当前工作树重新构建并采集 experiment。比较前必须匹配 workload、backend、模型、CPU、Release 构建、请求数和生成 token 数；它验证可重复性与回归门，不构成单变量优化实验。
 
@@ -57,7 +61,7 @@ bash code/chapter08_profiling/scripts/run_real_service_ab.sh
 | Throughput | `1.1066 token/s` | `1.0636 token/s` | `-3.8865%` |
 | 5% 回归门 | - | - | `KEEP` |
 
-## Q6_K down 单变量实验
+### Q6_K down 单变量实验
 
 实验使用同一个 Release 可执行文件、TinyLlama Q4_K_M、`Hello TinyLlama`、9 次 forward 和三轮迭代，只把 FFN down 从 scalar fused 切换为 AVX2/FMA fused。Q4_K gate/up、LM Head、请求和采样路径均未改变；两组运行都通过 golden token、Decoder 顶层计时和 FFN 子项闭合检查。
 
@@ -77,7 +81,7 @@ bash code/chapter08_profiling/scripts/run_real_q6k_down_ab.sh
 
 这组数据证明当前机器和固定 workload 下的 Q6_K down 优化有效，不代表其他模型、CPU 或长度会得到相同比例。
 
-## Q4_K gate/up 单变量实验
+### Q4_K gate/up 单变量实验
 
 第二个实验使用相同模型、prompt、9 次 forward 和三轮迭代，只把 FFN gate/up 从 scalar fused 切换为 AVX2/FMA fused。Q6_K down、QKV、Attention output、LM Head、请求和采样均保持原路径。非均匀合成 block、golden token 和两级计时闭合均通过。
 
@@ -87,7 +91,7 @@ bash code/chapter08_profiling/scripts/run_real_q4k_ffn_ab.sh
 
 原始 profile 和报告保存在 <a href="../_code/chapter08_profiling/results/tinyllama_q4k_ffn_scalar.txt"><code>tinyllama_q4k_ffn_scalar.txt</code></a>、<a href="../_code/chapter08_profiling/results/tinyllama_q4k_ffn_avx2.txt"><code>tinyllama_q4k_ffn_avx2.txt</code></a> 和 <a href="../_code/chapter08_profiling/results/tinyllama_q4k_ffn_ab.txt"><code>tinyllama_q4k_ffn_ab.txt</code></a>。
 
-Q4_K 与 Q6_K FFN 实验各自使用同一次运行中的配对 scalar baseline；百分比可以说明各自改动收益，但两组绝对毫秒数不能交叉相减。Chapter06 已用 `QuantizedLinearPolicy` 和 registry 收口 backend 选择、错误与测试契约。
+Q4_K 与 Q6_K FFN 实验各自使用同一次运行中的配对 scalar baseline；百分比可以说明各自改动收益，但两组绝对毫秒数不能交叉相减。Chapter06 已用 `QuantizedLinearPolicy` 和 registry 统一 backend 选择、错误与测试契约。
 
 | 指标 | Scalar fused | AVX2/FMA fused | Delta |
 | --- | ---: | ---: | ---: |
@@ -98,7 +102,7 @@ Q4_K 与 Q6_K FFN 实验各自使用同一次运行中的配对 scalar baseline�
 | Decoder 总计 | `5004.27 ms` | `2970.35 ms` | `-40.6436%` |
 | 判定 | - | - | `KEEP` |
 
-## Q4_K QKV/out 单变量实验
+### Q4_K QKV/out 单变量实验
 
 第三个实验通过独立 Attention policy 同时切换 Q、K、V 和 output projection。FFN gate/up、FFN down、LM Head、请求和采样保持 scalar；比较器显式检查三个作用域的 backend 字段，以及 golden token、Decoder 顶层计时和 FFN 子项闭合。
 
@@ -117,7 +121,7 @@ bash code/chapter08_profiling/scripts/run_real_q4k_attention_ab.sh
 | Decoder 总计 | `5161.73 ms` | `4266.20 ms` | `-17.3494%` |
 | 判定 | - | - | `KEEP` |
 
-## 组合 optimized policy
+### 组合 optimized policy
 
 三个单变量实验通过后，`run_real_optimized_policy_ab.sh` 在同一 Release 构建中生成 Decoder scalar/optimized profile 和双请求 ServiceCore scalar/optimized JSON。`optimized-avx2` 同时启用 Q4_K Attention、Q4_K FFN 与 Q6_K FFN backend，LM Head 保持 scalar；Factory 在模型加载时验证 AVX2/FMA 能力，并把同一模式应用到每个请求 Context。
 
