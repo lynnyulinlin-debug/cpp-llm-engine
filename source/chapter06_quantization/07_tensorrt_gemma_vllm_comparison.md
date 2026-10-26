@@ -12,19 +12,9 @@
 | `QuantizedLinearPolicy` | quantization method/backend dispatch | dtype、硬件和 shape 怎样选择实现 |
 | Decoder/ServiceCore A/B | engine accuracy/performance regression | 优化是否同时守住输出与性能 |
 
-## 源码入口
+## 教学实现与生产实现
 
-先选一种量化格式，从 block 定义追到实际 Linear kernel，再看框架如何注册和选择该实现。
-
-| 框架 | 官方入口 | 带着什么问题读 |
-| --- | --- | --- |
-| ggml / `llama.cpp` | [`ggml-quants.c`](https://github.com/ggml-org/llama.cpp/blob/master/ggml/src/ggml-quants.c)、[`ggml-cpu`](https://github.com/ggml-org/llama.cpp/tree/master/ggml/src/ggml-cpu) | block 布局怎样进入 CPU dot/matmul |
-| vLLM | [`quantization`](https://github.com/vllm-project/vllm/tree/main/vllm/model_executor/layers/quantization) | quant method 怎样绑定到模型 Linear |
-| TensorRT-LLM | [`kernels`](https://github.com/NVIDIA/TensorRT-LLM/tree/main/cpp/tensorrt_llm/kernels) | GPU quantized kernel 怎样组织输入和 workspace |
-
-## 教程保留与省略
-
-| 已实现 | 暂不实现 | 后续位置 |
+| 本章可验证对象 | 成熟系统继续增加 | 后续入口 |
 | --- | --- | --- |
 | INT8 教学格式、真实 Q4_K/Q6_K | AWQ、GPTQ、FP8 等多格式 | 格式扩展 |
 | block reference 与 fused CPU Linear | GPU quantized GEMM | GPU backend |
@@ -36,3 +26,9 @@
 1. 量化格式的 block layout 在 loader、Tensor 和 kernel 之间怎样保持一致？
 2. fused Linear 省掉了哪个中间量，误差基线来自哪里？
 3. backend policy 的选择依据是硬件能力、shape、格式，还是三者共同决定？
+
+| 项目卡 | 在本章中的用途 |
+| --- | --- |
+| [llama.cpp](../reference/ecosystem/llama_cpp.md) | Q4_K/Q6_K block 与 CPU 量化 kernel |
+| [vLLM](../reference/ecosystem/vllm.md) | quant method 与模型 Linear 的绑定 |
+| [TensorRT-LLM](../reference/ecosystem/tensorrt_llm.md) | GPU 量化 kernel、workspace 和执行策略 |

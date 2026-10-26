@@ -10,7 +10,13 @@
 - Request、block、scheduler 和 model runner 怎样传递状态
 - Prefix caching、CUDA Graph 等优化依赖哪些基础对象
 
-本教程只提炼短算法镜像，不把 nano-vLLM 变成 Python 前置课程，也不直接复制会随项目变化的源码。
+本教程用短 Python 镜像解释算法，再用 C++ 实现 ownership、错误契约和 backend。
+
+## 源码坐标
+
+| 对象 | 官方入口 | 阅读问题 |
+| --- | --- | --- |
+| 项目代码 | [nano-vLLM](https://github.com/GeeeekExplorer/nano-vllm) | model、scheduler、block manager 和 runner 怎样传递状态 |
 
 ## 对应教程章节
 

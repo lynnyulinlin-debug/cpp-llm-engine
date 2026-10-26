@@ -14,19 +14,9 @@
 | `code/cuda` cuBLAS backend | GEMM library、tactic 或 plugin | 库调用前后怎样处理 layout、stream 和 workspace |
 | PyTorch 对照 | backend correctness test | backend 替换后允许多大误差 |
 
-## 源码入口
+## 教学实现与生产实现
 
-先沿一个 Linear 或 MatMul 调用追到实际 kernel，再回看 backend 注册，不要从 kernel 目录逐文件浏览。
-
-| 框架 | 官方入口 | 带着什么问题读 |
-| --- | --- | --- |
-| ggml / `llama.cpp` | [`ggml-backend.cpp`](https://github.com/ggml-org/llama.cpp/blob/master/ggml/src/ggml-backend.cpp)、[`ggml-cpu`](https://github.com/ggml-org/llama.cpp/tree/master/ggml/src/ggml-cpu) | graph op 怎样分派到 CPU backend |
-| ggml / `llama.cpp` | [`ggml-cuda`](https://github.com/ggml-org/llama.cpp/tree/master/ggml/src/ggml-cuda) | 同一 op 怎样选择 CUDA kernel 或库调用 |
-| TensorRT-LLM | [`kernels`](https://github.com/NVIDIA/TensorRT-LLM/tree/main/cpp/tensorrt_llm/kernels)、[`runtime`](https://github.com/NVIDIA/TensorRT-LLM/tree/main/cpp/tensorrt_llm/runtime) | kernel 能力怎样进入 engine runtime |
-
-## 教程保留与省略
-
-| 已实现 | 暂不实现 | 后续位置 |
+| 本章可验证对象 | 成熟系统继续增加 | 后续入口 |
 | --- | --- | --- |
 | row-major MatMul contract | transpose、batched GEMM、动态 layout | 扩展 Operator contract |
 | CPU scalar reference、独立 cuBLAS backend | SIMD、batched GEMM 和自定义 fused kernel | CPU/GPU backend |
@@ -38,3 +28,8 @@
 1. 模型代码在哪里停止描述语义，backend 从哪里开始选择实现？
 2. layout 转换发生在算子、backend 还是 kernel 内部，成本是否可见？
 3. fused kernel 上线后，哪个 reference 路径继续承担正确性基线？
+
+| 项目卡 | 在本章中的用途 |
+| --- | --- |
+| [llama.cpp](../reference/ecosystem/llama_cpp.md) | ggml Operator、CPU/CUDA Backend 和量化 kernel |
+| [TensorRT-LLM](../reference/ecosystem/tensorrt_llm.md) | GPU Runtime、kernel 和 Executor 分层 |

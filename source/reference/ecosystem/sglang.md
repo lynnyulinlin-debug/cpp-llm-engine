@@ -13,6 +13,15 @@
 
 LPM 是调度策略，Radix Cache 是缓存与索引机制，HiCache 是多级存储扩展；三者相互协作，但不能写成同一个算法。本教程先保证请求级 K/V、block ownership 和释放语义正确，再讨论跨请求复用。
 
+## 源码坐标
+
+| 对象 | 官方入口 | 阅读问题 |
+| --- | --- | --- |
+| Scheduler | [`scheduler.py`](https://github.com/sgl-project/sglang/blob/main/python/sglang/srt/managers/scheduler.py) | token/cache budget 怎样进入调度循环 |
+| Radix Cache | [`radix_cache.py`](https://github.com/sgl-project/sglang/blob/main/python/sglang/srt/mem_cache/radix_cache.py) | prefix match、锁定、插入和淘汰怎样改变 ownership |
+| SRT Runtime | [`python/sglang/srt`](https://github.com/sgl-project/sglang/tree/main/python/sglang/srt) | API、scheduler、worker 和 cache 怎样分层 |
+| Benchmark | [`benchmark`](https://github.com/sgl-project/sglang/tree/main/benchmark) | serving、cache 和 workload 条件怎样定义 |
+
 ## 对应教程章节
 
 - Chapter05：Prefill/Decode、Chunked Prefill、Scheduler 和 Block KV

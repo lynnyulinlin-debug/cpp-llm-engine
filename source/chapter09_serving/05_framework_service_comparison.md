@@ -1,59 +1,42 @@
-# 09.5 Serving 框架对照：ServiceCore 与生产服务之间还差什么
+# 09.5 Serving 成熟框架对照
 
-本章把请求接入、调度、执行、流式输出和资源释放放进一个 C++ ServiceCore。成熟框架会继续把这些职责拆到 API server、engine core、worker 和 cache manager 中。
+本章用 C++ `ServiceCore` 连接请求接入、调度、执行、流式输出和资源释放。成熟服务把这些对象进一步拆到 API server、engine core、worker 和 cache manager。
 
-## 职责映射
+## 对象映射
 
-| 教程对象 | vLLM | SGLang | `llama.cpp` server |
+| 教程对象 | vLLM | SGLang | llama.cpp server |
 | --- | --- | --- | --- |
-| HTTP/SSE transport | OpenAI-compatible API server | HTTP server / tokenizer manager | server endpoint 与 slot |
+| HTTP/SSE transport | OpenAI-compatible API server | HTTP server / tokenizer manager | endpoint 与 slot |
 | `ServiceCore::submit` | engine request admission | scheduler request admission | request/slot 分配 |
 | waiting/running 队列 | V1 scheduler | SRT scheduler | slot 状态推进 |
-| `ModelExecutorFactory` | executor / worker / model runner | model worker | server context + model context |
+| `ModelExecutorFactory` | executor、worker、model runner | model worker | server context、model context |
 | block ownership 与回收 | KV cache manager | radix/prefix cache | context KV cache |
 | metrics 与 benchmark JSON | serving metrics | scheduler/server metrics | timings 与 server metrics |
 
-## 调度与缓存维度
+## 教学实现与生产实现
 
-服务对象映射之后，还要把调度与缓存拆成独立维度。Continuous Batching 决定本 step 的执行集合，LPM 决定 waiting 请求顺序，Radix Cache 决定共享前缀如何索引和持有 K/V，HiCache 决定前缀数据可以存在哪一级。
+本章验证单实例服务生命周期和指标来源；成熟系统继续增加多进程执行、租户策略、完整 API 和分布式观测。
 
-| 维度 | 本教程当前对象 | 成熟系统继续增加 |
+| 本章可验证对象 | 成熟系统继续增加 | 工程影响 |
 | --- | --- | --- |
-| Batch composition | `dispatch_step()`、token/block budget | prefill/decode 混排、抢占和异步执行 |
-| Queue policy | admission order、round-robin/最少进度 | priority、deadline、LPM |
-| Physical KV ownership | `KvBlockPool`、请求级 `BlockTable` | device page pool、复制、swap/offload |
-| Prefix reuse | 请求之间不共享 K/V | hash prefix cache 或 Radix Cache |
-| Storage hierarchy | 单级进程内资源 | GPU/CPU/外部存储和预取 |
-
-## 源码入口
-
-先沿一条请求从 API 到 engine、再到终态回收，不要同时阅读所有服务特性。
-
-| 框架 | 官方入口 | 带着什么问题读 |
-| --- | --- | --- |
-| vLLM | [`engine/core.py`](https://github.com/vllm-project/vllm/blob/main/vllm/v1/engine/core.py)、[`scheduler.py`](https://github.com/vllm-project/vllm/blob/main/vllm/v1/core/sched/scheduler.py) | API 进程与 engine core 如何通信，请求怎样被调度 |
-| vLLM | [`kv_cache_manager.py`](https://github.com/vllm-project/vllm/blob/main/vllm/v1/core/kv_cache_manager.py) | cache block 何时分配、提交和释放 |
-| Mini-SGLang | [`scheduler.py`](https://github.com/sgl-project/mini-sglang/blob/main/python/minisgl/scheduler/scheduler.py) | normal/overlap loop 怎样保持可读的请求推进路径 |
-| SGLang | [`scheduler.py`](https://github.com/sgl-project/sglang/blob/main/python/sglang/srt/managers/scheduler.py)、[`radix_cache.py`](https://github.com/sgl-project/sglang/blob/main/python/sglang/srt/mem_cache/radix_cache.py) | schedule policy 与 prefix cache 怎样交换命中和 ownership 信息 |
-| `llama.cpp` | [`tools/server`](https://github.com/ggml-org/llama.cpp/tree/master/tools/server) | 本地 C++ 模型上下文怎样接到 HTTP 服务 |
-
-## 教程保留与省略
-
-本章优先保证服务语义可测试，因此 transport 可以替换，ServiceCore、metrics 和 streaming contract 保持稳定。
-
-| 已实现 | 暂不实现 | 省略原因 |
-| --- | --- | --- |
-| admission、waiting/running、cancel、timeout | 多租户优先级、抢占和全局路由 | 先验证单实例生命周期 |
-| 同步完成和 SSE token event | 完整 OpenAI schema、鉴权、TLS | transport 不应主导 engine 设计 |
-| 每请求 Executor/Context 与统一回收 | 多进程 worker、分布式 executor | 先固定资源所有权 |
-| queue wait、TTFT、completion 聚合 | histogram、P99、分布式 trace | 先保证指标来源正确 |
-| token/block-budget dispatch | GPU 并行 batch executor | CPU 主线先证明调度行为 |
+| admission、waiting/running、cancel、timeout | 多租户优先级、抢占和全局路由 | 调度状态与业务策略分离 |
+| 同步完成和 SSE token event | 完整 OpenAI schema、鉴权、TLS | transport 与 Engine contract 分离 |
+| 每请求 Executor/Context 与统一回收 | 多进程 worker、分布式 executor | 跨进程资源所有权和失败恢复 |
+| queue wait、TTFT、completion 聚合 | histogram、P99、分布式 trace | 指标聚合与 trace context |
+| token/block-budget dispatch | GPU 并行 batch executor | 计划 metadata 与设备执行连接 |
 
 ## 源码阅读问题
 
-1. transport 断开、取消或超时时，终态由哪一层写入并触发回收？
-2. scheduler 只选择请求，还是也拥有 KV block 和模型执行资源？
-3. API server、engine core 和 worker 拆进不同进程后，哪些契约必须保持不变？
+从项目卡进入源码后，沿一条请求从 API 到 Engine，再跟踪到终态释放：
+
+1. transport 断开、取消或超时时，哪个对象写入终态并触发回收？
+2. Scheduler 选择请求时，KV block 和模型执行资源由谁持有？
+3. API server、EngineCore 和 worker 分进程后，哪些 contract 跨进程传递？
 4. 前缀命中、waiting 排序和 KV 存储层级分别由哪个对象决定？
 
-项目定位继续阅读 [`vLLM`](../reference/ecosystem/vllm.md)、[`Mini-SGLang`](../reference/ecosystem/mini_sglang.md) 和 [`SGLang`](../reference/ecosystem/sglang.md) 项目卡。
+| 项目卡 | 在本章中的用途 |
+| --- | --- |
+| [llama.cpp](../reference/ecosystem/llama_cpp.md) | 本地 C++ 模型上下文、slot 和 HTTP 服务 |
+| [vLLM](../reference/ecosystem/vllm.md) | API server、EngineCore、Scheduler 和 KV manager |
+| [Mini-SGLang](../reference/ecosystem/mini_sglang.md) | 可读的 normal/overlap 调度循环 |
+| [SGLang](../reference/ecosystem/sglang.md) | Scheduler、Radix Cache 和生产服务扩展 |

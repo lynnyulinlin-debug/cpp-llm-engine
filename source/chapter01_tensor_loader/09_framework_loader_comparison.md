@@ -12,21 +12,11 @@
 | `RealLlamaCpuModel` | 共享模型权重 | worker/model runner 中的模型实例 | 哪些资源跨请求共享 |
 | `RealLlamaCpuContext` | per-context inference state | request/runtime state | 哪些状态必须按请求隔离 |
 
-## 源码入口
-
-下面入口来自框架官方仓库。先追一条权重从文件名到模型参数的路径，不要从整个仓库目录开始读。
-
-| 框架 | 官方入口 | 带着什么问题读 |
-| --- | --- | --- |
-| `llama.cpp` | [`llama-model-loader.h`](https://github.com/ggml-org/llama.cpp/blob/master/src/llama-model-loader.h)、[`llama-model-loader.cpp`](https://github.com/ggml-org/llama.cpp/blob/master/src/llama-model-loader.cpp) | GGUF metadata、tensor index 和 payload 在哪里校验 |
-| `llama.cpp` | [`llama-model.cpp`](https://github.com/ggml-org/llama.cpp/blob/master/src/llama-model.cpp) | loader 输出怎样变成可执行模型 |
-| vLLM | [`model_loader`](https://github.com/vllm-project/vllm/tree/main/vllm/model_executor/model_loader) | loader 怎样选择格式并把权重交给模型实现 |
-
-## 教程保留与省略
+## 教学实现与生产实现
 
 本章用单个 TinyLlama GGUF 固定输入，目的是让格式边界和对象生命周期可见。
 
-| 已实现 | 暂不实现 | 省略原因 |
+| 本章可验证对象 | 成熟系统继续增加 | 学习顺序 |
 | --- | --- | --- |
 | GGUF header、metadata、tensor index 和 payload offset | SafeTensors、分片 checkpoint、远程下载 | 先固定一种真实格式 |
 | TinyLlama 配置和 tensor 名映射 | 多模型架构注册表 | 先验证 Llama 主线 |
@@ -38,3 +28,8 @@
 1. tensor 名称在什么时候从文件 schema 转换为模型层参数？
 2. 模型权重与请求级 KV/position 状态分别由谁持有？
 3. 增加一种 checkpoint 格式时，哪些内部对象和校验不应改变？
+
+| 项目卡 | 在本章中的用途 |
+| --- | --- |
+| [llama.cpp](../reference/ecosystem/llama_cpp.md) | GGUF Loader、模型对象和 Context |
+| [vLLM](../reference/ecosystem/vllm.md) | 多格式 checkpoint Loader 与模型实例 |

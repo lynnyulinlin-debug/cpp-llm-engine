@@ -113,7 +113,7 @@ git diff --stat
 - `source/chapter02_tensor_ops/intro.md`
 - `source/chapter03_matmul/intro.md`
 - `source/chapter04_attention/intro.md`
-- `source/chapter04_attention/07_vllm_nano_vllm_structure_bridge.md`
+- `source/chapter04_attention/06_gemma_tensorrt_comparison.md`
 - `source/chapter05_generation/intro.md`
 - `source/chapter06_quantization/intro.md`
 - `source/chapter07_benchmark/intro.md`

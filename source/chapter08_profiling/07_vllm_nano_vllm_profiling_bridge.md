@@ -12,19 +12,11 @@
 | `tid` / `sync_*` | host thread、CUDA stream、同步事件 | 时间花在计算还是等待 |
 | correctness-first A/B | optimization regression report | 单变量改动是否值得保留 |
 
-## 官方入口
+## 教学实现与生产实现
 
-先从框架 benchmark 或 metrics 复现现象，再进入 profiler；没有稳定 workload 的 trace 不能支持优化结论。
+稳定 workload 和 correctness gate 先复现性能现象，Profiler 再解释阶段、事件和热点。
 
-| 框架 | 官方入口 | 带着什么问题读 |
-| --- | --- | --- |
-| vLLM | [`benchmarks`](https://github.com/vllm-project/vllm/tree/main/benchmarks)、[`engine/core.py`](https://github.com/vllm-project/vllm/blob/main/vllm/v1/engine/core.py) | 指标异常对应 engine 的哪个阶段 |
-| TensorRT-LLM | [`benchmarks`](https://github.com/NVIDIA/TensorRT-LLM/tree/main/benchmarks)、[`runtime`](https://github.com/NVIDIA/TensorRT-LLM/tree/main/cpp/tensorrt_llm/runtime) | engine 配置、runtime 和 kernel 时间怎样关联 |
-| `llama.cpp` | [`llama-bench`](https://github.com/ggml-org/llama.cpp/tree/master/tools/llama-bench) | CPU/GPU backend 改动怎样进入稳定本地基线 |
-
-## 教程保留与省略
-
-| 已实现 | 暂不实现 | 使用条件 |
+| 本章可验证对象 | 成熟系统继续增加 | 使用条件 |
 | --- | --- | --- |
 | 阶段 JSON、最小 trace 和 hotspot | 完整 CPU sampling | 获得 `perf` 权限后补充 |
 | host/compute timeline 和同步点 | CUDA kernel 指标 | GPU backend 建立后使用 Nsight |
@@ -36,3 +28,9 @@
 1. benchmark 现象能否稳定复现，correctness 是否先通过？
 2. 热点属于模型计算、cache、scheduler、同步还是 transport？
 3. 修改后同一 workload 的阶段、事件和 hotspot 是否共同支持结论？
+
+| 项目卡 | 在本章中的用途 |
+| --- | --- |
+| [llama.cpp](../reference/ecosystem/llama_cpp.md) | CPU/GPU backend 的本地基线 |
+| [vLLM](../reference/ecosystem/vllm.md) | Benchmark 指标到 EngineCore 阶段的映射 |
+| [TensorRT-LLM](../reference/ecosystem/tensorrt_llm.md) | Engine、Runtime 和 GPU kernel 时间关联 |

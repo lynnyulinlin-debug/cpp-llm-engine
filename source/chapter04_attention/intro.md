@@ -49,7 +49,7 @@ CPU 调用链是：`MultiHeadAttention -> CpuReferenceAttentionBackend -> cpu_re
 | 主对照框架 | vLLM Llama model、TensorRT-LLM attention/kernels |
 | 成熟组件 | FlashAttention、paged KV、融合算子、张量并行和多模型适配 |
 | 重点差异 | 教学层验证单层结构；backend 测试独立验证 mask、position offset 和连续 KV 输入 |
-| 深入入口 | [`04.6 Gemma / TensorRT-LLM 对照`](./06_gemma_tensorrt_comparison.md)、[`04.7 vLLM / nano-vLLM 结构阅读桥`](./07_vllm_nano_vllm_structure_bridge.md) |
+| 深入入口 | [`04.6 Decoder 成熟框架对照`](./06_gemma_tensorrt_comparison.md) |
 
 ## 3. 阅读与源码顺序
 
@@ -59,7 +59,7 @@ CPU 调用链是：`MultiHeadAttention -> CpuReferenceAttentionBackend -> cpu_re
 | 2 | [`04.2 LayerNorm and Activation`](./02_layernorm_and_activation.md)、[`04.3 FeedForward`](./03_feedforward.md) | decoder 的逐 token 组件 |
 | 3 | [`04.4 DecoderLayer`](./04_decoder_layer.md) | Attention、FFN 和 Residual 的完整顺序 |
 | 4 | [`04.5 Load First Layer`](./05_load_first_layer.md) | 真实权重和 shape 校验 |
-| 5 | [`04.6 Gemma / TensorRT-LLM 对照`](./06_gemma_tensorrt_comparison.md)、[`04.7 vLLM / nano-vLLM 结构阅读桥`](./07_vllm_nano_vllm_structure_bridge.md) | 模型结构与真实 backend 的对应关系 |
+| 5 | [`04.6 Decoder 成熟框架对照`](./06_gemma_tensorrt_comparison.md) | 模型结构与真实 backend 的对应关系 |
 
 源码先看 <a href="../_code/chapter04_attention/src/attention.cpp"><code>attention.cpp</code></a>、<a href="../_code/chapter04_attention/src/attention_backend.cpp"><code>attention_backend.cpp</code></a>、<a href="../_code/chapter04_attention/src/decoder_layer.cpp"><code>decoder_layer.cpp</code></a>；测试入口是 <a href="../_code/chapter04_attention/tests/chapter04_attention_test.cpp"><code>chapter04_attention_test.cpp</code></a>。可选 GPU 实现从 <a href="../_code/cuda/src/rope_backend.cu"><code>rope_backend.cu</code></a>、<a href="../_code/cuda/src/cuda_kv_cache.cpp"><code>cuda_kv_cache.cpp</code></a>、<a href="../_code/cuda/src/gqa_attention_backend.cu"><code>gqa_attention_backend.cu</code></a> 及对应测试进入。前置阅读是 [`chapter03_matmul`](../chapter03_matmul/intro.md)；Attention、GQA、RoPE、Norm 和 SwiGLU 的统一符号从 [`F-ATTN-01`](../reference/formulas.md#f-attn-01) 开始查阅。
 

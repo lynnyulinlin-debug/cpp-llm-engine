@@ -16,6 +16,13 @@
 - 帮助验证架构和兼容性选择
 - 在教程需要具体目标时，作为示例模型家族
 
+## 官方入口
+
+| 入口 | 用途 |
+| --- | --- |
+| [Gemma 模型文档](https://ai.google.dev/gemma/docs) | 查模型家族、结构和使用方式 |
+| [gemma.cpp](https://github.com/google/gemma.cpp) | 观察具体模型家族到轻量 C++ Runtime 的映射 |
+
 ## 为什么和 `llama.cpp` 很适合一起看
 
 `Gemma` 给教程提供了一个具体的模型家族锚点，`llama.cpp` 给教程提供了一个更宽的本地推理 baseline。两者一起看，读者就能在“具体模型实现细节”和“更通用的生产级运行时结构”之间来回切换。

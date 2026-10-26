@@ -17,7 +17,7 @@
 
 - 前置阅读：[`04.1 Multi-head Attention`](./01_multihead_attention.md)、[`04.3 Feed Forward Network`](./03_feedforward.md)
 - 源码直达：<a href="../_code/chapter04_attention/src/decoder_layer.cpp"><code>decoder_layer.cpp</code></a>、<a href="../_code/chapter04_attention/src/attention.cpp"><code>attention.cpp</code></a>、<a href="../_code/chapter04_attention/tests/chapter04_attention_test.cpp"><code>chapter04_attention_test.cpp</code></a>
-- 相关阅读：[`04.5 首层权重加载`](./05_load_first_layer.md)、[`04.7 vLLM / nano-vLLM 结构阅读桥`](./07_vllm_nano_vllm_structure_bridge.md)、[`章节导读`](./intro.md)
+- 相关阅读：[`04.5 首层权重加载`](./05_load_first_layer.md)、[`04.6 Decoder 成熟框架对照`](./06_gemma_tensorrt_comparison.md)、[`章节导读`](./intro.md)
 
 ## 核心结构
 

@@ -12,20 +12,9 @@
 | 双请求时间轴 | concurrency / serving workload | 请求到达方式和调度策略 |
 | JSON 结果文件 | benchmark report | 模型、dtype、硬件和命令是否可复现 |
 
-## 官方入口
+## 教学实现与生产实现
 
-这些入口适合读取 workload 和结果字段定义，不用于直接横比仓库发布的数字。
-
-| 框架 | 官方入口 | 带着什么问题读 |
-| --- | --- | --- |
-| vLLM | [`benchmarks`](https://github.com/vllm-project/vllm/tree/main/benchmarks) | online、offline 和 latency workload 怎样区分 |
-| TensorRT-LLM | [`benchmarks`](https://github.com/NVIDIA/TensorRT-LLM/tree/main/benchmarks) | engine 配置和 GPU 条件怎样进入结果 |
-| `llama.cpp` | [`llama-bench`](https://github.com/ggml-org/llama.cpp/tree/master/tools/llama-bench) | 本地模型加载、prompt processing 和 generation 怎样计时 |
-| SGLang | [`benchmark`](https://github.com/sgl-project/sglang/tree/main/benchmark) | serving、cache 或 workflow 条件怎样定义 |
-
-## 教程保留与省略
-
-| 已实现 | 暂不实现 | 后续位置 |
+| 本章可验证对象 | 成熟系统继续增加 | 后续入口 |
 | --- | --- | --- |
 | correctness-first、阶段耗时和吞吐 | 大规模并发负载生成 | Chapter09 服务压测扩展 |
 | 固定双请求 benchmark | 到达率分布和长时间稳态 | 服务 benchmark 扩展 |
@@ -37,3 +26,10 @@
 1. 两组结果的模型、dtype、输入输出长度、并发和硬件是否一致？
 2. TTFT、TPOT、throughput 的起止点和聚合方式是否一致？
 3. 优化结果是否附带 correctness、失败率和资源占用证据？
+
+| 项目卡 | 在本章中的用途 |
+| --- | --- |
+| [llama.cpp](../reference/ecosystem/llama_cpp.md) | 本地 prompt processing 与 generation 基线 |
+| [vLLM](../reference/ecosystem/vllm.md) | online、offline 和 latency workload |
+| [SGLang](../reference/ecosystem/sglang.md) | serving 与 cache workload |
+| [TensorRT-LLM](../reference/ecosystem/tensorrt_llm.md) | Engine 配置与 GPU Benchmark |

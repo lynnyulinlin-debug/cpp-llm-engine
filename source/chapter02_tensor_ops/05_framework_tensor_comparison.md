@@ -12,21 +12,11 @@
 | `slice` | view/offset 操作 | KV block 或 token window 寻址 | 子窗口是否复制数据 |
 | `TensorContract` | backend 的 shape/type 检查 | worker/backend 输入契约 | 错误在哪一层被拒绝 |
 
-## 源码入口
-
-ggml 适合观察通用 tensor/view，vLLM 适合观察这些语义怎样进入分页 KV Cache。
-
-| 框架 | 官方入口 | 带着什么问题读 |
-| --- | --- | --- |
-| ggml | [`ggml.c`](https://github.com/ggml-org/llama.cpp/blob/master/ggml/src/ggml.c) | tensor 元数据和 view offset 怎样表达 |
-| ggml | [`ggml-backend.cpp`](https://github.com/ggml-org/llama.cpp/blob/master/ggml/src/ggml-backend.cpp) | storage 进入不同 backend 后由谁管理 |
-| vLLM | [`kv_cache_manager.py`](https://github.com/vllm-project/vllm/blob/main/vllm/v1/core/kv_cache_manager.py) | 逻辑 token 怎样映射到可复用 cache block |
-
-## 教程保留与省略
+## 教学实现与生产实现
 
 本章限制在连续 CPU storage，便于用指针、offset 和测试直接证明共享关系。
 
-| 已实现 | 暂不实现 | 省略原因 |
+| 本章可验证对象 | 成熟系统继续增加 | 学习顺序 |
 | --- | --- | --- |
 | 共享 storage 的 reshape 和 slice | transpose、广播、任意非连续 view | 先固定最小地址计算 |
 | shape/stride/offset contract | 自动 contiguous copy | 不隐藏潜在复制成本 |
@@ -38,3 +28,8 @@ ggml 适合观察通用 tensor/view，vLLM 适合观察这些语义怎样进入�
 1. 一个 view 销毁后，底层 storage 为什么仍可能有效？
 2. reshape 在什么条件下可以只改元数据，什么时候必须复制？
 3. 分页 KV Cache 的 block table 与本章的 offset/stride 有什么共同点？
+
+| 项目卡 | 在本章中的用途 |
+| --- | --- |
+| [llama.cpp](../reference/ecosystem/llama_cpp.md) | ggml Tensor、view 与 backend buffer |
+| [vLLM](../reference/ecosystem/vllm.md) | Tensor 语义在分页 KV Cache 中的应用 |

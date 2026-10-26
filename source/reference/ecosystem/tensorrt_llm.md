@@ -19,6 +19,15 @@
 - 量化本身就是部署策略的一部分
 - 系统需要一条面向生产的 GPU 执行路径
 
+## 源码坐标
+
+| 对象 | 官方入口 | 阅读问题 |
+| --- | --- | --- |
+| C++ Runtime | [`cpp/tensorrt_llm/runtime`](https://github.com/NVIDIA/TensorRT-LLM/tree/main/cpp/tensorrt_llm/runtime) | engine、buffer 和执行上下文怎样组织 |
+| GPU kernels | [`cpp/tensorrt_llm/kernels`](https://github.com/NVIDIA/TensorRT-LLM/tree/main/cpp/tensorrt_llm/kernels) | Attention、量化和融合算子在哪里落地 |
+| Executor | [`cpp/tensorrt_llm/executor`](https://github.com/NVIDIA/TensorRT-LLM/tree/main/cpp/tensorrt_llm/executor) | 请求、batch 和 runtime 怎样连接 |
+| Benchmark | [`benchmarks`](https://github.com/NVIDIA/TensorRT-LLM/tree/main/benchmarks) | engine 配置和 GPU 条件怎样进入结果 |
+
 ## 对应教程章节
 
 `TensorRT-LLM` 主要对应教程里的这些章节：

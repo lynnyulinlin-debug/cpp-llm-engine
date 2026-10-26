@@ -10,7 +10,7 @@
 - kernel 启动、设备内存与 cuBLAS 如何进入同一条执行路径
 - Paged KV 的地址映射怎样影响 Attention 输入
 
-不要直接复制其目录作为本教程章节结构。本教程还需要独立表达 Loader、Tensor/View、验证、Profiling 和 Serving。
+Tiny-VLLM 采用线性模块目录；本教程额外拆出 Loader、Tensor/View、验证、Profiling 和 Serving，用于连接算法实现与完整服务链路。
 
 ## 对应教程章节
 

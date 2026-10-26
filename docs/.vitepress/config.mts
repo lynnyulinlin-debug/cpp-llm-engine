@@ -206,8 +206,7 @@ function createSidebar() {
             { text: '前馈网络', file: '03_feedforward.md' },
             { text: 'DecoderLayer', file: '04_decoder_layer.md' },
             { text: '加载第一层权重', file: '05_load_first_layer.md' },
-            { text: 'Gemma / TensorRT-LLM 对照', file: '06_gemma_tensorrt_comparison.md' },
-            { text: 'Decoder 成熟框架阅读桥', file: '07_vllm_nano_vllm_structure_bridge.md' },
+            { text: 'Decoder 成熟框架对照', file: '06_gemma_tensorrt_comparison.md' },
           ]),
           chapterGroup('05', '第 05 章 生成运行时与 Serving 基础', '/chapter05_generation', [
             { text: '首轮：Generation Core', file: 'part_a_generation_core.md', section: true },

@@ -14,7 +14,7 @@
 
 - 前置阅读：[`04.4 DecoderLayer`](./04_decoder_layer.md)、[`Chapter01 模型加载`](../chapter01_tensor_loader/intro.md)
 - 源码直达：<a href="../_code/chapter01_tensor_loader/examples/gguf_first_layer_forward.cpp"><code>gguf_first_layer_forward.cpp</code></a>、<a href="../_code/chapter01_tensor_loader/src/model_schema.cpp"><code>model_schema.cpp</code></a>、<a href="../_code/chapter01_tensor_loader/src/real_layer_weights.cpp"><code>real_layer_weights.cpp</code></a>
-- 相关阅读：[`04.7 vLLM / nano-vLLM 结构阅读桥`](./07_vllm_nano_vllm_structure_bridge.md)、[`Chapter06 量化`](../chapter06_quantization/intro.md)
+- 相关阅读：[`04.6 Decoder 成熟框架对照`](./06_gemma_tensorrt_comparison.md)、[`Chapter06 量化`](../chapter06_quantization/intro.md)
 
 ## 两条加载路径
 
