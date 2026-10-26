@@ -11,7 +11,6 @@ This is the canonical English entry for the tutorial. The Chinese main line rema
 - guide.md: how to read the tutorial
 - guides: engineering references for build, environment, and migration
 - reference: terminology, concept mapping, ecosystem comparison, and engine-layer analysis
-- maintenance: contributor-only maintenance rules and templates
 
 ## Engine Layer
 

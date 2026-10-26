@@ -45,19 +45,18 @@ features:
 | `chapter07` | 验证与证据 |
 | `chapter08` | 性能归因与优化闭环 |
 
-`chapter08` 之后，主线转入 `reference`、`guides` 和 `maintenance`：
+`chapter08` 之后，继续进入 Chapter09，并按需查阅 `reference` 和 `guides`：
 
 - `reference` 讲概念解释、术语和生态对照
 - `guides` 讲构建、环境、迁移和工程方法
-- `maintenance` 讲站点维护、写作规范和长期收口
 
 想先看“指挥台 / 发动机”的分工，可以直接进 [training vs inference frameworks](/reference/framework_comparison)。
 
 ## 你会看到什么
 
-- `foundation` 到 `chapter08_profiling` 的主线
+- `foundation` 到 `chapter09_serving` 的主线
 - 训练框架、推理框架和本教程的对照层
-- 术语表、写作规范和维护规范
+- 术语表、公式表和跨章节资产表
 - 图示、表格和收口页
 
 ## 适合谁

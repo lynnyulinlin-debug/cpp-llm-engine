@@ -38,14 +38,14 @@ Quantization usually lowers weight storage cost first, but it does not automatic
 
 Separate correctness tests from benchmark measurements. Fix logic first, then measure performance. If you mix them, the result is usually unstable.
 
-### 4.2 Why should I read `summary.md` first?
+### 4.2 Why should I read the chapter `intro.md` first?
 
-Because `summary.md` tells you what the chapter solved, where the boundary is, and what comes next. It is the fastest way to decide where to look.
+The `intro.md` shows the chapter's position, learning content, source order, and verification criteria. The old `summary.md` files remain only for compatibility with existing links and no longer provide separate navigation.
 
 ## 5. How to use this page
 
 - Find the question category first
-- Then return to the relevant chapter `intro.md` or `summary.md`
+- Then return to the relevant chapter `intro.md`
 - If it is still unclear, read the detailed chapter page or the reference layer
 
 ## 6. Maintenance rule

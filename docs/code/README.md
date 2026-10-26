@@ -12,6 +12,11 @@
 - [chapter05_generation](./chapter05_generation)
 - [chapter06_quantization](./chapter06_quantization)
 - [chapter07_benchmark](./chapter07_benchmark)
+- [chapter08_profiling](./chapter08_profiling)
+- [chapter09_serving](./chapter09_serving)
+- [engine First Success](./engine)
+- [CUDA 公共基础层](./cuda)
+- [多模态 CPU 输入扩展](./multimodal)
 
 ## 使用方式
 

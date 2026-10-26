@@ -5,6 +5,7 @@ export default defineConfig({
   description: '用 C++ 构建 LLM 推理引擎',
   lang: 'zh-CN',
   cleanUrls: false,
+  srcExclude: ['maintenance/**/*.md'],
   lastUpdated: true,
   ignoreDeadLinks: [
     /^\.\.\/_code\//,
@@ -40,7 +41,6 @@ export default defineConfig({
       { text: 'Foundation 题库', link: '/exercises/foundation/README' },
       { text: '开发参考', link: '/guides/README' },
       { text: '设计参考', link: '/reference/README' },
-      { text: '维护文档', link: '/maintenance/README' },
       { text: '代码索引', link: '/code/README' },
     ],
     locales: {
@@ -51,7 +51,6 @@ export default defineConfig({
           { text: 'Guide', link: '/en/guide' },
           { text: 'Development', link: '/en/guides/README' },
           { text: 'Reference', link: '/en/reference/README' },
-          { text: 'Maintenance', link: '/en/maintenance/README' },
         ],
         sidebar: createEnglishSidebar(),
       },
@@ -70,14 +69,16 @@ function numberedText(index: string | number, text: string) {
   return `${index} ${text}`
 }
 
-function chapterGroup(chapterCode: string, text: string, base: string, pages: Array<{ text: string; file: string }>) {
+function chapterGroup(chapterCode: string, text: string, base: string, pages: Array<{ text: string; file: string; section?: boolean }>) {
   return {
     text,
     collapsed: true,
     items: [
       { text: numberedText(`${chapterCode}.0`, '本章导读'), link: `${base}/intro` },
-      ...pages.map((page, index) => ({ text: numberedText(`${chapterCode}.${index + 1}`, page.text), link: `${base}/${page.file.replace(/\.md$/, '')}` })),
-      { text: numberedText(`${chapterCode}.${pages.length + 1}`, '本章小结'), link: `${base}/summary` },
+      ...pages.map((page, index) => ({
+        text: page.section ? page.text : numberedText(`${chapterCode}.${index + 1}`, page.text),
+        link: `${base}/${page.file.replace(/\.md$/, '')}`,
+      })),
     ],
   }
 }
@@ -115,7 +116,6 @@ function createEnglishSidebar() {
           { text: 'Guide', link: '/en/guide' },
           { text: 'Development References', link: '/en/guides/README' },
           { text: 'Design References', link: '/en/reference/README' },
-          { text: 'Maintenance', link: '/en/maintenance/README' },
           { text: 'Foundation', link: '/en/foundation/README' },
           chapterLandingGroup('00', 'Chapter 00 Quickstart', '/chapter00_quickstart'),
           chapterLandingGroup('01', 'Chapter 01 Model Weights and Tensor Objects', '/chapter01_tensor_loader'),
@@ -135,17 +135,13 @@ function createSidebar() {
   return {
     '/': [
       {
-        text: '教程主线',
+        text: '开始这里',
         collapsed: false,
         items: [
           { text: '主入口', link: '/README' },
-          { text: '英文入口', link: '/en/README' },
           { text: '使用文档', link: '/guide' },
+          { text: '第一期 CPU 学习计划', link: '/guides/phase1_cpu_learning_plan' },
           { text: 'Foundation 题库', link: '/exercises/foundation/README' },
-          { text: '开发参考', link: '/guides/README' },
-          { text: '设计参考', link: '/reference/README' },
-          { text: '维护文档', link: '/maintenance/README' },
-          { text: '代码索引', link: '/code/README' },
           chapterGroup('00', '第 00 章 起跑线', '/chapter00_quickstart', [
             { text: '环境准备', file: '01_environment_setup.md' },
             { text: '克隆并编译 llama.cpp', file: '02_clone_and_build_llamacpp.md' },
@@ -159,6 +155,7 @@ function createSidebar() {
             collapsed: true,
             items: [
               { text: numberedText(1, '总览'), link: '/foundation/README' },
+              { text: numberedText(1.5, '正文与练习映射'), link: '/foundation/exercise_map' },
               { text: numberedText(2, 'C++ 基础'), link: '/foundation/01_cxx_basics' },
               { text: numberedText(3, 'CMake 和编译基础'), link: '/foundation/02_cmake_build_basics' },
               { text: numberedText(4, 'CUDA 和环境基础'), link: '/foundation/03_cuda_environment_basics' },
@@ -170,6 +167,12 @@ function createSidebar() {
               { text: numberedText(10, '最小 C++ / CUDA 项目'), link: '/foundation/09_minimal_cpp_cuda_project' },
             ],
           },
+        ],
+      },
+      {
+        text: '引擎主线',
+        collapsed: false,
+        items: [
           chapterGroup('01', '第 01 章 模型权重与 Tensor 对象', '/chapter01_tensor_loader', [
             { text: 'Tensor 接口', file: '01_tensor_interface.md' },
             { text: 'Tensor 实现', file: '02_tensor_implement.md' },
@@ -177,12 +180,16 @@ function createSidebar() {
             { text: 'Python 转换器', file: '04_python_converter.md' },
             { text: '模型加载器', file: '05_model_loader.md' },
             { text: '验证与打印', file: '06_verify_and_print.md' },
+            { text: '输入契约与 Tokenizer', file: '07_input_contract_and_tokenizer.md' },
+            { text: '模型元数据与 GGUF 边界', file: '08_model_metadata_and_gguf_boundary.md' },
+            { text: 'Loader 框架对照', file: '09_framework_loader_comparison.md' },
           ]),
           chapterGroup('02', '第 02 章 Tensor 视图与共享存储', '/chapter02_tensor_ops', [
             { text: '共享存储', file: '01_shared_ptr_memory.md' },
             { text: 'reshape', file: '02_reshape.md' },
             { text: 'slice', file: '03_slice.md' },
             { text: '单元测试', file: '04_uint_tests.md' },
+            { text: 'Tensor 与 View 框架对照', file: '05_framework_tensor_comparison.md' },
           ]),
           chapterGroup('03', '第 03 章 MatMul 与计算后端', '/chapter03_matmul', [
             { text: '算子基类', file: '01_operator_base.md' },
@@ -200,20 +207,22 @@ function createSidebar() {
             { text: 'DecoderLayer', file: '04_decoder_layer.md' },
             { text: '加载第一层权重', file: '05_load_first_layer.md' },
             { text: 'Gemma / TensorRT-LLM 对照', file: '06_gemma_tensorrt_comparison.md' },
-            { text: 'vLLM / nano-vLLM 结构阅读桥', file: '07_vllm_nano_vllm_structure_bridge.md' },
+            { text: 'Decoder 成熟框架阅读桥', file: '07_vllm_nano_vllm_structure_bridge.md' },
           ]),
           chapterGroup('05', '第 05 章 生成运行时与 Serving 基础', '/chapter05_generation', [
-            { text: 'Embedding 与位置编码', file: '01_embedding_and_position.md' },
-            { text: 'Transformer 组装', file: '02_transformer_assembly.md' },
+            { text: '首轮：Generation Core', file: 'part_a_generation_core.md', section: true },
+            { text: '进阶：Serving Preview', file: 'part_b_serving_preview.md', section: true },
+            { text: '选读：Embedding 与位置编码', file: '01_embedding_and_position.md' },
+            { text: '选读：Transformer 组装', file: '02_transformer_assembly.md' },
             { text: '朴素生成', file: '03_naive_generation.md' },
             { text: 'KV Cache', file: '04_kv_cache.md' },
             { text: 'Scheduler', file: '05_scheduler.md' },
             { text: 'Sampler', file: '05_sampler.md' },
             { text: '端到端生成测试', file: '06_end_to_end_generation.md' },
-            { text: 'vLLM 对照', file: '07_vllm_comparison.md' },
+            { text: '选读：Generation Runtime 框架对照', file: '07_vllm_comparison.md' },
             { text: 'Request 生命周期', file: '08_request_lifecycle.md' },
-            { text: 'Continuous Batching 入门', file: '09_continuous_batching.md' },
-            { text: 'Block KV Cache 阅读入口', file: '10_block_kv_cache.md' },
+            { text: '进阶：Continuous Batching', file: '09_continuous_batching.md' },
+            { text: '进阶：Block KV Cache', file: '10_block_kv_cache.md' },
           ]),
           chapterGroup('06', '第 06 章 量化', '/chapter06_quantization', [
             { text: '量化基础', file: '01_quantization_basics.md' },
@@ -222,9 +231,15 @@ function createSidebar() {
             { text: '反量化算子', file: '04_dequantize_op.md' },
             { text: '量化 Linear', file: '05_linear_with_quant.md' },
             { text: '精度验证', file: '06_accuracy_validation.md' },
-            { text: 'TensorRT-LLM / Gemma / vLLM 对照', file: '07_tensorrt_gemma_vllm_comparison.md' },
+            { text: '量化成熟框架对照', file: '07_tensorrt_gemma_vllm_comparison.md' },
             { text: '量化在 Serving Runtime 里的位置', file: '08_quantization_in_serving_runtime.md' },
           ]),
+        ],
+      },
+      {
+        text: '验证与优化',
+        collapsed: false,
+        items: [
           chapterGroup('07', '第 07 章 验证与基准测试', '/chapter07_benchmark', [
             { text: '测试框架搭建', file: '01_test_harness_setup.md' },
             { text: '端到端正确性', file: '02_e2e_correctness.md' },
@@ -232,42 +247,51 @@ function createSidebar() {
             { text: 'Benchmark 脚本', file: '04_benchmark_script.md' },
             { text: '优化建议', file: '05_optimization_tips.md' },
             { text: '结果解读', file: '06_result_interpretation.md' },
-            { text: '主流对照', file: '07_framework_comparison.md' },
+            { text: '主流框架 Benchmark 对照', file: '07_framework_comparison.md' },
           ]),
           chapterGroup('08', '第 08 章 性能归因', '/chapter08_profiling', [
             { text: 'Profiling 基础', file: '01_profiling_basics.md' },
             { text: '延迟拆解', file: '02_latency_breakdown.md' },
-            { text: '内存与带宽瓶颈', file: '03_memory_bandwidth.md' },
-            { text: 'Kernel 启动与 CUDA Graph', file: '04_kernel_launch_and_cuda_graph.md' },
+            { text: '进阶：内存与带宽瓶颈', file: '03_memory_bandwidth.md' },
+            { text: '进阶：Kernel 启动与 CUDA Graph', file: '04_kernel_launch_and_cuda_graph.md' },
             { text: 'A/B 对比实验', file: '05_ab_experiment.md' },
             { text: '优化闭环', file: '06_optimization_loop.md' },
-            { text: 'vLLM / nano-vLLM Profiling 阅读桥', file: '07_vllm_nano_vllm_profiling_bridge.md' },
+            { text: '选读：成熟框架 Profiling 阅读桥', file: '07_vllm_nano_vllm_profiling_bridge.md' },
+            { text: '进阶：真实 TinyLlama 服务 Profiling', file: '08_real_service_profile.md' },
+          ]),
+          chapterGroup('09', '第 09 章 服务扩展', '/chapter09_serving', [
+            { text: 'C++ Service Core', file: '01_service_core.md' },
+            { text: 'Transport 与 C++ 网络库', file: '02_transport.md' },
+            { text: '真实 ServiceCore Benchmark', file: '03_real_service_benchmark.md' },
+            { text: '真实模型 HTTP Completion', file: '04_real_http_completion.md' },
+            { text: 'Serving 框架对照', file: '05_framework_service_comparison.md' },
           ]),
         ],
       },
       {
-        text: '查阅与维护',
+        text: '查阅与扩展',
         collapsed: true,
         items: [
           { text: '开发参考总入口', link: '/guides/README' },
+          { text: '第一期 CPU 学习计划', link: '/guides/phase1_cpu_learning_plan' },
           { text: 'CMake 常用技巧', link: '/guides/cmake_guide' },
           { text: 'CUDA 安装与配置', link: '/guides/setup_cuda' },
-          { text: 'GTest 迁移预案', link: '/guides/gtest_migration' },
           { text: 'GGUF 解析', link: '/guides/gguf_parser' },
-          { text: '语言策略', link: '/guides/language_strategy' },
           { text: 'Foundation 题库', link: '/exercises/foundation/README' },
           { text: '设计参考总入口', link: '/reference/README' },
+          { text: '章节文档与代码资产', link: '/reference/chapter_assets' },
+          { text: '实验与验证资产', link: '/reference/experiment_assets' },
           { text: '训练框架 vs 推理框架', link: '/reference/framework_comparison' },
+          { text: '数据结构与算法资产表', link: '/reference/data_structures_algorithms' },
           { text: '推理引擎内存管理', link: '/reference/memory_management' },
+          { text: 'CPU 主线与 GPU 边界', link: '/reference/cpu_backend_architecture' },
+          { text: 'CPU / GPU 统一架构', link: '/reference/cpu_gpu_architecture' },
+          { text: '多模态推理输入链路', link: '/reference/multimodal_inference' },
+          { text: '公式索引', link: '/reference/formulas' },
           { text: '术语表', link: '/reference/glossary' },
           { text: '进一步阅读', link: '/reference/further_reading' },
           { text: 'FAQ', link: '/reference/faq' },
           { text: '生态对照', link: '/reference/ecosystem/README' },
-          { text: '维护文档总入口', link: '/maintenance/README' },
-          { text: '教程维护文档', link: '/maintenance/tutorial_maintenance' },
-          { text: '写作规范', link: '/maintenance/tutorial_writing_guidelines' },
-          { text: '章节模板', link: '/maintenance/chapter_template' },
-          { text: '收口模板', link: '/maintenance/summary_template' },
         ],
       },
     ],
@@ -277,6 +301,9 @@ function createSidebar() {
         collapsed: false,
         items: [
           { text: '总览', link: '/code/README' },
+          { text: 'Repository Engine First Success', link: '/code/engine' },
+          { text: 'CUDA 公共基础层', link: '/code/cuda' },
+          { text: '多模态 CPU 输入扩展', link: '/code/multimodal' },
           codeGroup('00', '第 00 章 起跑线', '/code/chapter00_quickstart'),
           codeGroup('01', '第 01 章 模型权重与 Tensor 对象', '/code/chapter01_tensor_loader'),
           codeGroup('02', '第 02 章 Tensor 视图与共享存储', '/code/chapter02_tensor_ops'),
@@ -285,6 +312,8 @@ function createSidebar() {
           codeGroup('05', '第 05 章 生成运行时与 Serving 基础', '/code/chapter05_generation'),
           codeGroup('06', '第 06 章 量化', '/code/chapter06_quantization'),
           codeGroup('07', '第 07 章 验证与基准测试', '/code/chapter07_benchmark'),
+          codeGroup('08', '第 08 章 性能归因', '/code/chapter08_profiling'),
+          codeGroup('09', '第 09 章 服务扩展', '/code/chapter09_serving'),
         ],
       },
     ],

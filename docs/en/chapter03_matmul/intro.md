@@ -39,7 +39,7 @@ Continue to [summary](summary) or move to [the next chapter](/en/chapter04_atten
 
 ### Source Reading Suggestion
 
-- `chapter03_matmul`: read `Operator` first, then the CPU reference, then the cuBLAS backend
+- `chapter03_matmul`: read `Operator` first, then the implemented CPU reference, then the planned cuBLAS backend design
 - `chapter04_attention`: read `Multi-head Attention`, then `DecoderLayer`, then first-layer weight validation
 - `chapter05_generation`: read `Naive Generation`, then `KV Cache`, then `Sampler`
 - `chapter06_quantization`: read quantization basics, then `DequantizeOp`, then accuracy validation

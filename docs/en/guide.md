@@ -17,11 +17,10 @@ This tutorial moves along one inference-engine main line instead of being a loos
 | `chapter06` | representation and cost |
 | `chapter07` | verification and evidence |
 
-After `chapter07`, the main line moves into `reference`, `guides`, and `maintenance`:
+After `chapter07`, continue to profiling and serving, then use `reference` and `guides` as needed:
 
 - `reference`: concept explanations, terminology, and ecosystem comparison
 - `guides`: build, environment, migration, and engineering methods
-- `maintenance`: site maintenance, writing rules, and long-term closure
 
 If you want to understand the "control tower / engine" split first, read [training vs inference frameworks](/en/reference/framework_comparison). That page shows where Python frameworks, C++ engines, and the engine layer sit in the system.
 

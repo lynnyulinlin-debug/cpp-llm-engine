@@ -1,0 +1,46 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 620" role="img" aria-labelledby="title desc">
+  <title id="title">Tutorial code architecture</title>
+  <desc id="desc">公共契约连接章节实现、真实模型上下文、CUDA backend、多模态输入和服务扩展。</desc>
+  <defs>
+    <marker id="arrow" markerWidth="10" markerHeight="10" refX="8" refY="3" orient="auto"><path d="M0,0 L9,3 L0,6 Z" fill="#334155"/></marker>
+    <style>
+      .title { font-family: "Noto Sans CJK SC"; font-size: 28px; font-weight: 700; fill: #0f172a; }
+      .label { font-family: "Noto Sans CJK SC"; font-size: 16px; font-weight: 700; fill: #0f172a; }
+      .small { font-family: "Noto Sans CJK SC"; font-size: 14px; font-weight: 400; fill: #475569; }
+      .box { stroke: #334155; stroke-width: 2; rx: 13; }
+      .core { fill: #fef3c7; }
+      .chapter { fill: #dbeafe; }
+      .runtime { fill: #dcfce7; }
+      .service { fill: #fce7f3; }
+      .side { fill: #f1f5f9; }
+      .line { stroke: #334155; stroke-width: 2.5; fill: none; marker-end: url(#arrow); }
+      .connector { stroke: #334155; stroke-width: 2.5; fill: none; }
+      .dash { stroke: #64748b; stroke-width: 2; stroke-dasharray: 7 6; fill: none; marker-end: url(#arrow); }
+    </style>
+  </defs>
+  <rect width="1200" height="620" rx="24" fill="#f8fafc"/>
+  <text x="52" y="54" class="title">教程代码架构：公共契约、章节库与能力扩展</text>
+  <rect x="430" y="90" width="340" height="74" class="box" fill="#fef3c7"/>
+  <text x="600" y="120" text-anchor="middle" class="label">code/core</text>
+  <text x="600" y="146" text-anchor="middle" class="small">Tensor / Backend / Operator / Decoder Contracts</text>
+  <path d="M600 164 V195 M160 195 H1050" class="connector"/>
+  <g>
+    <rect x="60" y="220" width="200" height="82" class="box" fill="#dbeafe"/><text x="160" y="253" text-anchor="middle" class="label">Chapter01</text><text x="160" y="278" text-anchor="middle" class="small">Loader / GGUF / Model Build</text>
+    <rect x="285" y="220" width="200" height="82" class="box" fill="#dbeafe"/><text x="385" y="253" text-anchor="middle" class="label">Chapter02</text><text x="385" y="278" text-anchor="middle" class="small">View / Storage / contract()</text>
+    <rect x="510" y="220" width="200" height="82" class="box" fill="#dbeafe"/><text x="610" y="253" text-anchor="middle" class="label">Chapter03-04</text><text x="610" y="278" text-anchor="middle" class="small">Operator / Decoder Structure</text>
+    <rect x="735" y="220" width="200" height="82" class="box" fill="#dcfce7"/><text x="835" y="253" text-anchor="middle" class="label">Chapter05-06</text><text x="835" y="278" text-anchor="middle" class="small">Runtime / Quantization</text>
+    <rect x="960" y="220" width="180" height="82" class="box" fill="#fce7f3"/><text x="1050" y="253" text-anchor="middle" class="label">Chapter09</text><text x="1050" y="278" text-anchor="middle" class="small">Service / HTTP</text>
+  </g>
+  <path d="M160 195 V220" class="line"/>
+  <path d="M385 195 V220" class="line"/>
+  <path d="M610 195 V220" class="line"/>
+  <path d="M835 195 V220" class="line"/>
+  <path d="M1050 195 V220" class="line"/>
+  <rect x="45" y="370" width="250" height="92" class="box" fill="#f1f5f9"/><text x="170" y="398" text-anchor="middle" class="label">code/engine</text><text x="170" y="424" text-anchor="middle" class="small">1 Model -> N Context</text><text x="170" y="446" text-anchor="middle" class="small">Core Context -> Runtime</text>
+  <rect x="320" y="370" width="250" height="92" class="box" fill="#e0f2fe"/><text x="445" y="398" text-anchor="middle" class="label">code/cuda</text><text x="445" y="424" text-anchor="middle" class="small">Device / Stream / Workspace</text><text x="445" y="446" text-anchor="middle" class="small">cuBLAS / Quantized Linear</text>
+  <rect x="595" y="370" width="250" height="92" class="box" fill="#e8f0fa"/><text x="720" y="398" text-anchor="middle" class="label">code/multimodal</text><text x="720" y="424" text-anchor="middle" class="small">Vision / Projector</text><text x="720" y="446" text-anchor="middle" class="small">Embedding Composition</text>
+  <rect x="870" y="370" width="285" height="92" class="box" fill="#f1f5f9"/><text x="1012" y="405" text-anchor="middle" class="label">source / docs / tests</text><text x="1012" y="432" text-anchor="middle" class="small">正文、SVG、独立构建与回归</text>
+  <path d="M160 302 V340 H170 V370 M610 302 V340 H445 V370 M835 302 V340 H720 V370 M1050 302 V340 H1012 V370" class="dash"/>
+  <text x="600" y="535" text-anchor="middle" class="small">Core 契约对齐 CPU/CUDA backend、教学结构与真实 Model；Context 隔离请求状态。</text>
+  <text x="600" y="562" text-anchor="middle" class="small">Engine 适配执行；多模态扩展输入；Chapter05/09 负责请求推进、终态和资源释放。</text>
+</svg>

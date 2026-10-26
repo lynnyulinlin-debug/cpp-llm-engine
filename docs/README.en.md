@@ -8,7 +8,7 @@ first.
 
 The Chinese main line is now mostly complete. Current work focuses on English
 chapter bodies, residual wording cleanup, and the continued completion of the
-reference and maintenance layers.
+reference layer.
 
 ## Roles
 
@@ -17,7 +17,6 @@ reference and maintenance layers.
 - guide.md: how to read the tutorial
 - guides: engineering references for build, environment, and migration
 - reference: terminology, concept mapping, ecosystem comparison, and engine-layer analysis
-- maintenance: contributor-only maintenance rules and templates
 
 ## Engine Layer
 
@@ -97,5 +96,5 @@ npm run docs:build
 
 - Must-read for learners: `guide.md`, `chapter00_quickstart`, `foundation`
 - Must-read for engineering help: `guides/README.md`
-- Must-read for future contributors: `maintenance/tutorial_maintenance.md`, `maintenance/tutorial_writing_guidelines.md`
+- Contribution workflow: repository-level `CONTRIBUTING.md`
 - Optional reference: `reference/glossary.md`, `reference/framework_comparison.md`, `reference/ecosystem/`

@@ -1,0 +1,71 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1280" height="560" viewBox="0 0 1280 560" role="img" aria-labelledby="title desc">
+  <title id="title">C++ LLM 推理引擎教程知识概念图</title>
+  <desc id="desc">展示教程从 Foundation 和真实推理基线，经过 CPU 引擎主线，再扩展到 CUDA、多模态和服务的学习路径。</desc>
+  <defs>
+    <marker id="arrow" markerWidth="10" markerHeight="10" refX="8" refY="3" orient="auto">
+      <path d="M0,0 L0,6 L9,3 z" fill="#334155"/>
+    </marker>
+    <style>
+      .title { font-family: sans-serif; font-size: 27px; font-weight: 700; fill: #0f172a; }
+      .label { font-family: sans-serif; font-size: 16px; font-weight: 700; fill: #0f172a; }
+      .small { font-family: sans-serif; font-size: 14px; fill: #475569; }
+      .box { stroke: #334155; stroke-width: 2; rx: 15; }
+      .start { fill: #fef3c7; }
+      .engine { fill: #dbeafe; }
+      .runtime { fill: #dcfce7; }
+      .evidence { fill: #fce7f3; }
+      .side { fill: #e2e8f0; stroke-dasharray: 7 6; }
+      .line { stroke: #334155; stroke-width: 2.5; fill: none; marker-end: url(#arrow); }
+      .dash { stroke: #64748b; stroke-width: 2; stroke-dasharray: 7 6; fill: none; }
+    </style>
+  </defs>
+  <rect width="1280" height="560" fill="#f8fafc"/>
+  <text x="54" y="52" class="title">从真实推理基线到可解释的 C++ 推理引擎</text>
+
+  <rect x="54" y="130" width="190" height="92" class="box start"/>
+  <text x="149" y="167" text-anchor="middle" class="label">Foundation</text>
+  <text x="149" y="194" text-anchor="middle" class="small">C++ / CMake / CUDA / Test</text>
+  <rect x="290" y="130" width="190" height="92" class="box start"/>
+  <text x="385" y="167" text-anchor="middle" class="label">Chapter 00</text>
+  <text x="385" y="194" text-anchor="middle" class="small">llama.cpp / TinyLlama</text>
+  <path d="M244 176 H290" class="line"/>
+
+  <rect x="526" y="130" width="280" height="92" class="box engine"/>
+  <text x="666" y="167" text-anchor="middle" class="label">Chapter 01 - 04</text>
+  <text x="666" y="194" text-anchor="middle" class="small">Tensor -> Operator -> Decoder</text>
+  <path d="M480 176 H526" class="line"/>
+
+  <rect x="852" y="130" width="190" height="92" class="box runtime"/>
+  <text x="947" y="167" text-anchor="middle" class="label">Chapter 05</text>
+  <text x="947" y="194" text-anchor="middle" class="small">Request / KV / Scheduler</text>
+  <path d="M806 176 H852" class="line"/>
+
+  <rect x="1088" y="130" width="138" height="92" class="box evidence"/>
+  <text x="1157" y="167" text-anchor="middle" class="label">06 - 08</text>
+  <text x="1157" y="194" text-anchor="middle" class="small">量化 / 测量</text>
+  <path d="M1042 176 H1088" class="line"/>
+
+  <rect x="250" y="330" width="310" height="94" class="box side"/>
+  <text x="405" y="368" text-anchor="middle" class="label">CPU-first 主线</text>
+  <text x="405" y="396" text-anchor="middle" class="small">先跑通、先验证、保留 reference</text>
+  <rect x="660" y="330" width="310" height="94" class="box side"/>
+  <text x="815" y="368" text-anchor="middle" class="label">GPU optional 扩展（P1-2）</text>
+  <text x="815" y="396" text-anchor="middle" class="small">资源层 → cuBLAS → 量化 Linear</text>
+  <path d="M666 222 V280 H405 V330" class="dash"/>
+  <path d="M947 222 V280 H815 V330" class="dash"/>
+
+  <rect x="1000" y="330" width="226" height="94" class="box side"/>
+  <text x="1113" y="368" text-anchor="middle" class="label">真实框架对照</text>
+  <text x="1113" y="396" text-anchor="middle" class="small">llama.cpp / vLLM / SGLang</text>
+  <path d="M947 222 V280 H1113 V330" class="dash"/>
+
+  <rect x="1000" y="465" width="226" height="62" class="box runtime"/>
+  <text x="1113" y="491" text-anchor="middle" class="label">Chapter 09 服务扩展</text>
+  <text x="1113" y="514" text-anchor="middle" class="small">Chapter05 后可选深入</text>
+  <path d="M1113 424 V465" class="line"/>
+
+  <rect x="590" y="465" width="380" height="62" class="box engine"/>
+  <text x="780" y="491" text-anchor="middle" class="label">SmolVLM 多模态 CPU 扩展</text>
+  <text x="780" y="514" text-anchor="middle" class="small">Vision → Projector → 复用 LLM Runtime</text>
+  <path d="M405 424 V496 H590" class="dash"/>
+</svg>
