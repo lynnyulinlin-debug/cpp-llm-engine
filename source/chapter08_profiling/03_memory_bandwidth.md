@@ -1,8 +1,8 @@
 # 08.3 Memory and Bandwidth 内存与带宽瓶颈
 
-推理引擎不只受算力限制，也经常受内存和带宽限制。本页专门判断性能问题是否来自数据移动、分配和 cache 组织。
+推理引擎不只受算力限制，也经常受内存和带宽限制。性能分析需要判断问题是否来自数据移动、分配和 cache 组织。
 
-## 阅读入口
+**阅读入口**
 
 - 前置阅读：[`02.1 Shared Underlying Storage`](../chapter02_tensor_ops/01_shared_ptr_memory.md)、[`05.4 KV Cache`](../chapter05_generation/04_kv_cache.md)
 - 源码直达：<a href="../_code/chapter05_generation/src/kv_cache.cpp"><code>kv_cache.cpp</code></a>、<a href="../_code/chapter06_quantization/src/quantized_linear.cpp"><code>quantized_linear.cpp</code></a>、<a href="../_code/chapter06_quantization/src/dequantize_op.cpp"><code>dequantize_op.cpp</code></a>
@@ -45,4 +45,4 @@
 2. 再确认 `decode` 路径是否随着输出长度增长而放大
 3. 最后再看 `sampling`、`output` 是否只是当前样例较轻，还是本身就不是主成本
 
-这就是内存与带宽页要做的事：先帮助你排除“看起来像瓶颈、其实不是第一瓶颈”的方向。
+这就是内存与带宽页要做的事：先排除“看起来像瓶颈、但当前数据没有证明”的方向。

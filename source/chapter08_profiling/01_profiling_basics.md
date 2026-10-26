@@ -1,14 +1,14 @@
 # 08.1 Profiling Basics Profiling 基础
 
-benchmark 回答“快了多少”，profiling 回答“为什么这样”。本页先把这两件事拆开，避免看到一个性能数字后直接猜瓶颈。
+benchmark 回答“快了多少”，profiling 回答“为什么这样”。先把这两件事拆开，避免看到一个性能数字后直接猜瓶颈。
 
-## 阅读入口
+**阅读入口**
 
 - 前置阅读：[`chapter08 导读`](./intro.md)、[`07.3 Benchmark Metrics`](../chapter07_benchmark/03_benchmark_metrics.md)
 - 源码直达：<a href="../_code/chapter07_benchmark/src/benchmark.cpp"><code>benchmark.cpp</code></a>、<a href="../_code/chapter07_benchmark/src/test_helpers.cpp"><code>test_helpers.cpp</code></a>
 - 相关阅读：[`推理引擎 Profiling`](../reference/profiling.md)、[`08.2 Latency Breakdown`](./02_latency_breakdown.md)
 
-## 最小分工
+## 先看什么
 
 | 问题 | benchmark | profiling |
 | --- | --- | --- |
@@ -18,7 +18,7 @@ benchmark 回答“快了多少”，profiling 回答“为什么这样”。本
 
 最小原则是：没有 benchmark，不要谈优化收益；没有 profiling，不要轻易判断瓶颈原因。
 
-## 推理引擎里先看哪些层
+### 推理引擎里先看哪些层
 
 - 计算：MatMul、attention、dequantize、sampling
 - 内存：分配、拷贝、KV cache、workspace
@@ -27,7 +27,7 @@ benchmark 回答“快了多少”，profiling 回答“为什么这样”。本
 
 先把热点归到正确层级，再决定是否需要更细的工具。
 
-## 最小记录格式
+## 记录结果
 
 第一次做 profiling 时，不要直接写“attention 慢”或“cache 慢”。先写成可复查记录：
 
@@ -41,7 +41,7 @@ benchmark 回答“快了多少”，profiling 回答“为什么这样”。本
 
 这样写的好处是，后面即使结论错了，也能知道错在 benchmark、profiling 解释，还是实验设计。
 
-## 一个真实基线样例
+### 一个真实基线样例
 
 下面这组输出来自当前仓库里已经可运行的最小 benchmark demo：
 
@@ -75,7 +75,7 @@ benchmark: tokens=7, elapsed_ms=0.60
 
 但它还不能回答热点在哪个函数、同步点在哪里、有没有 cache miss。这正是 profiling 要补上的部分。
 
-## 再往下一层看什么
+### 再往下一层看什么
 
 如果阶段汇总显示 `prefill` 最重，下一步不要直接改代码，先补两类证据：
 

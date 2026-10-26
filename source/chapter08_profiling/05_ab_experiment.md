@@ -2,13 +2,13 @@
 
 优化结论必须能复查。A/B 实验的作用是把“我觉得快了”变成“在同一条件下，这个改动带来了可解释变化”。
 
-## 阅读入口
+**阅读入口**
 
 - 前置阅读：[`07.6 Result Interpretation`](../chapter07_benchmark/06_result_interpretation.md)、[`08.2 Latency Breakdown`](./02_latency_breakdown.md)
 - 源码直达：<a href="../_code/chapter07_benchmark/examples/main_benchmark.cpp"><code>main_benchmark.cpp</code></a>、<a href="../_code/chapter07_benchmark/scripts/run.sh"><code>run.sh</code></a>、<a href="../_code/chapter07_benchmark/tests/chapter07_benchmark_test.cpp"><code>chapter07_benchmark_test.cpp</code></a>
 - 相关阅读：[`回归测试`](../reference/regression_testing.md)、[`08.6 Optimization Loop`](./06_optimization_loop.md)
 
-## 最小实验纪律
+## 实验模板
 
 - 只改变一个变量
 - 固定模型、输入、batch、硬件和运行参数
@@ -18,7 +18,7 @@
 
 如果一次实验同时改 scheduler、cache 和 kernel，就算结果变快，也很难判断到底是哪一项生效。
 
-## 结果模板
+### 结果模板
 
 | 项目 | baseline | experiment | 结论 |
 | --- | --- | --- | --- |
@@ -31,7 +31,7 @@
 
 这个表的价值不是漂亮，而是逼迫优化结论同时回答收益和代价。
 
-## 一个可直接套用的实验记录
+### 一个可直接套用的实验记录
 
 ```markdown
 ## A/B Report
@@ -63,7 +63,7 @@
 - 理由：
 ```
 
-## 用当前基线先写一份 baseline 记录
+### 用当前基线先写一份 baseline 记录
 
 第一次补实验记录时，不要等“有优化之后”再写。先把 baseline 写出来：
 
@@ -99,9 +99,9 @@
 - 理由：当前只有 baseline，还没有单变量实验
 ```
 
-这份记录的作用不是得出结论，而是把后续实验需要补齐的字段先固定下来。下一步如果你改的是 scheduler 或 cache，就必须看它影响的是 `prefill`、`decode`，还是只是 `output`。
+这份记录先固定后续实验需要的字段。下一步如果你改的是 scheduler 或 cache，就必须看它影响的是 `prefill`、`decode`，还是只是 `output`。
 
-## 结构化记录长什么样
+## 结构化记录
 
 如果后续要把 benchmark / profiling 结果长期保存下来，纯文本摘要还不够。当前教程基线已经可以进一步导出结构化 JSON 样例，至少包含三层：
 

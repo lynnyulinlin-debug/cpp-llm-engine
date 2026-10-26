@@ -1,0 +1,17 @@
+experiment=tinyllama_q6k_down_single_variable
+correctness=PASS
+iterations=3
+forward_tokens_per_iteration=9
+baseline_backend=scalar
+experiment_backend=avx2
+baseline_ffn_down_ms=1355.8275
+experiment_ffn_down_ms=792.0788
+ffn_down_delta_percent=-41.5797
+baseline_ffn_ms=3890.5023
+experiment_ffn_ms=3255.1299
+ffn_delta_percent=-16.3314
+baseline_total_ms=5104.6891
+experiment_total_ms=4433.3283
+total_delta_percent=-13.1518
+decision=KEEP
+reason=down and total latency improved

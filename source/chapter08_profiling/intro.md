@@ -1,55 +1,59 @@
 # 08.0 Explain Why It Is Slow 性能归因与优化闭环
 
-这一章先回答一个优化问题：benchmark 已经告诉我们快慢变化之后，怎样解释原因，并把优化变成可复查的工程闭环？
+## 1. 本章位置与成功标准
 
-`chapter07` 负责证明系统“对不对、快多少”；本章负责继续追问“为什么快、为什么慢、下一步该改哪里”。它不新增一套独立 runtime，而是在已有 benchmark 结果上建立 profiling、A/B 实验和优化决策流程。
+Chapter 07 已经告诉我们结果变快还是变慢；本章继续追问原因，并把一次优化写成可复查的实验。
 
-## 本章和 vLLM / nano-vLLM 的联系
+```bash
+bash code/chapter08_profiling/scripts/run.sh
+```
 
-读 vLLM / nano-vLLM 时，很多性能结论都来自 profiling 和 A/B 对比：瓶颈可能在 prefill、decode、KV cache、scheduler、kernel launch、内存分配或数据搬运。本章先建立归因方法，把真实项目里的性能优化拆回可验证的层级。
+成功标准：能从 Chapter 07 教学 JSON 和 Chapter09 真实服务 JSON 生成阶段报告，执行 correctness-first 的 A/B 判定，并把真实 Decoder 热点收敛到可实验的子阶段。本章不重新实现 runtime，也不把无权限采集的 `perf` 数据写成结论。
 
-## 本章概览
+本章把 benchmark 结果转换成优化决策：先确认条件一致，再定位阶段和热点，最后决定保留、回滚或继续拆分。真实 TinyLlama 案例见 [`08.8 真实服务 Profiling`](./08_real_service_profile.md)。
 
-| 先看什么 | 这一节讲什么 | 为什么重要 | 对应小节 |
-| --- | --- | --- | --- |
-| profiling 和 benchmark 怎么分工 | 结果对照与原因解释 | 先避免把数字误当成原因 | [`08.1 Profiling Basics`](./01_profiling_basics.md) |
-| 延迟应该怎么拆 | prefill、decode、sampling、output | 先定位慢在哪个阶段 | [`08.2 Latency Breakdown`](./02_latency_breakdown.md) |
-| 内存和带宽怎么看 | 分配、拷贝、KV cache、带宽瓶颈 | 先判断是不是数据移动问题 | [`08.3 Memory and Bandwidth`](./03_memory_bandwidth.md) |
-| kernel launch 怎么影响性能 | CUDA Graph、launch overhead、同步点 | 先理解小 batch / decode 的固定开销 | [`08.4 Kernel Launch and CUDA Graph`](./04_kernel_launch_and_cuda_graph.md) |
-| A/B 实验怎么设计 | 固定变量、单点改动、回滚标准 | 先让优化结论可复查 | [`08.5 A/B Experiment`](./05_ab_experiment.md) |
-| 优化如何闭环 | hypothesis、change、measure、decide | 先把优化变成流程而不是猜测 | [`08.6 Optimization Loop`](./06_optimization_loop.md) |
-| 怎么读真实项目优化 | vLLM / nano-vLLM profiling 坐标 | 先把本章方法映射到开源项目 | [`08.7 vLLM / nano-vLLM Profiling 阅读桥`](./07_vllm_nano_vllm_profiling_bridge.md) |
-| 本章怎么收口 | profiling 和优化边界 | 让后续改动回到证据链 | [`08.8 本章小结`](./summary.md) |
+![Chapter 08 主图：Profiling 与优化闭环](../assets/diagrams/chapter08-main.svg)
 
-## 阅读入口
+## 2. 三种阅读深度
 
-- 前置阅读：[`chapter07_benchmark`](../chapter07_benchmark/intro.md)、[`07.6 Result Interpretation`](../chapter07_benchmark/06_result_interpretation.md)
-- 源码直达：<a href="../_code/chapter07_benchmark/src/benchmark.cpp"><code>benchmark.cpp</code></a>、<a href="../_code/chapter07_benchmark/src/test_helpers.cpp"><code>test_helpers.cpp</code></a>、<a href="../_code/chapter05_generation/src/runtime.cpp"><code>runtime.cpp</code></a>
-- 相关阅读：[`推理引擎 Profiling`](../reference/profiling.md)、[`推理引擎系统补强图`](../reference/inference_engine_systems.md)、[`回归测试`](../reference/regression_testing.md)
+完成本章后，可以：
 
-## 这章在解决什么
+- 区分 benchmark 的结果描述和 profiling 的原因解释
+- 拆分 prefill、decode、sampling、output、cache 和调度时间
+- 判断瓶颈属于计算、内存、同步、调度还是输入开销
+- 设计固定条件、单变量改动和明确回滚标准的 A/B 实验
+- 把一次优化记录成可以复现和回归的报告
 
-这一章只做一件事：把“性能数字”变成“可行动的优化判断”。当 benchmark 显示 token latency 变差时，归因范围应先覆盖 kernel、内存、调度、cache、输入和运行条件。
+首轮只学习“怎样从数据形成一个可回滚的优化决定”。内存带宽、kernel launch 和 CUDA Graph 属于硬件深入；真实 TinyLlama 案例和成熟框架阅读用于复盘，不是理解 A/B 方法的前置条件。
 
-## 这章怎么做
+| 深度 | 阅读范围 | 完成标志 |
+| --- | --- | --- |
+| 首轮必读 | Profiling Basics、Latency Breakdown、A/B Experiment、Optimization Loop | 能从固定 workload 得到 `KEEP/REJECT` 决定 |
+| 第二轮进阶 | Memory/Bandwidth、Kernel Launch/CUDA Graph、真实 TinyLlama 服务案例 | 能把阶段耗时下钻到资源或 kernel 假设 |
+| 按需选读 | vLLM / nano-vLLM Profiling 阅读桥 | 能在成熟框架中找到对应观测点 |
 
-本章使用一个固定流程：
+## 3. 阅读与源码顺序
 
-1. 先确认 benchmark 条件一致
-2. 再拆 prefill / decode / sampling / output
-3. 再判断热点属于计算、内存、调度还是流程开销
-4. 再设计只改变一个变量的 A/B 实验
-5. 最后按正确性、性能收益和复杂度决定保留或回滚
+首轮源码只看 <a href="../_code/chapter08_profiling/include/chapter08_profiling/profile_record.h"><code>profile_record.h</code></a> 和 <a href="../_code/chapter08_profiling/include/chapter08_profiling/ab_compare.h"><code>ab_compare.h</code></a>。真实案例再进入 JSON adapter 和 <a href="../_code/engine/examples/real_tinyllama_decoder_profile.cpp"><code>real_tinyllama_decoder_profile.cpp</code></a>。前置阅读是 [`Chapter07`](../chapter07_benchmark/intro.md)，原始结果、A/B 报告和复现入口统一从[实验与验证资产索引](../reference/experiment_assets.md)查询。
 
-本章的产物不是一个新 runtime，而是一份可以复查的优化记录。最小记录应包含：
+| 顺序 | 页面 | 读完后应看到什么 |
+| --- | --- | --- |
+| 1，必读 | [`08.1 Profiling Basics`](./01_profiling_basics.md)、[`08.2 Latency Breakdown`](./02_latency_breakdown.md) | benchmark 与 profiling 的分工、阶段拆分 |
+| 2，必读 | [`08.5 A/B Experiment`](./05_ab_experiment.md)、[`08.6 Optimization Loop`](./06_optimization_loop.md) | hypothesis -> change -> measure -> decide |
+| 3，进阶 | [`08.3 Memory and Bandwidth`](./03_memory_bandwidth.md)、[`08.4 Kernel Launch and CUDA Graph`](./04_kernel_launch_and_cuda_graph.md) | 内存、带宽、launch 和同步点 |
+| 4，进阶 | [`08.8 真实 TinyLlama 服务 Profiling`](./08_real_service_profile.md) | 从 ServiceCore 阶段进入 Decoder 子阶段和真实回归 A/B |
+| 5，选读 | [`08.7 vLLM / nano-vLLM Profiling 阅读桥`](./07_vllm_nano_vllm_profiling_bridge.md) | 将方法映射到成熟项目 |
 
-- benchmark 条件：硬件、模型、输入长度、输出长度、batch、dtype
-- profiling 结论：热点阶段、主要等待点、证据来源
-- A/B 对照：baseline、experiment、指标变化、正确性结果
-- 工程决策：保留、回滚，还是继续拆分下一轮实验
+## 4. 验证
 
-## 收口与下一步
+一次有效的优化记录至少包含：
 
-到本章结束，应能形成一份完整的优化记录：改了什么、为什么改、改善了哪个指标、有没有破坏正确性、是否值得保留。
+1. 硬件、模型、dtype、输入长度、输出长度和 batch
+2. baseline 与 experiment 的 correctness 结果
+3. prefill、decode、sampling、output 和 peak memory 指标
+4. trace / hotspot 证据和只改变的变量
+5. 保留、回滚或继续拆分的决定
 
-这章是主线从“能实现”走向“能优化”的入口。后续如果继续扩展代码，优先把 profiling 记录、A/B 报告和 benchmark 结果放到同一套可复查格式里。
+不要用单个吞吐数字直接归因；先确认 workload 相同，再区分计算、内存、同步和调度开销。Chapter 08 工具只验证报告字段和 A/B 判定，不替代 Nsight 等硬件 profiler。
+
+Q4_K gate/up、Q6_K down 与 Q4_K QKV/out 三组单变量 A/B 及组合后的 Decoder/ServiceCore 回归均判定 `KEEP`。`optimized-avx2` 已作为显式实验策略接入 Factory，默认服务仍使用 scalar；真实 Decoder 通过公共执行契约进入 Runtime。符号级 `perf` 采样属于环境允许时的补充证据，不是本章验收前提。

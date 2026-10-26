@@ -1,8 +1,8 @@
 # 08.2 Latency Breakdown 延迟拆解
 
-端到端 latency 是结果，不是原因。本页把一次生成请求拆成几个阶段，帮助你判断慢在哪里。
+端到端 latency 是结果，不是原因。把一次生成请求拆成几个阶段，再根据各阶段耗时定位慢点。
 
-## 阅读入口
+**阅读入口**
 
 - 前置阅读：[`08.1 Profiling Basics`](./01_profiling_basics.md)、[`05.9 Request 生命周期`](../chapter05_generation/08_request_lifecycle.md)
 - 源码直达：<a href="../_code/chapter05_generation/src/runtime.cpp"><code>runtime.cpp</code></a>、<a href="../_code/chapter05_generation/src/scheduler.cpp"><code>scheduler.cpp</code></a>、<a href="../_code/chapter07_benchmark/src/benchmark.cpp"><code>benchmark.cpp</code></a>

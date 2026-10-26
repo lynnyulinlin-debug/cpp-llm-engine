@@ -2,13 +2,13 @@
 
 性能优化不是不断加技巧，而是一条闭环：提出假设、修改实现、重新测量、解释结果、决定保留或回滚。
 
-## 阅读入口
+**阅读入口**
 
 - 前置阅读：[`08.5 A/B Experiment`](./05_ab_experiment.md)、[`07.5 Optimization Tips`](../chapter07_benchmark/05_optimization_tips.md)
 - 源码直达：<a href="../_code/chapter07_benchmark/src/benchmark.cpp"><code>benchmark.cpp</code></a>、<a href="../_code/chapter05_generation/src/runtime.cpp"><code>runtime.cpp</code></a>、<a href="../_code/chapter05_generation/src/kv_cache.cpp"><code>kv_cache.cpp</code></a>
 - 相关阅读：[`推理引擎系统补强图`](../reference/inference_engine_systems.md)、[`08.7 vLLM / nano-vLLM Profiling 阅读桥`](./07_vllm_nano_vllm_profiling_bridge.md)
 
-## 最小闭环
+## 优化步骤
 
 ```text
 benchmark -> hypothesis -> profiling -> change -> benchmark -> decision
@@ -23,7 +23,7 @@ benchmark -> hypothesis -> profiling -> change -> benchmark -> decision
 - benchmark：改动是否产生可复查收益？
 - decision：保留、回滚，还是继续拆？
 
-## 保留优化的条件
+### 保留优化的条件
 
 一个优化至少要同时满足三件事：
 
@@ -33,7 +33,7 @@ benchmark -> hypothesis -> profiling -> change -> benchmark -> decision
 
 如果只满足第二项，它更像一次实验结果，还不是可以进入主线的工程改动。
 
-## 什么时候不要继续优化
+### 什么时候不要继续优化
 
 下面几种情况应该先停下来，而不是继续叠优化：
 
@@ -45,7 +45,7 @@ benchmark -> hypothesis -> profiling -> change -> benchmark -> decision
 
 这不是保守，而是工程边界。推理引擎优化最终要进入长期维护，不能只看一次跑分。
 
-## 用当前教程代码走一遍最小闭环
+### 用当前教程代码走一遍闭环
 
 拿 `chapter07_benchmark_demo` 的真实输出，可以先走一遍不引入任何新优化技巧的最小闭环：
 
@@ -58,7 +58,7 @@ benchmark -> hypothesis -> profiling -> change -> benchmark -> decision
 
 这条示例故意很小，因为教程当前要先建立“证据链”习惯，而不是堆优化技巧。
 
-## 为什么还要结构化输出
+## 结构化输出
 
 当阶段计时、trace 事件和 hotspot 表都已经出现之后，再往前一步就是把它们收进同一份结构化结果。原因很直接：
 

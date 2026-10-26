@@ -1,0 +1,38 @@
+{
+  "schema_version": 1,
+  "benchmark": "tinyllama_service_core_cpu",
+  "model": "TinyLlama-1.1B-Chat-v1.0.Q4_K_M",
+  "device": "cpu",
+  "execution_policy": "scalar",
+  "environment": {
+    "hardware_concurrency": 32,
+    "cpu_model": "AMD Ryzen 9 9955HX 16-Core Processor",
+    "compiler": "gcc 13.1.0",
+    "build_type": "Release"
+  },
+  "warmup": 1,
+  "iterations": 3,
+  "request_count": 2,
+  "max_new_tokens_per_request": 4,
+  "prompt_tokens": [6, 1],
+  "one_time_ms": {"tokenizer_load": 25.731692, "model_load": 193.145696},
+  "metrics_ms": {
+    "prefill_compute": {"min": 3960.458933, "mean": 3977.475392, "p50": 3960.81819, "max": 4011.149053},
+    "decode_compute": {"min": 3567.981483, "mean": 3595.746561, "p50": 3586.525274, "max": 3632.732925},
+    "runtime_overhead": {"min": 0.161862, "mean": 0.1645543333, "p50": 0.165491, "max": 0.16631},
+    "dispatch": {"min": 7528.965983, "mean": 7573.386507, "p50": 7547.149698, "max": 7644.04384},
+    "end_to_end": {"min": 7528.979227, "mean": 7573.399755, "p50": 7547.163403, "max": 7644.056634},
+    "request_a_ttft": {"min": 3362.732829, "mean": 3376.428711, "p50": 3368.4834, "max": 3398.069904},
+    "request_b_ttft": {"min": 3960.501553, "mean": 3977.516606, "p50": 3960.858245, "max": 4011.190019},
+    "request_a_completion": {"min": 6933.218228, "mean": 6977.954071, "p50": 6952.80643, "max": 7047.837555},
+    "request_b_completion": {"min": 7528.964881, "mean": 7573.385338, "p50": 7547.148385, "max": 7644.042748}
+  },
+  "throughput_tokens_per_second": {"min": 1.046566473, "mean": 1.056377402, "p50": 1.060002825, "max": 1.062562909},
+  "correctness": {
+    "all_iterations": true,
+    "request_a_golden": "29892 306 29915 29885",
+    "request_b_golden": "839 744 29892 263",
+    "context_and_cache_isolation": true,
+    "terminal_resources_released": true
+  }
+}
