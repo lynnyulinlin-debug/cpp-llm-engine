@@ -1,8 +1,6 @@
 # 00.6 Deploy vLLM 部署 serving baseline
 
-这一节是可选内容。`chapter00` 的必做目标仍然是跑通 `llama.cpp` 本地推理；部署 `vLLM` 的作用，是提前看一眼真实推理服务长什么样。
-
-`vLLM` 在这里不是本教程要复刻的实现，而是一个 serving baseline。你只需要确认服务能启动、模型能加载、HTTP 请求能返回文本。
+本节用 `vLLM` 建立可选 serving baseline，验证服务启动、模型加载和 HTTP 文本返回。`chapter00` 的主验证仍是 `llama.cpp` 本地推理。
 
 **阅读入口**
 
@@ -12,19 +10,13 @@
 
 ## 运行前判断
 
-适合做：
+运行本节需要：
 
 - 你有可用 NVIDIA GPU 和 Docker 环境
-- 你希望先体验 OpenAI-compatible server
-- 你想提前建立 `request -> server -> model -> response` 的服务化直觉
+- 已准备 Hugging Face 模型访问和缓存目录
+- 希望体验 `request -> server -> model -> response` 的 OpenAI-compatible server
 
-可以跳过：
-
-- 当前机器没有合适 GPU
-- 只想先完成 C++ 推理引擎主线
-- 还没有准备 Hugging Face 模型访问和缓存目录
-
-跳过这一节不会影响后面的 `chapter01` 到 `chapter07`。
+当前机器没有合适 GPU 或 Docker 时，在完成 `llama.cpp` 首次推理后直接进入 `chapter01_tensor_loader`。
 
 ## 启动和请求
 
@@ -70,9 +62,9 @@ curl http://localhost:8000/v1/chat/completions \
 
 ## 结果和后续
 
-这里不需要深入源码，只观察四件事：
+本次部署观察四件事：
 
-- 服务不是一次性命令，而是常驻进程
+- 服务以常驻进程运行
 - 请求通过 HTTP 进入 runtime
 - 模型加载后可以连续处理请求
 - 输出以 OpenAI-compatible API 形式返回
@@ -88,8 +80,6 @@ curl http://localhost:8000/v1/chat/completions \
 | 量化模型影响显存和速度 | `chapter06_quantization` |
 | 服务性能需要 benchmark | `chapter07_benchmark` |
 
-### 失败时怎么办
+### 范围与失败处理
 
-这一节只做部署体验，不解释 `PagedAttention`、continuous batching、block manager 或调度策略。这些内容会在 `chapter05_generation` 里逐步回到主线。
-
-如果这一节失败，先不要阻塞主线。只要 `llama.cpp` 的首次推理已经跑通，就可以继续进入 `chapter01_tensor_loader`。
+`PagedAttention`、continuous batching、block manager 和调度策略在 `chapter05_generation` 展开。本节启动失败时记录 GPU、镜像和模型加载错误；`llama.cpp` 首次推理通过后即可继续 Chapter01。

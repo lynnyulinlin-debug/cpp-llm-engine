@@ -1,14 +1,13 @@
 # 推理引擎 Profiling
 
-Profiling 参考页讲清 benchmark 之后如何使用 profiling。
-`chapter07_benchmark` 已经把正确性和性能收口成证据链，`chapter08_profiling` 会把这部分内容放进主线；Profiling 参考页集中解释证据背后的瓶颈。
+Benchmark 衡量性能变化，Profiling 定位时间消耗在 kernel、内存、调度、数据搬运还是并发等待。
 
-## 1. 这页要解决什么
+## 1. Benchmark 之后看什么
 
 benchmark 回答的是“快了多少、慢了多少”。  
 profiling 回答的是“为什么会这样”。
 
-如果没有 profiling，读者就只能看到数字，不能判断改动到底落在：
+定位性能变化时，需要继续判断改动落在：
 
 - kernel
 - 内存
@@ -16,7 +15,7 @@ profiling 回答的是“为什么会这样”。
 - 数据搬运
 - 并发竞争
 
-这对推理引擎来说不够，因为真正的优化要先知道瓶颈在哪一层。
+瓶颈位置决定应该优化 kernel、数据布局、调度还是并发控制。
 
 ## 2. benchmark 和 profiling 的分工
 
@@ -66,7 +65,7 @@ benchmark 是证据，profiling 是证据说明书。
 
 | 章节 | 已经做了什么 | profiling 继续补什么 |
 | --- | --- | --- |
-| `chapter07_benchmark` | 正确性、benchmark、结果收口 | 为什么快、为什么慢 |
+| `chapter07_benchmark` | 正确性、benchmark、结果记录 | 为什么快、为什么慢 |
 | `chapter08_profiling` | profiling、A/B 对比、优化闭环 | 把瓶颈解释变成可执行优化流程 |
 | `chapter05_generation` | 生成 runtime 骨架 | runtime 内部哪个环节在吃时间 |
 | `chapter06_quantization` | 表示和成本变化 | 误差和成本变化到底落在哪一层 |
@@ -80,5 +79,6 @@ profiling 是把 benchmark 的结论变成下一步优化动作的桥梁。
 - 最后回到这里找瓶颈归因的切入点
 - 最后再决定是改 runtime、改内存，还是改后端
 
-如果只保留一句话：  
-benchmark 告诉你结果，profiling 告诉你原因。
+## 核心结论
+
+Benchmark 衡量结果，Profiling 解释原因。

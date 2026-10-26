@@ -55,7 +55,7 @@ Tensor dequantize(const Tensor& q, float scale) {
 
 - 先支持最基础的 INT8 到浮点转换
 - 保持接口和后续 Linear 可直接连接
-- 不要把反量化逻辑散落在多个算子里
+- 由统一反量化接口复用格式解析和错误检查
 
 ## 验证与排查
 

@@ -81,7 +81,7 @@ Tensor y = matmul_op.forward(x, w);
 
 源码锚点：`code/chapter03_matmul/include/chapter03_matmul/matmul_op.h`
 
-这个例子不是为了展示代码量，而是为了强调：前端接口要稳定，后端执行要可替换。
+这个例子展示稳定前端接口与可替换后端执行之间的分工。
 
 常见问题：
 

@@ -1,6 +1,6 @@
 # 09.2 Transport 与 C++ 网络库
 
-本页只讨论 HTTP/SSE 如何接到 Chapter09。网络库负责连接、请求解析、响应写出和连接事件；`ServiceCore`、metrics 和 streaming contract 继续由 Chapter09 维护。
+HTTP/SSE 通过 Transport Adapter 接入 Chapter09。网络库处理连接、请求解析、响应写出和连接事件，`ServiceCore` 处理请求状态、metrics 和 streaming contract。
 
 ## 传输层边界
 
@@ -71,7 +71,7 @@ public:
 6. 再增加 Beast/Asio transport，复用同一组 contract tests。
 7. 对两种 transport 比较并发、TTFT、吞吐、断开和超时行为。
 
-网络库不是 Chapter09 ServiceCore 的替代品。它只替换最外层 transport；如果接入网络库需要修改队列、Request 终态、metrics 字段或 token event 格式，应先修正适配层，而不是扩大 ServiceCore 职责。
+网络库替换最外层 transport，并通过稳定适配接口复用队列、Request 终态、metrics 字段和 token event 格式。接入差异优先在适配层处理。
 
 ## 验证入口
 

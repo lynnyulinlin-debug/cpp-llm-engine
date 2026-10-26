@@ -1,6 +1,6 @@
-# Reference 设计参考
+# Reference 查阅索引
 
-这里放的是概念解释、对比分析、术语索引和继续阅读材料。它面向“想理解设计”的读者，而不是正在改代码的读者。
+这里汇总概念解释、系统对比、术语公式、实验资产和外部项目阅读入口。
 
 ## 内容范围
 
@@ -27,10 +27,7 @@
 
 ## 怎么用
 
-- 理解概念、术语或生态定位时，可以从这里查
-- 编写代码时，这里不是第一入口
-- 这些页面以解释和对比为主，不展开成主线正文
-
-## 图片资源
-
-图片资源统一放在 `source/assets/diagrams/`，正文使用相对路径 `../assets/diagrams/<name>.svg` 引用。`docs/assets` 是站点源码树的映射，`docs/.vitepress/public/diagrams` 仅保留旧站点 URL 的兼容映射。提交文档时必须同时提交对应 SVG；`npm run docs:check-links` 会检查源码相对路径、生成 HTML 中的 `href` 和图片 `src`，避免只提交正文而遗漏图片资源。
+- 查术语和公式时，进入 `glossary.md` 或 `formulas.md`
+- 查章节代码、图片和验证入口时，进入 `chapter_assets.md`
+- 查性能实验和复现命令时，进入 `experiment_assets.md`
+- 对照成熟框架时，先读 `framework_comparison.md`，再进入 `ecosystem/`

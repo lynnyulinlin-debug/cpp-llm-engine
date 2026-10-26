@@ -1,182 +1,121 @@
-# 推理引擎系统补强图
+# 推理引擎系统组件图
 
-推理引擎系统参考页集中说明当前教程覆盖的推理引擎能力，以及后续需要补充的系统能力。
-主线已经覆盖 `Tensor`、算子、decoder、生成 runtime、量化和 benchmark；完整的推理引擎教程还需要继续补充运行时、内存、profiling、输入链路和服务化。
+一次推理请求会依次经过输入处理、调度、模型执行、状态更新和输出。下面的组件图把章节中分别实现的对象放回同一条请求路径，便于定位代码和排查问题。
 
-## 1. 教程覆盖到哪里
+## 1. 请求经过哪些阶段
 
-推理引擎系统参考页回答一个问题：主线现有章节之外，还缺哪几块系统能力，应该按什么顺序补。
+| 阶段 | 主要对象 | 输入与输出 | 对应章节 |
+| --- | --- | --- | --- |
+| 输入处理 | Tokenizer、Prompt Template、ModelConfig | 文本和模型文件 → token、配置与权重 | Chapter00-01 |
+| 数据与计算 | Tensor、Operator、Backend、Decoder | token 与权重 → hidden state、logits | Chapter02-04、06 |
+| 生成运行时 | Request、Scheduler、KV Cache、Sampler | prompt token → 逐 token 输出 | Chapter05 |
+| 验证与归因 | Golden、Benchmark、ProfileRecord | 执行结果 → 正确性和性能证据 | Chapter07-08 |
+| 服务接入 | ServiceCore、HTTP Adapter、ResponseWriter | 外部请求 → 同步响应或 SSE | Chapter09 |
 
-把这个问题说清楚有两个作用：
+## 2. 五组系统组件
 
-- 读者不会把“教程已经写完主线”误解成“推理引擎系统已经完整”
-- 后续补章或补节时，可以沿着同一条系统分层继续推进，而不是到处散着补
+### 输入组件
 
-## 2. 运行时系统层
+输入组件把文本、图片和模型文件转换成执行路径能够消费的对象：
 
-最像“推理引擎”和“普通 forward 代码”的分界线，不在算子本身，而在请求是怎么被持续推进的。
+- tokenizer 和 prompt template 生成 token 序列
+- GGUF reader、metadata adapter 和 model builder 生成模型对象
+- 多模态 preprocessor、Vision Encoder 和 Projector 生成视觉 embedding
 
-最小生成 runtime 解决的是“能逐 token 输出”，但真实引擎还需要这些能力：
+输入契约的详细字段见[推理引擎输入链路](./input_pipeline.md)。
 
-- 请求生命周期管理
-- 并发请求管理
-- continuous batching
-- backpressure
-- 请求取消
-- 超时处理
-- 流式输出
-- 优先级队列
+### 控制组件
 
-这些能力决定的是系统行为，不是单个算子行为。  
-如果它们不显式化，教程就很容易停留在“单请求能跑”的层面，而不是“多请求能持续服务”的层面。
+`Request` 保存输入、生成历史和终态，`Scheduler` 决定每个 step 推进哪些请求。服务入口负责 admission、取消和超时，终态路径负责通知输出并释放请求资源。
 
-### 建议的理解顺序
+控制组件需要回答：
 
-1. 先看请求如何进入系统
-2. 再看请求如何进入 `prefill` 和 `decode`
-3. 再看调度器如何决定推进谁
-4. 再看并发请求如何共享同一套 runtime 资源
-5. 最后再看取消、超时和流式输出如何接入
+- 请求何时进入 waiting、running 和 terminal 状态
+- prefill 与 decode 如何进入同一个调度循环
+- 多请求如何共享执行资源并保持 Context 隔离
+- 取消、超时和失败如何结束输出并归还资源
 
-## 3. 内存管理
+更完整的状态和调度说明见[推理引擎运行时](./runtime_systems.md)。
 
-引擎里最容易被低估的部分，往往不是模型结构，而是内存。
+### 执行组件
 
-现有主线已经讲了 `Tensor`、view 语义和 `KV Cache`，但一个更完整的引擎还要回答这些问题：
+`Runtime` 组织生成步骤，`Executor` 把一次执行交给模型，`Operator` 固定计算语义，`Backend` 选择 CPU、CUDA 或外部库实现。
 
-- allocator 怎么设计
-- memory pool 怎么复用
-- workspace 怎么分配
-- 碎片怎么控制
-- host / device staging 怎么做
-- stream 同步和对象生命周期怎么对齐
+```text
+Runtime -> Executor -> Operator -> Backend -> Kernel
+```
 
-如果没有统一的内存管理，系统会出现两个典型问题：
+这条路径让 CPU reference 和 CUDA backend 使用相同输入输出契约。数值错误可以沿 shape、Operator、Backend、kernel 的顺序定位。
 
-- 功能能跑，但内存不断抖动，性能和稳定性都不稳
-- 代码里每个模块都各自申请和释放，最后没人知道资源边界在哪里
+### 资源组件
 
-### 和现有主线的关系
+权重与模型同生命周期，workspace 与执行上下文同生命周期，KV Cache 与请求同生命周期。资源组件统一管理：
 
-- `chapter02` 已经说明了 view 和共享存储
-- `chapter05` 已经引入 `KV Cache`
-- 但“共享什么、复用什么、什么时候释放、怎么避免碎片”还没有系统讲完
+- Tensor storage 与 view
+- 模型权重和量化 payload
+- CPU/CUDA workspace
+- 请求级 KV Cache
+- host/device staging buffer
 
-这部分更像是推理引擎的基础设施层，不是单章算子层。
+所有权、复用和释放顺序见[推理引擎内存管理](./memory_management.md)。
 
-## 4. 请求输入链路
+### 证据与观测组件
 
-推理引擎不只接收权重，也接收用户请求。  
-输入链路已经单独展开成 [推理引擎输入链路](./input_pipeline.md)。
+正确性测试确认输出是否可信，benchmark 测量固定 workload，profiling 解释时间消耗，metrics 观察持续服务状态。
 
-这里先保留最重要的判断：如果只讲模型权重如何进入程序，还不算完整输入链路。  
-tokenizer、prompt template、special tokens、stop criteria、max length、pad / truncation 都会影响后面的 runtime 行为。
-
-## 5. Profiling
-
-`chapter07` 已经把 benchmark 和正确性测试分开了，但 benchmark 只能回答“快不快”，不能回答“为什么快或慢”。
-
-profiling 要补的是解释层，重点看这些东西：
-
-- 热点落在哪个阶段
-- 是 kernel 慢，还是内存慢
-- 是调度开销高，还是数据搬运高
-- 是单次执行慢，还是请求并发时被放大
-
-### benchmark 和 profiling 的区别
-
-| 问题 | benchmark | profiling |
+| 证据 | 回答的问题 | 典型产物 |
 | --- | --- | --- |
-| 结论 | 快多少 | 为什么快 / 慢 |
-| 关注点 | 稳定对照 | 热点和瓶颈 |
-| 输入要求 | 固定条件可复查 | 固定条件下定位原因 |
-| 输出形态 | 数字和对照表 | 热点、耗时分布、调用路径 |
+| 单元测试 | 局部 shape、数值和状态是否正确 | CTest 结果 |
+| Golden | 真实模型路径是否与独立 reference 一致 | token、logits、checksum |
+| Benchmark | 固定条件下延迟和吞吐是多少 | JSON result |
+| Profiling | 时间和内存主要消耗在哪里 | phase、trace、hotspot |
+| Service metrics | 请求是否完成并释放资源 | accepted、completed、failed、inflight |
 
-这两者必须分开。  
-benchmark 用来做决策，profiling 用来解释决策。
-
-## 6. 服务化基础
-
-如果目标是“推理引擎”，那系统最后总会走向服务化。  
-服务化基础已经单独展开成 [推理引擎服务化基础](./service_basics.md)。
-
-最基础的服务化能力包括限流、SLA、请求取消、健康检查、日志和指标。  
-这些能力决定了系统是不是“只给单个本地进程用”，还是“可以作为一个持续服务运行”。
-
-## 7. 从章节回到系统组件
-
-章节按依赖关系拆开实现，系统视角再把它们组合起来。下面的映射用于定位知识入口，不表示开发进度。
-
-| 系统组件 | 章节入口 | 组合后回答的问题 |
-| --- | --- | --- |
-| 输入与模型对象 | `chapter00`、`chapter01` | 文本、tokenizer、metadata 和权重怎样进入引擎 |
-| Tensor 与计算 backend | `chapter02`、`chapter03`、`chapter04` | 数据怎样表示，算子怎样落到 CPU/GPU 实现 |
-| Generation Runtime | `chapter05` | Request、prefill/decode、Sampler 和 KV 状态怎样推进 |
-| 权重表示 | `chapter06` | 量化格式怎样改变加载、Linear 和误差 |
-| 验证与归因 | `chapter07`、`chapter08` | 怎样证明结果正确、性能变化来自哪里 |
-| 服务核心 | `chapter09` | admission、队列、HTTP/SSE 和资源释放怎样接到 Runtime |
-
-## 8. 最小推理引擎架构图
+## 3. 系统结构
 
 ```mermaid
 flowchart LR
     Client[Client / API] --> Input[Input Pipeline]
     Input --> Request[Request]
 
-    subgraph Control[控制面]
+    subgraph Control[控制组件]
         Queue[Waiting Queue]
         Scheduler[Scheduler]
     end
 
-    subgraph RuntimeLayer[运行时]
+    subgraph RuntimeLayer[执行组件]
         Runtime[Generation Runtime]
         Executor[Executor]
-    end
-
-    subgraph Compute[计算面]
         Operator[Operator]
-        Backend[Backend]
-        Kernel[CPU / CUDA / Library Kernel]
+        Backend[CPU / CUDA Backend]
     end
 
-    subgraph Resources[资源层]
+    subgraph Resources[资源组件]
         Tensor[Tensor / Weights]
         Cache[KV Cache]
-        Memory[Allocator / Memory Pool]
+        Memory[Workspace / Memory Pool]
     end
 
     Request --> Queue --> Scheduler --> Runtime
-    Runtime --> Executor --> Operator --> Backend --> Kernel
+    Runtime --> Executor --> Operator --> Backend
     Tensor --> Operator
     Memory --> Tensor
     Memory --> Cache
     Cache <--> Runtime
     Runtime --> Output[Streaming / Output]
 
-    Runtime -. observes .-> Trace[Benchmark / Profiling]
-    Executor -. verified by .-> Tests[Regression Tests]
+    Runtime -. metrics .-> Observe[Benchmark / Profiling]
+    Executor -. golden .-> Tests[Regression Tests]
 ```
 
-这张图把系统分成四条边界：
+## 4. 从问题定位入口
 
-- **控制面**：`Request`、队列和 `Scheduler` 决定哪些请求在当前 step 推进
-- **运行时**：`Runtime` 保存生成状态，`Executor` 负责组织一次具体执行
-- **计算面**：`Operator` 定义计算语义，`Backend` 选择实现，kernel 或库完成实际计算
-- **资源层**：`Tensor`、权重、`KV Cache` 和内存管理共同决定数据在哪里、如何复用和何时释放
-
-主执行链是：
-
-```text
-Request -> Scheduler -> Runtime -> Executor -> Operator -> Backend -> Kernel
-```
-
-这不是严格的调用栈。`Runtime` 会同时读写 `KV Cache`，`Executor` 会消费 `Tensor` 和权重，`Benchmark / Profiling` 与回归测试则从旁观察和验证这条链路。
-
-## 10. 这页和主线怎么接
-
-- `chapter05` 负责把 decoder 变成最小 runtime
-- `chapter07` 负责把正确性和性能收口成证据链
-- `chapter08` 负责解释性能证据并记录优化前后的决定
-- 推理引擎系统参考页负责把“最小 runtime”继续扩展到完整引擎系统
-
-如果要继续补中文主线，推理引擎系统参考页可以作为系统层的总索引，后面新增内容也尽量沿着这些小节继续展开。
+| 观察到的问题 | 先检查 | 阅读入口 |
+| --- | --- | --- |
+| token 或模型配置错误 | tokenizer、metadata、tensor schema | Chapter01、[输入链路](./input_pipeline.md) |
+| shape 或数值错误 | Tensor view、Operator、CPU reference | Chapter02-04 |
+| 长上下文结果异常 | position、KV append、请求 Context | Chapter05、[内存管理](./memory_management.md) |
+| 多请求卡住或资源未释放 | Request 终态、Scheduler、ServiceCore | Chapter05、Chapter09 |
+| 量化输出偏差 | block layout、scale、Linear backend | Chapter06 |
+| 性能下降 | workload、阶段计时、hotspot | Chapter07-08、[Profiling](./profiling.md) |
+| HTTP/SSE 行为异常 | adapter、ResponseWriter、terminal callback | Chapter09、[服务化基础](./service_basics.md) |

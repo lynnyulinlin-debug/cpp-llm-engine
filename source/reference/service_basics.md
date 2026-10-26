@@ -1,14 +1,10 @@
 # 推理引擎服务化基础
 
-服务化基础讲清推理引擎如何从本地程序进入持续服务。
-主线在 `chapter05_generation` 和 `chapter07_benchmark` 里已经碰到一些服务化语义，服务化基础把它们收成最基础的运行规则。
+推理服务把外部请求转换为 Runtime 动作，并处理 admission、取消、超时、输出和指标。
 
-## 1. 这页要解决什么
+## 1. 服务接入需要处理什么
 
-如果系统已经有多请求、流式输出和资源复用，那么它就不再只是一个 demo。  
-这时就必须开始回答服务化问题。
-
-服务化基础聚焦最基础的服务化能力，以及它们如何落到 `Request`、`Scheduler` 和资源回收上。
+多请求、流式输出和资源复用需要明确的接入规则，并落实到 `Request`、`Scheduler` 和资源回收。
 
 ## 2. 服务化最小集合
 
@@ -83,7 +79,7 @@ SLA 解决的是“系统承诺的响应边界是什么”。
 | 章节 | 已经做了什么 | 服务化页继续补什么 |
 | --- | --- | --- |
 | `chapter05_generation` | 最小 generation runtime、streaming callback | 如何把 runtime 变成可持续服务 |
-| `chapter07_benchmark` | 验证、对照和结果收口 | 服务化场景下如何读结果 |
+| `chapter07_benchmark` | 验证、对照和结果记录 | 服务化场景下如何读结果 |
 | `reference/runtime_systems.md` | 请求生命周期、continuous batching、backpressure | 面向外部服务的最小规则 |
 
 服务化基础先固定 production serving 的基础语义。
@@ -96,5 +92,6 @@ SLA 解决的是“系统承诺的响应边界是什么”。
 - 再看 `reference/inference_engine_systems.md`
 - 系统开始对外接请求后，用服务化基础检查服务规则是否清楚
 
-如果只保留一句话：  
-服务化基础决定了引擎是不是能持续对外工作。
+## 核心结论
+
+服务化规则让引擎能够持续接收请求、输出结果并回收资源。

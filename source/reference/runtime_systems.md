@@ -1,14 +1,10 @@
 # 推理引擎运行时
 
-运行时系统参考讲清推理引擎和单次 `forward` 的差异。
-主线在 `chapter05_generation` 已经把最小生成 runtime 立住了，运行时系统参考把它往更接近真实 serving runtime 的方向推进。
+Generation Runtime 持续推进 Request，并协调 Scheduler、KV Cache、输出和终态资源释放。
 
-## 1. 这页要解决什么
+## 1. Runtime 管理的状态
 
-这页只回答一个问题：一个推理引擎的运行时，除了能逐 token 输出，还应该显式管理什么。
-
-如果不把这些东西单独讲出来，读者很容易把“模型能生成”误解成“引擎已经完整”。  
-但真正的引擎，关键差别在于它能不能持续接请求、调度请求、控制资源和处理异常。
+单次 `forward` 产生一组数值结果；Runtime 还要持续接收和调度请求、控制资源、处理异常并输出生成事件。
 
 ## 2. 运行时的核心边界
 
@@ -49,7 +45,7 @@
 
 ## 4. 并发请求和 continuous batching
 
-真正的 serving 场景不会永远只有一个请求。
+生产 Serving 通常需要同时管理多个请求。
 
 最小 runtime 可以先只服务单请求，但系统设计上必须预留这些能力：
 
@@ -98,7 +94,7 @@ backpressure 解决的是：
 | --- | --- | --- |
 | `chapter05_generation` | generation runtime、chunked prefill、基础公平性、token/block-budget batch | 抢占、优先级和并行 batch executor |
 | `chapter06_quantization` | 稳定 runtime 上的表示变化 | 资源边界和调度边界继续保持清楚 |
-| `chapter07_benchmark` | 验证和证据收口 | 运行时缺口对应的性能和稳定性问题 |
+| `chapter07_benchmark` | 验证和结果记录 | 运行时缺口对应的性能和稳定性问题 |
 | `chapter09_serving` | waiting/running 队列、`dispatch_step()`、Block KV ownership、终态释放 | device K/V payload、抢占和业务优先级 |
 
 运行时系统参考页在主线 runtime 骨架上继续补充服务化能力。

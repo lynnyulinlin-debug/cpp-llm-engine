@@ -75,6 +75,6 @@ bash code/chapter01_tensor_loader/run.sh
 8. 同一个只读 Model 创建的两个请求 Context 分别维护 position 和分层 K/V，输出不互相污染
 9. 教学 Decoder 与真实 Model 都能输出合法结构契约，真实 Context 能通过公共执行接口完成 prefill/decode
 
-不要把 toy tokenizer 当作 TinyLlama 的真实 tokenizer；Chapter 00 的真实 tokenizer 由 `llama.cpp` 提供，本章同时验证真实 tokenizer adapter 和 layer-0 权重进入 CPU 计算前的边界。
+Toy tokenizer 用于验证接口和测试夹具；Chapter 00 的 TinyLlama tokenizer 由 `llama.cpp` 提供，本章同时验证真实 tokenizer adapter 和 layer-0 权重进入 CPU 计算前的契约。
 
 **下一章：**程序已经知道模型里有什么、用户输入是什么；Chapter 02 在不复制 storage 的情况下实现 `reshape` 和 `slice`。
