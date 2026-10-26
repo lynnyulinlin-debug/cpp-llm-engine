@@ -63,6 +63,8 @@
 
 只运行与修改类型匹配的检查不代表可以跳过明显受影响的回归。
 
+Pull request 会自动运行 `.github/workflows/ci.yml`。CI 只覆盖无模型、无网络服务和无 GPU 的默认路径；涉及真实模型、CUDA、transport 或性能实验时，贡献者仍需按下表提供对应的本地验证结果。
+
 | 修改范围 | 必须运行 |
 | --- | --- |
 | Markdown、SVG、导航或链接 | `npm run docs:check-structure`、`npm run docs:check-links`、`npm run docs:check-style`、`npm run docs:check-reference` |

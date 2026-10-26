@@ -4,7 +4,13 @@
 
 _A Practical Tutorial for Building a C++ LLM Inference Engine_
 
+[![CPU and docs CI](https://github.com/lynnyulinlin-debug/cpp-llm-engine/actions/workflows/ci.yml/badge.svg)](https://github.com/lynnyulinlin-debug/cpp-llm-engine/actions/workflows/ci.yml)
+
 这是一套中文优先、以 C++ 为实现主线、CPU 可完整学习、GPU 可选加速的推理引擎工程教程。目标是从真实模型基线出发，逐步构建可以自行修改和验证的推理服务框架。
+
+主图从上到下展示学习阶段、代码骨架和能力扩展。CPU 主线负责形成完整推理服务，CUDA 替换执行后端，多模态扩展输入路径，成熟框架用于核对工程策略。
+
+![cpp-llm-engine 教程主图](source/assets/diagrams/tutorial-concept-map.svg)
 
 ## 开始学习
 
@@ -18,7 +24,7 @@ Foundation 负责补工具链和语言能力，Chapter 00 负责建立真实推�
 
 学习路径遵循同一条证据链：真实模型基线、算法与数据契约、最小 C++ 实现、测试或 benchmark、成熟框架工程坐标。完成主线后，学习者应能连接权重加载、Tensor、Operator、Decoder、Generation Runtime 和 ServiceCore，并能判断一次实现或优化是否有可复现证据。
 
-Python 只在 Attention、调度或缓存等复杂算法中作为短小的讲解语言，不形成第二套实现。`llama.cpp`、Tiny-VLLM、nano-vLLM、vLLM、SGLang、TensorRT-LLM 和 DeepInfer 用于回答不同工程问题，不替代本教程的稳定 C++ 主线。
+Python 用于解释复杂算法并提供独立数值参考，不形成第二套运行时。`llama.cpp`、Tiny-VLLM、nano-vLLM、vLLM、SGLang、TensorRT-LLM 和 DeepInfer 用于回答不同工程问题，不替代本教程的稳定 C++ 主线。
 
 主线覆盖单机 CPU 推理服务和可选的单消费级 NVIDIA GPU backend，并以多模态作为复用现有 Runtime 的扩展方向。多 GPU、模型并行、分离式部署、集群 KV 存储和生产级多租户属于进阶设计参照，不作为当前可运行能力承诺。
 
@@ -78,12 +84,6 @@ GPU 阶段面向单机、单张 NVIDIA 消费级显卡，CPU 路径始终保留�
 | 最低显存 | 尚未确定，等待 4/6/8 GB 限额或设备实测 |
 | 发布证据 | 模型、context、并发数、权重、KV、workspace、runtime 和峰值显存 |
 
-## 教程地图
-
-下面这张图展示教程从基础、真实推理基线到自研 Runtime、验证和 GPU 扩展的学习路径。跨章节的数据结构、算法、代码入口和验证产物见[数据结构与算法资产表](source/reference/data_structures_algorithms.md)。
-
-![教程知识概念图](source/assets/diagrams/tutorial-concept-map.svg)
-
 ## 章节入口
 
 主线顺序固定为：
@@ -109,17 +109,13 @@ Chapter09 虽然放在总主线末尾，但服务化专题可以在完成 Chapte
 | [`chapter08_profiling`](source/chapter08_profiling/intro.md) | 归因与优化层 | Profiling 证据和 A/B 对比 | 阶段、trace、hotspot 和优化决策 |
 | [`chapter09_serving`](source/chapter09_serving/intro.md) | 服务扩展层 | C++ Service Core、动态 batch、Block KV、HTTP/SSE | 可测试的最小 CPU 推理服务 |
 | [`code/cuda`](code/cuda/README.md) | GPU 执行扩展 | 设备资源、量化 Linear、RoPE、连续 KV、GQA、合成 Decoder | CPU/CUDA 数值对照与设备 CTest |
-| [`code/multimodal`](code/multimodal/README.md) | 多模态输入扩展 | 动态切图、Vision Encoder、Projector、embedding 拼接 | SmolVLM CPU 输入与 Decoder golden |
+| [`code/multimodal`](code/multimodal/README.md) | 多模态输入扩展 | 动态切图、Vision Encoder、Projector、embedding 拼接 | SmolVLM CPU Decoder、ServiceCore 与 profiling golden |
 | [`guides`](source/guides/README.md) | 工程参考层 | 构建、环境、迁移和工程方法 | 按需使用的操作指南 |
 | [`reference`](source/reference/README.md) | 解释层 | 术语、生态对照、概念映射 | 跨章节查询入口 |
 
 ## 使用文档
 
-如果你要选择学习路线和运行代码，阅读 [USAGE.md](USAGE.md)；准备修改和提交时阅读 [CONTRIBUTING.md](CONTRIBUTING.md)；搭建环境或查看 CPU / GPU 分界线时阅读 [docs/guide.md](docs/guide.md)。下面两张图分别展示公共契约、章节库、Engine、服务扩展之间的关系，以及从单章 CTest 到全局回归和文档检查的验证层次。
-
-![教程代码架构图](source/assets/diagrams/code-architecture.svg)
-
-![教程测试流水线图](source/assets/diagrams/test-pipeline.svg)
+如果你要选择学习路线和运行代码，阅读 [USAGE.md](USAGE.md)；准备修改和提交时阅读 [CONTRIBUTING.md](CONTRIBUTING.md)；搭建环境或查看 CPU / GPU 分界线时阅读 [docs/guide.md](docs/guide.md)。完整代码架构图也放在阅读指南中，不在 README 重复展开。
 
 ## 进阶优化路线
 
@@ -143,13 +139,19 @@ Chapter09 虽然放在总主线末尾，但服务化专题可以在完成 Chapte
 - [docs/README.md](docs/README.md)
 - [docs/README.en.md](docs/README.en.md)
 - [docs/guide.md](docs/guide.md)
-- [docs/index.md](/)
+- [docs/index.md](docs/index.md)
 - [source/reference/README.md](source/reference/README.md)
 - [source/reference/chapter_assets.md](source/reference/chapter_assets.md)
 - [source/reference/experiment_assets.md](source/reference/experiment_assets.md)
 - [source/reference/formulas.md](source/reference/formulas.md)
 - [source/reference/glossary.md](source/reference/glossary.md)
 - [source/reference/ecosystem/README.md](source/reference/ecosystem/README.md)
+
+## 验证闭环
+
+默认 CPU 回归负责无模型、无网络、无 GPU 环境下的主线稳定性；真实模型、transport、性能、CUDA 和多模态实验使用各自入口补充证据。验证从局部数值与状态开始，逐步收口到章节脚本、全局回归和文档发布检查。
+
+![教程验证证据图](source/assets/diagrams/test-pipeline.svg)
 
 ## 构建与检查
 
@@ -164,6 +166,8 @@ npm run test:regression
 ```
 
 `test:regression` 是不依赖 GGUF、网络下载或 GPU 的默认 CPU 回归。真实模型、cpp-httplib transport、性能实验和现有 CUDA 设备测试使用各自的可选验证入口，不包含在这条命令中。
+
+GitHub Actions 会在 `main` push 和 pull request 上执行文档风格、链接构建与默认 CPU 回归。真实模型、GPU 和 socket 验证继续使用各自的本地入口。
 
 如果你的环境需要指定镜像：
 

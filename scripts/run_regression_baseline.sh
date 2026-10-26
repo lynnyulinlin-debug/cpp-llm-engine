@@ -109,7 +109,7 @@ run_and_check \
 
 run_and_check \
     chapter07 \
-    "cd '${repo_root}' && bash code/chapter07_benchmark/scripts/run.sh" \
+    "cd '${repo_root}' && CHAPTER07_RESULT_DIR='${tmp_dir}/chapter07-results' bash code/chapter07_benchmark/scripts/run.sh" \
     "unit checks: true" \
     "e2e checks: true" \
     "100% tests passed, 0 tests failed out of 8"
