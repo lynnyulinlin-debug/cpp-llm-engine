@@ -1,6 +1,8 @@
 # Tutorial Maintenance 教程维护文档
 
-本文档面向未来的项目贡献者，定义这套教程的最终维护规范。核心目标是让主线一直清晰、可走通、可验证，并且支持后续持续增量而不破坏整体结构。
+本文档面向负责教程结构和长期治理的维护者，定义跨章节的稳定维护规范。学习路线和运行入口以仓库根目录的 `USAGE.md` 为准，常规修改与提交要求以 `CONTRIBUTING.md` 为准。
+
+下面的“当前交接快照”是早期历史记录，不作为当前实现状态或任务优先级的权威来源；后续维护应将稳定规则保留在本文，将阶段状态留在版本历史和项目管理工具中。
 
 ## 0. 当前交接快照
 
@@ -8,7 +10,7 @@
 
 ### 0.1 项目目标
 
-当前教程定位是“推理引擎原理 + 最小实现 + 验证”的中文主线教程。它不是直接复刻 `vLLM`、`SGLang`、`TensorRT-LLM` 或 `llama.cpp`，而是用可读、可运行、可验证的 C++ 最小实现帮助学习者建立推理引擎的核心心智模型，再在合适位置挂上开源项目阅读坐标。
+教程定位、能力范围、模块职责和结构变更条件统一维护在 [`tutorial_positioning.md`](./tutorial_positioning.md)。本文件记录仓库维护方法和历史状态，不再维护第二份定位定义。
 
 主线目标保持三件事：
 
@@ -23,6 +25,7 @@
 - `source/` 是中文教程正文源头，后续正文修改优先改这里
 - `docs/` 是 VitePress 站点入口和在线映射层，大部分章节目录通过软链接指向 `source/`
 - `code/` 是每章最小实现源码，文档里的“源码直达”应指向这里的具体文件
+- `code/` 下的源码、头文件、测试和示例使用统一文件头；当前检查器先覆盖已完成的 `core` 和 `engine`，各章节补齐后再扩大检查范围
 
 站点相关结构：
 
@@ -44,7 +47,7 @@
 - 为 `chapter05` 增加 request lifecycle、continuous batching、block KV cache 相关小节
 - 为 `chapter06` 增加量化在 serving runtime 中位置的小节
 - 新增 `chapter08_profiling`，覆盖 profiling、latency breakdown、memory bandwidth、CUDA Graph、A/B 实验和优化闭环
-- 收敛 `chapter00` 到 `chapter08` 的 intro / summary 风格，恢复并统一“本章概览”
+- 收敛 `chapter00` 到 `chapter08` 的 intro 风格，统一章节导读、源码顺序和验证入口
 - 将同章小节链接改为源码可点击的 `./xxx.md`
 - 将跨章文档链接改为源码可点击的 `../chapter_xxx/xxx.md`
 - 将正文中的“源码直达”从 `/code/chapterXX` 或 `/code/chapterXX#anchor` 改为具体源码文件链接
@@ -119,6 +122,7 @@ git diff --stat
 维护与参考：
 
 - `source/maintenance/tutorial_maintenance.md`
+- `source/maintenance/tutorial_positioning.md`
 - `source/maintenance/tutorial_writing_guidelines.md`
 - `source/reference/README.md`
 - `source/reference/framework_comparison.md`
@@ -172,8 +176,8 @@ git diff --stat
 
 建议后续按优先级推进：
 
-1. 优先审查并精修 `chapter05_generation`：确认它已经稳定承担“运行时主线章”的职责，而不是再次滑回组件说明；重点看 `intro / summary / request lifecycle / KV cache / vLLM bridge`
-2. 回看 `chapter00` 到 `chapter08` 的 summary 是否还存在“回看源码”过厚或与 intro 重复的问题
+1. 优先审查并精修 `chapter05_generation`：确认它已经稳定承担“运行时主线章”的职责，而不是再次滑回组件说明；重点看 `intro / request lifecycle / KV cache / vLLM bridge`
+2. 检查 `chapter00` 到 `chapter08` 的兼容页和旧链接，确认章节收口已经统一迁移到 intro
 3. 按 `chapter01` 到 `chapter04` 的方式继续审查 `chapter06`、`chapter07` 正文小节层级，优先合并重复标题，不删减正文信息
 4. `chapter08_profiling` 的最小工程证据链已基本收口；后续优先转向其他章节，而不是继续扩成 profiler 工具
 5. 做一次全教程标题层级审计，确认正文、intro、summary、sidebar 四类入口的命名规则已经一致
@@ -424,7 +428,7 @@ V2 的重点是：
 
 ## 7. Google Test 迁移预案
 
-如果未来 `chapter07` 的测试复杂度继续上升，GTest 的迁移预案已经单独放在 [gtest_migration.md](../guides/gtest_migration.md)。
+如果未来 `chapter07` 的测试复杂度继续上升，GTest 的迁移预案已经单独放在 [gtest_migration.md](./gtest_migration.md)。
 
 那页会回答：
 
@@ -598,10 +602,10 @@ npm run docs:dev
 
 正文模板规则固定如下：
 
-- `intro.md` 必须有可跳转的 `本章概览`
-- `summary.md` 必须使用固定的收口结构，不允许临时改成别的尾页风格
+- `intro.md` 必须有可跳转的章节导读，并承载定位、顺序和验证
+- `summary.md` 迁移期间只保留旧链接兼容页，不再扩展独立收口结构
 - 章节正文的标题编号要和章节号保持一致，避免 `05.x`、`04.x`、`07.x` 混写
-- 同一章内，intro 和 summary 的结构尽量保持同类章节一致，减少读者重新适应成本
+- 同一章内，intro 的结构保持一致，减少读者重新适应成本
 
 ### 10.3 语言规则固定
 
@@ -609,7 +613,7 @@ npm run docs:dev
 - 必要技术名词可以保留英文，例如 `Tensor`、`MatMul`、`KV Cache`
 - `docs/README.md` 和生态索引页可以中英混排
 - 其他正文不要用大段英文模板
-- 语言策略的完整约定见 [language_strategy.md](../guides/language_strategy.md)
+- 语言策略的完整约定见 [language_strategy.md](./language_strategy.md)
 
 ### 10.4 章节间代码复用方式
 
@@ -640,13 +644,11 @@ npm run docs:dev
 - 正文
   - 一个概念点对应一个实现步骤
   - 每一步都有可运行或可验证的结果
-- `summary.md`
-  - 本章解决了什么
-  - 本章关键结论
-  - 下一步是什么
-  - 收口结论
-  - 边界说明
-  - 进阶扩展
+- `intro.md`
+  - 本章位置与成功标准
+  - 内容地图
+  - 阅读与源码顺序
+  - 验证与下一章提示
 
 ## 11. 章节完成验收
 

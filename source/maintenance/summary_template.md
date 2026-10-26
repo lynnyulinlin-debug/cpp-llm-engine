@@ -1,98 +1,17 @@
-# Summary Template 章节收口模板
+# Summary Template 章节小结兼容页
 
-这个模板用于 `summary.md`。目标是让中文主线更稳定，同时给非中文母语学习者留出最小但有用的英文锚点。
+中文主线不再把 `summary.md` 作为独立学习页面。章节结论、验证和下一步统一写在 `intro.md`，保证学习者只有一个章节入口。
 
-## 建议结构
+迁移期间保留旧文件，避免历史链接失效。兼容页只保留标题和一个指向 `intro.md` 的链接，不重新复制正文内容。
 
-### 1. 本章解决了什么
+## 写作约束
 
-- 用中文说明这一章解决的核心问题
-- 用 2 到 4 句把边界讲清楚
-
-### 2. 为什么它重要
-
-- 说明这一章为什么现在必须出现
-- 说明后续章节依赖它什么
-
-### 3. 背景回顾
-
-- 用一小段话回顾这一章最关键的背景
-- 说明读者为什么在这里需要它
-
-### 4. 中间推导回顾
-
-- 回顾这一章是怎么从问题走到方案的
-- 说明最关键的设计转折点是什么
-
-### 5. 本章产物与验证
-
-- 列出本章结束时新增的具体能力或产物
-- 每项能力都写明验证方式、输入条件或通过标准
-
-### 6. 边界说明
-
-- 明确这一章不做什么
-- 明确哪些更复杂的问题留给后续章节或附录
-
-### 7. 下一步是什么
-
-- 用一句话说明自然的下一章
-- 说明为什么它是顺着来的，不是硬切的
-
-### 8. 回看源码
-
-- 先看哪一个源码文件
-- 哪个测试最能验证这章
-- 如果只想快速复习，先看哪个入口
-
-### 9. Checks
-
-- If you change docs or links in this chapter, run `npm run docs:check-links` first
-- Then run `npm run docs:build`
-- If the build still fails, check routes and anchors before changing the prose
-
-## 示例写法
-
-```md
-## 本章解决了什么
-
-...
-
-## 为什么它重要
-
-...
-
-## 背景回顾
-
-...
-
-## 中间推导回顾
-
-...
-
-## 本章产物与验证
-
-完成本章后，应能得到一个可运行的最小实现，并通过对应测试验证其行为。
-
-## 边界说明
-
-...
-
-## 下一步是什么
-
-...
+- 不在兼容页重复 intro、框架对照表或源码入口
+- 不在兼容页新增背景、推导、复盘或下一步导航
+- 需要详细系统说明时链接到 `reference/`，不在兼容页展开
 
 ## Checks
 
-- If you change docs or links in this chapter, run `npm run docs:check-links` first
-- Then run `npm run docs:build`
-- If the build still fails, check routes and anchors before changing the prose
-```
-
-## 维护原则
-
-- 中文正文负责讲清楚内容
-- 英文锚点如需保留，放到英文镜像页里单独维护
-- 不在收口里重复全文
-- 每章保持同一结构，不随意变体
-- 背景和中间推导不是可选项，正文里应稳定保留
+- `npm run docs:check-links`
+- `npm run docs:build`
+- `git diff --check`

@@ -4,6 +4,5 @@
 
 - [guides/README.md](../guides/README.md)：开发参考
 - [reference/README.md](../reference/README.md)：设计参考
-- [maintenance/README.md](../maintenance/README.md)：维护文档
 
 如果你还在访问旧链接，优先切换到上面的新入口。
