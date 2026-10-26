@@ -39,7 +39,7 @@ Q4_K_M 还会让后续章节遇到真实的 Q4_K/Q6_K 权重，而不是只处�
 
 先确认 `llama.cpp` 已经完成克隆。目录名中的 `.` 是项目目录名的一部分，不是文件扩展名，也不是隐藏目录标记；不要在尚未克隆时先创建 `llama.cpp` 空目录。
 
-如果之前已经误执行过 `mkdir -p llama.cpp/models`，保留这个目录即可，先把它整体改名为占位目录，再克隆真正的仓库：
+如果之前已经误执行过 `mkdir -p llama.cpp/models`，保留这个目录即可，先把它整体改名为占位目录，再克隆 llama.cpp 源码仓库：
 
 ```bash
 cd /data/cpp-llm-engine

@@ -1,6 +1,6 @@
 # Further Reading 进一步阅读
 
-这个页面收集主教程之外最值得继续看的内容。
+完成主线后，可以按系统实现、Serving、性能和模型交付四个方向继续阅读。
 
 ## 1. 加深主线
 
@@ -39,14 +39,3 @@
 - `guides/setup_cuda.md`
 - `guides/gguf_parser.md`
 - `reference/faq.md`
-
-## 7. 先统一术语
-
-- `reference/glossary.md`
-- 先把 `Tensor`、`MatMul`、`KV Cache`、`scheduler` 这些核心词写统一
-
-## 8. 检查链接
-
-- 先跑 `npm run docs:check-links`
-- 再跑 `npm run docs:build`
-- 如果还是报错，优先看站点路由和锚点

@@ -8,7 +8,7 @@ F09 把前面的 C++、CMake、测试和资源管理组合成一个可增长的�
 | --- | --- | --- |
 | 单文件 | `main.cpp` + executable | 第一次构建成功 |
 | 可复用逻辑 | `include/` + `src/` + library | app 和 test 共享实现 |
-| 工程收口 | library + app + test + CTest | 可独立验证和持续扩展 |
+| 完整工程 | library + app + test + CTest | 可独立验证和持续扩展 |
 | CUDA 扩展 | `.cu` target + `ENABLE_CUDA` | CPU baseline 与 GPU backend 并存 |
 
 ## 2. 最小构建图
@@ -51,7 +51,7 @@ cmake --build build
 ctest --test-dir build --output-on-failure
 ```
 
-对应练习见 [Foundation 正文与练习映射](./exercise_map.md)：FQ04 验证 CMake/CTest，FQ12 验证 workspace 所有权，FQ17 验证三者组合。工程收口后进入 Chapter 00 和 Chapter 01。
+对应练习见 [Foundation 正文与练习映射](./exercise_map.md)：FQ04 验证 CMake/CTest，FQ12 验证 workspace 所有权，FQ17 验证三者组合。完成后进入 Chapter 00 和 Chapter 01。
 
 ## 5. 总结
 

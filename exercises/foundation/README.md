@@ -21,8 +21,8 @@
 | `FQ13` | 主线 | Shape-aware Batch | sequence length、padding、buffer offset | `chapter05` |
 | `FQ14` | 主线 | Step Scheduler | FIFO、token budget、round-robin | `chapter05` |
 | `FQ15` | 主线 | KV Block Pool | block 分配、释放、复用 | `chapter05` / `reference` |
-| `FQ16` | 收口 | Prefill/Decode State | 阶段迁移、token 计数、终态 | `chapter05` |
-| `FQ17` | 收口 | Minimal Project Integration | library、app、test、workspace 所有权 | `F09` / `chapter00` / `chapter01` |
+| `FQ16` | 综合 | Prefill/Decode State | 阶段迁移、token 计数、终态 | `chapter05` |
+| `FQ17` | 综合 | Minimal Project Integration | library、app、test、workspace 所有权 | `F09` / `chapter00` / `chapter01` |
 
 每道题都包含问题说明、完成标准、验证命令、提示和主线链接。题目入口：
 
@@ -77,8 +77,8 @@ bash exercises/foundation/run_all.sh
 | --- | --- | --- |
 | 入门必做 | `FQ01`、`FQ02`、`FQ04`、`FQ05` | 构建小型 C++ 程序，处理所有权、shape 和错误输入 |
 | CPU 主线 | `FQ03`、`FQ06`、`FQ08`、`FQ12` | 理解 view、CPU 算子、Tensor ownership 和 workspace |
-| Runtime 收口 | `FQ07`、`FQ09`、`FQ11`、`FQ13`、`FQ14`、`FQ15`、`FQ16` | 理解 Request、batch、scheduler、KV block 和 Prefill/Decode |
-| 工程收口 | `FQ17` | 把 library、app、test 和资源所有权组合成可运行项目 |
+| Runtime 综合练习 | `FQ07`、`FQ09`、`FQ11`、`FQ13`、`FQ14`、`FQ15`、`FQ16` | 理解 Request、batch、scheduler、KV block 和 Prefill/Decode |
+| 工程整合 | `FQ17` | 把 library、app、test 和资源所有权组合成可运行项目 |
 | CUDA 选修 | `FQ10` | 先写 CPU reference，再把索引逻辑映射到 CUDA kernel |
 
 推荐总顺序：`FQ01 -> FQ02 -> FQ04 -> FQ05 -> FQ03 -> FQ06 -> FQ08 -> FQ12 -> FQ17 -> FQ07 -> FQ09 -> FQ11 -> FQ13 -> FQ14 -> FQ15 -> FQ16`，有 CUDA 环境再插入 `FQ10`。
@@ -107,7 +107,7 @@ bash exercises/foundation/run_all.sh
 
 ## Foundation 完成标准
 
-完成入门组后，学习者应能独立构建和测试 C++ 小程序；完成 CPU 主线和 FQ17 后，应能读懂 Chapter 00-03 的项目组织、对象和算子；完成 Runtime 收口后，应能进入 Chapter 05 阅读 Request、Scheduler、KV Cache 和 Prefill/Decode。题库参考实现的 CTest 通过不等于学习完成，学习者还需要把 starter 改完并运行对应验证。
+完成入门组后，学习者应能独立构建和测试 C++ 小程序；完成 CPU 主线和 FQ17 后，应能读懂 Chapter 00-03 的项目组织、对象和算子；完成 Runtime 综合练习后，应能进入 Chapter 05 阅读 Request、Scheduler、KV Cache 和 Prefill/Decode。题库参考实现的 CTest 通过不等于学习完成，学习者还需要把 starter 改完并运行对应验证。
 
 ## 运行全部题目
 

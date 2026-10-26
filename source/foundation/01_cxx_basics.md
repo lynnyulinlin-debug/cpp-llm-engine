@@ -42,7 +42,7 @@ class Buffer {
 
 验证时回答三个问题：资源由谁释放？移动后源对象是什么状态？返回大对象是否需要手写 `new/delete`？
 
-对应练习见 [Foundation 正文与练习映射](./exercise_map.md)，直接完成 `FQ01`；工程收口再完成 `FQ17`。
+对应练习见 [Foundation 正文与练习映射](./exercise_map.md)：`FQ01` 验证所有权，`FQ17` 验证完整最小工程。
 
 ## 5. 总结
 

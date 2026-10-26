@@ -31,4 +31,4 @@
 - Chapter04：模型层、Attention backend 和权重映射
 - Chapter05：Request、Scheduler、Continuous Batching 和 Block KV
 - Chapter07-08：服务 workload、吞吐/延迟指标和 profiling
-- Chapter09：EngineCore、worker 与服务入口的职责边界
+- Chapter09：EngineCore、worker 与服务入口的分工

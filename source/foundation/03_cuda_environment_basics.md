@@ -48,7 +48,7 @@ CUDA_HOME=/usr/local/cuda-12.8 bash code/cuda/scripts/run.sh
 | `CudaStatus` | 保留 CUDA 错误码、操作名和可读信息 | 人工错误和 launch 错误能转成 core `Status` |
 | `DeviceBuffer` | move-only 所有权、零长度和显式释放 | `cudaMalloc/cudaFree` 与移动后源对象变空 |
 | `PinnedHostBuffer` | 页锁定 host 内存和可重叠复制前提 | `cudaMallocHost/cudaFreeHost`、移动和重复释放 |
-| `CudaStream` / `CudaEvent` | 异步顺序、同步边界和 GPU elapsed time | 同一 stream 串联 H2D、kernel、D2H 并由 event 收口 |
+| `CudaStream` / `CudaEvent` | 异步顺序、同步边界和 GPU elapsed time | 同一 stream 串联 H2D、kernel、D2H，并由 event 记录完成时间 |
 | 同步/异步 H2D/D2H | host 指针、offset、容量和 stream 边界 | 真实 kernel 前后数据正确，无效句柄和越界在入队前拒绝 |
 | `CudaElementwiseBackend` | grid/block、非整除边界和 backend 设备身份 | Vector Add 与 CPU golden 一致，固定 workload 用 event 多轮计时 |
 

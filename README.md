@@ -12,9 +12,17 @@ _A Practical Tutorial for Building a C++ LLM Inference Engine_
 
 ![cpp-llm-engine 教程主图](source/assets/diagrams/tutorial-concept-map.svg)
 
-## 开始学习
+## Quick Start
 
-第一次使用只从 [USAGE.md](USAGE.md) 开始。它给出环境检查、最短运行命令、Chapter 00-09 顺序，以及 Foundation、CUDA 和多模态的进入条件。
+准备好 CMake、C++17 编译器、Node.js 和 npm 后，先运行无需模型文件的轻量回归：
+
+```bash
+npm install
+npm run test:regression
+bash code/chapter00_quickstart/run.sh
+```
+
+随后按 [Chapter 00](source/chapter00_quickstart/intro.md) 准备 `llama.cpp` 和 TinyLlama GGUF，运行第一次真实推理。完整学习顺序与可选扩展见 [USAGE.md](USAGE.md)。
 
 ## 教程定位
 
