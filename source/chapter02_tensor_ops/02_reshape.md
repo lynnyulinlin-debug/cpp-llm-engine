@@ -1,7 +1,7 @@
 # 02.2 Reshape 重塑
 
 
-## 这一页要解决什么
+## 用 Reshape 改变 Tensor 视图
 
 实现只改变形状、不复制数据的 `reshape` 操作。
 
@@ -27,28 +27,25 @@
 - 保持数据总元素数一致
 - 保持底层存储句柄不变
 
-`reshape` 的关键约束是“元素总数必须不变”。如果新旧 shape 的元素数不同，这个操作就不再是视图变换，而是在请求一份不同的数据布局，应该直接拒绝。
+`reshape` 的关键约束有两个：元素总数必须不变，当前 view 必须逻辑连续。如果新旧 shape 的元素数不同，或者 view 中间存在行间隙，这个操作就应该直接拒绝，而不是偷偷复制数据。
 
-最小实现通常只做三件事：
+本章的实现允许带非零 `offset` 的连续 view 继续 reshape。例如，先取出完整的一行，再把这一行 reshape 成 `3x1`，仍然复用同一份 storage。一个跨行的 `2x2` slice 具有父 Tensor 的行 stride，虽然共享 storage，但不是连续 view，因此不能 reshape。
 
-1. 校验新 shape 的元素数
-2. 复用原始存储和偏移
-3. 返回一个只更新 shape 的新视图
+最小实现通常只做四件事：
 
-示例伪代码可以写成：
+1. 校验当前 view 是否连续
+2. 校验新 shape 的元素数
+3. 复用原始存储和偏移
+4. 返回一个只更新 shape 和 stride 的新视图
+
+便捷入口和工程入口复用同一条核心路径：
 
 ```cpp
-Tensor reshape(const Tensor& t, std::vector<int64_t> new_shape) {
-    if (numel(new_shape) != t.numel()) {
-        throw std::invalid_argument("reshape size mismatch");
-    }
-    Tensor out = t;
-    out.set_shape(std::move(new_shape));
-    return out;
-}
+Tensor output;
+auto status = tensor.try_reshape(rows, cols, &output);
 ```
 
-这里最重要的是不要分配新存储，只改视图描述。
+`try_reshape()` 用 `Status` 区分 source 未就绪、view 非连续、元素数变化和溢出；`reshape()` 在失败时仍返回无效 Tensor。两种入口不会分配新 storage，也不会形成两套 reshape 语义。
 
 实现建议：
 
@@ -74,6 +71,7 @@ Tensor reshape(const Tensor& t, std::vector<int64_t> new_shape) {
 - `reshape` 前后元素总数一致
 - 数据内容不变
 - 新旧张量共享同一份存储
+- 非连续 slice 的 reshape 会失败
 
 一个简单的验证方式是把 `{2, 2}` reshape 成 `{4}`，再把结果转回 vector 比较，确认内容顺序没有变化。
 

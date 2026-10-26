@@ -1,7 +1,7 @@
 # 02.4 Unit Tests 单元测试
 
 
-## 这一页要解决什么
+## 用单元测试锁定 View 语义
 
 用简单单元测试验证 `reshape` 和 `slice` 的 view 语义是否正确。
 
@@ -25,7 +25,12 @@
 - `reshape` 不复制数据
 - `slice` 返回共享存储
 - 切片内容和预期一致
-- 元素数和 shape 保持合理
+- offset 和 row/column stride 符合预期
+- 非连续 view 的 reshape 会被拒绝
+- 越界访问和非法切片会失败
+- 父 Tensor 销毁后，仍被持有的 view 保持有效
+- core contract 能验证连续 Tensor 和带 offset slice 的最大可达存储位置
+- `try_reshape()` / `try_slice()` 返回可断言的错误消息
 
 建议测试方式：
 
@@ -49,18 +54,13 @@
 
 这类测试的意义不是覆盖所有情况，而是把最容易被误写的语义锁住，避免后续重构时把共享存储悄悄改成拷贝。
 
-一个最小测试样例可以写成：
+本章测试直接使用 C++ `assert`，从仓库根目录运行：
 
 ```cpp
-TEST(TensorView, ReshapeSharesStorage) {
-    Tensor a = Tensor::from_vector<float>("a", {2, 2}, {1, 2, 3, 4});
-    Tensor b = reshape(a, {4});
-    EXPECT_EQ(a.storage(), b.storage());
-    EXPECT_EQ(b.to_vector<float>()[3], 4.f);
-}
+bash code/chapter02_tensor_ops/scripts/run.sh
 ```
 
-这类测试同时验证了“数据内容”和“共享关系”。
+脚本会隔离构建 demo，执行 CTest，并在测试中同时验证“数据内容”“共享关系”“stride”“边界”和“生命周期”。
 
 常见问题：
 

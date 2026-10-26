@@ -12,8 +12,8 @@
 
 | 文件 | 作用 |
 | --- | --- |
-| <a href="/_code/chapter02_tensor_ops/include/chapter02_tensor_ops/tensor.h"><code>tensor.h</code></a> | Tensor 接口和 view 语义 |
-| <a href="/_code/chapter02_tensor_ops/src/tensor.cpp"><code>src/tensor.cpp</code></a> | reshape / slice 实现 |
+| <a href="/_code/chapter02_tensor_ops/include/chapter02_tensor_ops/tensor.h"><code>tensor.h</code></a> | Tensor、`contract()` 和 `try_*` 接口 |
+| <a href="/_code/chapter02_tensor_ops/src/tensor.cpp"><code>src/tensor.cpp</code></a> | reshape / slice 与 core contract 适配 |
 
 ## 验证与脚本
 
@@ -26,7 +26,6 @@
 ## 对应文档
 
 - [chapter02 导读](../chapter02_tensor_ops/intro.md)
-- [chapter02 小结](../chapter02_tensor_ops/summary.md)
 
 ## 说明
 

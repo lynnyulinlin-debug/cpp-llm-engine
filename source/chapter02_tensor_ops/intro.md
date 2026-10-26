@@ -1,64 +1,61 @@
 # 02.0 Tensor Views and Shared Storage 学习视图语义和存储共享
 
-这一章先回答一个视图问题：张量怎样在不拷贝数据的情况下改变形状和局部窗口？
+## 1. 本章位置与成功标准
 
-本章会为 `Tensor` 增加 view 语义的基础操作：`reshape` 和 `slice`。
+本章让 `Tensor` 在不复制数据的情况下改变 shape 和局部窗口。
 
-## 本章和 vLLM / nano-vLLM 的联系
+```bash
+bash code/chapter02_tensor_ops/scripts/run.sh
+```
 
-真实推理框架里很多张量变化不是复制数据，而是改变 shape、offset、view 或 metadata。vLLM / nano-vLLM 的模型输入、attention 中间结果和 KV cache 视图都会依赖这种“不移动数据，只改变观察方式”的思路；本章先把这层 Tensor view 语义讲清楚。
+成功标准：demo 能完成 `reshape` 和 `slice`，CTest 能证明 view 共享 storage、`TensorContract` 保留 stride/offset，边界错误通过 `Status` 被明确拒绝。
 
-更具体地说，本章处在真实推理执行链里一个很容易被忽略的位置：
+![Chapter 02 主图：Tensor View 与共享存储](../assets/diagrams/chapter02-main.svg)
 
-- 上层模型或 runtime 需要不同形状、不同窗口的数据观察方式
-- Tensor 层负责把这些变化收束成 view，而不是新的数据块
-- 后面的 attention、KV cache 和 decode 路径才能在不额外复制的前提下继续往下走
+本章位于对象表示和数值计算之间，解决“同一份数据怎样被不同算子观察”的问题。本章不实现 MatMul、Attention 或 KV Cache，只提供它们需要的 view 语义。
 
-学习本章时，最重要的不是把 `reshape`、`slice` 当成通用 API，而是先建立一个判断：这次变化是在“重新分配数据”，还是只是在“重新观察已有数据”。
+## 2. 内容地图
 
-## 本章概览
+完成本章后，可以：
 
-| 先看什么 | 这一节讲什么 | 为什么重要 | 对应小节 |
-| --- | --- | --- | --- |
-| 共享存储为什么重要 | `shared_ptr` 和底层 storage | 先让多个 view 能共享数据 | [`02.1 Shared Underlying Storage`](./01_shared_ptr_memory.md) |
-| `reshape` 做什么 | 只改 shape，不复制数据 | 先分清形状解释和数据本体 | [`02.2 Reshape`](./02_reshape.md) |
-| `slice` 做什么 | 窗口、offset 和子视图 | 先固定局部观察语义 | [`02.3 Slice`](./03_slice.md) |
-| 怎么验证 view | 单元测试和边界检查 | 先锁住共享存储语义 | [`02.4 Unit Tests`](./04_uint_tests.md) |
-| 本章怎么收口 | view-aware Tensor 和下一章入口 | 进入算子前先固定张量模型 | [`02.5 本章小结`](./summary.md) |
+- 区分改变 shape 与复制数据
+- 用共享 storage 表达多个 Tensor view
+- 用 `reshape` 改变形状，用 `slice` 改变 offset 和窗口
+- 检查 view 的生命周期、范围和底层数据是否仍然一致
+- 区分适合入门的便捷 API 与跨 backend 使用的 `contract()` / `try_*` API
 
-## 阅读入口
+成熟框架会在 tensor 图、模型执行和 KV Cache 中反复使用 view 语义。本章先对照 storage、shape、stride 和 offset 四个共同要素。
 
-- 前置阅读：[`chapter01_tensor_loader`](../chapter01_tensor_loader/intro.md)、[`foundation`](../foundation/README.md)
-- 源码直达：<a href="../_code/chapter02_tensor_ops/include/chapter02_tensor_ops/tensor.h"><code>tensor.h</code></a>、<a href="../_code/chapter02_tensor_ops/src/tensor.cpp"><code>tensor.cpp</code></a>、<a href="../_code/chapter02_tensor_ops/tests/chapter02_tensor_ops_test.cpp"><code>chapter02_tensor_ops_test.cpp</code></a>
-- 相关阅读：[`02.1 Shared Underlying Storage`](./01_shared_ptr_memory.md)、[`02.4 Uint Tests`](./04_uint_tests.md)、[`推理引擎内存管理`](../reference/memory_management.md)、[`02.5 本章小结`](./summary.md)
+| 对照项 | 内容 |
+| --- | --- |
+| 本章教学对象 | 共享 storage、reshape、slice 和 TensorContract |
+| 主对照框架 | `llama.cpp` 的 ggml tensor/view；vLLM 的 cache 元数据 |
+| 成熟组件 | 非连续 view、设备内存、allocator、页表和异步生命周期 |
+| 重点差异 | 本章只实现连续 CPU storage 上的可验证 view，不隐藏复制和跨设备迁移 |
+| 深入入口 | [`02.5 Tensor 与 View 框架对照`](./05_framework_tensor_comparison.md) |
 
-## 这章在解决什么
+## 3. 阅读与源码顺序
 
-这一章只做一件事：让视图改变不再依赖拷贝。它要把 `Tensor` 从“数据容器”推进到“共享存储的视图对象”，让多个张量对象共享同一份底层存储，并在不复制数据的情况下改变观察方式。
+| 顺序 | 页面 | 读完后应看到什么 |
+| --- | --- | --- |
+| 1 | [`02.1 Shared Underlying Storage`](./01_shared_ptr_memory.md) | storage 和 view 的所有权关系 |
+| 2 | [`02.2 Reshape`](./02_reshape.md) | 只改 shape、不复制数据 |
+| 3 | [`02.3 Slice`](./03_slice.md) | 通过 offset 观察局部窗口 |
+| 4 | [`02.4 Unit Tests`](./04_uint_tests.md) | shape、offset、共享 storage 和异常边界 |
+| 5 | [`02.5 Tensor 与 View 框架对照`](./05_framework_tensor_comparison.md) | 在 ggml 和 vLLM 中定位对应数据结构 |
 
-它解决的不是“少写一次 memcpy”这么局部的问题，而是后面真实推理路径里为什么能够同时做到：
+源码先看 <a href="../_code/chapter02_tensor_ops/include/chapter02_tensor_ops/tensor.h"><code>tensor.h</code></a>、<a href="../_code/chapter02_tensor_ops/src/tensor.cpp"><code>tensor.cpp</code></a> 和 <a href="../_code/chapter02_tensor_ops/tests/chapter02_tensor_ops_test.cpp"><code>chapter02_tensor_ops_test.cpp</code></a>。前置阅读是 [`chapter01_tensor_loader`](../chapter01_tensor_loader/intro.md)；内存生命周期的扩展说明见 [`推理引擎内存管理`](../reference/memory_management.md)，numel、stride 和 offset 统一写法见 [`F-TENSOR-01/02`](../reference/formulas.md#f-tensor-01)。
 
-- 改 shape
-- 取局部窗口
-- 共享 KV cache 或中间结果
+## 4. 验证
 
-而不把内存成本和数据移动成本一路放大。
+本章至少检查：
 
-## 这章怎么做
+1. `reshape` 只改变 shape
+2. `slice` 只改变 offset 和窗口
+3. 父张量和子视图指向同一份 storage
+4. 越界 shape、offset 和长度会失败
+5. `contract()` 的 shape、stride、offset 和 storage bytes 能通过公共范围校验
 
-最小设计只完成两件事：
+看到 Tensor API 时，先判断它是在重新分配数据，还是只改变观察方式。这个判断会直接影响 Chapter 03 的算子输入和 Chapter 05 的 KV Cache 成本。
 
-- 共享底层存储
-- 让 `reshape` 和 `slice` 只改变观察方式，不复制数据
-
-推理引擎里很多变换只是在改变观察方式，不是在生成新数据块。把这些约束摆出来后，设计就会自然收敛成“底层 storage + view 对象”。
-
-## 收口与下一步
-
-这一章留下的判定标准很简单：以后看到张量操作，先问它是在改“形状解释”，还是在改“观察窗口”。如果想验证得更完整，可以检查：
-
-- `reshape` 只改变 shape，不复制底层数据
-- `slice` 只改变窗口和 offset，不切断 storage
-- 父张量和子视图共享同一份底层存储
-
-下一步进入 `chapter03_matmul`，开始把 `Tensor` 用到真正的数值计算中。`chapter02` 把“同一份数据怎么被看”说清楚了，`chapter03` 才开始回答“这份数据怎么参与计算”。
+**下一章：**本章固定数据的观察方式，Chapter 03 将 Tensor 接入 MatMul，并把算子语义与 CPU / GPU backend 分开。

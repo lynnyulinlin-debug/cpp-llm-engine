@@ -1,7 +1,7 @@
 # 02.3 Slice 切片
 
 
-## 这一页要解决什么
+## 用 Slice 取局部视图
 
 实现返回子视图的 `slice` 操作，让张量可以表达局部窗口而不复制数据。
 
@@ -24,25 +24,23 @@
 
 - 返回子视图
 - 共享底层数据
-- 记录偏移和长度
+- 记录偏移、shape 和 stride
 - 不复制原始数据
 
 `slice` 和 `reshape` 的区别在于：`reshape` 改的是“如何解释整个数据”，`slice` 改的是“读哪一段数据”。因此 `slice` 必须记录起始偏移，并把视图限制在目标区间内。
 
-最小版本可以先支持一维或二维切片，先把偏移和长度算对，再考虑更复杂的多维索引。
+最小版本先支持二维切片，先把偏移、shape 和 stride 算对，再考虑更复杂的多维索引。
 
-示例伪代码可以写成：
+本章二维 slice 的核心计算是：
 
 ```cpp
-Tensor slice(const Tensor& t, std::size_t begin, std::size_t len) {
-    Tensor out = t;
-    out.set_offset_bytes(t.offset_bytes() + begin * dtype_size(t.dtype()));
-    out.set_shape({static_cast<int64_t>(len)});
-    return out;
-}
+const std::size_t new_offset = offset_ + row_start * row_stride_ + col_start * col_stride_;
+return Tensor(storage_, row_count, col_count, new_offset, row_stride_, col_stride_);
 ```
 
-如果是二维切片，偏移计算会更复杂，但思想还是一样：共享 storage，只改视图边界。
+二维切片的偏移是父视图偏移、起始行 stride 和起始列 stride 的组合；返回 view 还要保留父视图的 stride。这样可以正确表达跨行窗口，但这类窗口通常不是连续 view，不能直接 reshape。
+
+`try_slice()` 将“起点越界”“长度为零”“范围超出 shape”和“offset 溢出”分别返回为 `Status`。`contract()` 再把结果导出为 `{shape, strides, storage_offset_elements, storage_bytes}`，后续算子无需了解 `shared_ptr<vector<float>>` 也能检查 view 范围。
 
 实现建议：
 
@@ -52,7 +50,7 @@ Tensor slice(const Tensor& t, std::size_t begin, std::size_t len) {
 
 ## `slice` 在真实项目里为什么重要
 
-`slice` 这一页和推理引擎的联系，比看起来更直接。很多真实工程问题本质上都不是“做一次新计算”，而是“从已有数据里取出该看的那一段”。
+`slice` 和推理引擎的联系很直接。很多真实工程问题本质上是“从已有数据里取出该看的那一段”。
 
 最典型的对应场景包括：
 
@@ -60,7 +58,7 @@ Tensor slice(const Tensor& t, std::size_t begin, std::size_t len) {
 - attention 中间结果的局部窗口
 - KV cache block 或 chunk 的局部访问
 
-所以这一页真正要建立的不是切片语法，而是一种工程习惯：先问能不能通过 view 取局部窗口，再问要不要复制出一份新数据。
+切片练习要建立一种工程习惯：先问能不能通过 view 取局部窗口，再问要不要复制出一份新数据。
 
 ## 验证与排查
 
@@ -68,7 +66,8 @@ Tensor slice(const Tensor& t, std::size_t begin, std::size_t len) {
 
 - 子视图能读到原始数据中的对应片段
 - 父视图和子视图共享同一存储
-- 视图销毁不会破坏底层数据
+- 父 Tensor 销毁后，仍被持有的 view 可以继续读写
+- 越界起点、长度和元素访问会失败
 
 建议用一个小数组做测试，例如 `{10, 20, 30, 40, 50}`，切出中间一段，确认返回内容和原始数组对应区间一致。
 
