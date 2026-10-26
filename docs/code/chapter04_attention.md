@@ -1,12 +1,12 @@
 # chapter04_attention 代码导航
 
-这一页用于定位 attention、FFN、decoder layer 和对应测试。
+本章代码包含 Attention、FFN、DecoderLayer、KV Cache 和对应测试。
 
 ## 阅读顺序
 
 1. 先看 `attention.cpp`
 2. 再看 `feed_forward.cpp` 和 `decoder_layer.cpp`
-3. 最后用测试收口
+3. 最后运行测试，核对各模块的输入、输出和错误路径
 
 ## 模型结构
 
@@ -30,8 +30,3 @@
 ## 对应文档
 
 - [chapter04 导读](../chapter04_attention/intro.md)
-- [chapter04 导读](../chapter04_attention/intro.md)
-
-## 说明
-
-代码索引页只做补充导航。正文页的“源码直达”应直接链接到具体文件，不应只跳到本页或章节代码目录。

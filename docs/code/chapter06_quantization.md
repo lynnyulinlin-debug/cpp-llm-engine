@@ -1,6 +1,6 @@
 # chapter06_quantization 代码导航
 
-这一页用于定位 INT8 权重、反量化、量化 Linear 和精度验证。
+本章代码包含 INT8、Q4_K、Q6_K 解码、量化 Linear、benchmark 和精度测试。
 
 ## 阅读顺序
 
@@ -43,7 +43,3 @@
 ## 对应文档
 
 - [chapter06 导读](../chapter06_quantization/intro.md)
-
-## 说明
-
-代码索引页只做补充导航。正文页的“源码直达”应直接链接到具体文件，不应只跳到本页或章节代码目录。

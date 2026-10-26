@@ -1,6 +1,6 @@
 # chapter05_generation 代码导航
 
-这一页用于定位 generation runtime 的请求、调度、KV cache、采样和端到端测试。
+本章代码包含 Request、Scheduler、KV Cache、Sampler、Runtime 和端到端测试。
 
 ## 两部分入口
 
@@ -39,7 +39,3 @@
 ## 对应文档
 
 - [chapter05 导读](../chapter05_generation/intro.md)
-
-## 说明
-
-代码索引页只做补充导航。正文页的“源码直达”应直接链接到具体文件，不应只跳到本页或章节代码目录。

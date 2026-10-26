@@ -1,6 +1,6 @@
 # chapter01_tensor_loader 代码导航
 
-这一页用于补充查看 Tensor 与 ModelLoader 的源码分布。正文页仍应优先链接到具体文件。
+本章代码包含 Tensor、GGUF Reader、模型配置、Tokenizer adapter、ModelBuilder 和真实模型测试。
 
 ## 阅读顺序
 
@@ -50,8 +50,3 @@
 - [chapter01 导读](../chapter01_tensor_loader/intro.md)
 - [输入契约与 Tokenizer](../chapter01_tensor_loader/07_input_contract_and_tokenizer.md)
 - [模型元数据与 GGUF 边界](../chapter01_tensor_loader/08_model_metadata_and_gguf_boundary.md)
-- [chapter01 导读](../chapter01_tensor_loader/intro.md)
-
-## 说明
-
-代码索引页只做补充导航。正文页的“源码直达”应直接链接到具体文件，不应只跳到本页或章节代码目录。

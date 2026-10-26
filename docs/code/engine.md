@@ -1,6 +1,6 @@
 # engine First Success 代码导航
 
-这一页定位本教程自己的第一个 CPU-only 纵向切片。它复用 Chapter 05 的最小 generation runtime，但增加了仓库级入口，把 prompt、token tensor、Request、Decoder、Generation Runtime 和输出串起来。
+Engine 将 prompt、token tensor、Request、真实 Model/Context、Chapter 05 Runtime 和输出连接成 CPU 纵向执行路径。
 
 ## 阅读顺序
 

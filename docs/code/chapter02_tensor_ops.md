@@ -1,6 +1,6 @@
 # chapter02_tensor_ops 代码导航
 
-这一页用于快速定位 view-aware Tensor 的源码、示例和测试。
+本章代码包含共享 Storage 的 Tensor view、reshape、slice、示例和测试。
 
 ## 阅读顺序
 
@@ -26,7 +26,3 @@
 ## 对应文档
 
 - [chapter02 导读](../chapter02_tensor_ops/intro.md)
-
-## 说明
-
-代码索引页只做补充导航。正文页的“源码直达”应直接链接到具体文件，不应只跳到本页或章节代码目录。

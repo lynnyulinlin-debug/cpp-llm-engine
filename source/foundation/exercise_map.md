@@ -1,6 +1,6 @@
 # Foundation 正文与练习映射
 
-这张表只回答“读完正文后做哪道题”。题目要求、starter、编译命令和验收标准统一维护在 [`Foundation Exercises`](../exercises/foundation/README.md)；题目链接打开仓库中的实际 README。
+下表连接 Foundation 正文、对应题目、验证目标和主线出口。题目要求、starter、编译命令和验收标准见 [`Foundation Exercises`](../exercises/foundation/README.md)。
 
 | 正文 | 题目 | 关系 | 题目验证什么 | 主线出口 |
 | --- | --- | --- | --- | --- |

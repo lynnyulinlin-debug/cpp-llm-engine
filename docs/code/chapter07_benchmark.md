@@ -1,6 +1,6 @@
 # chapter07_benchmark 代码导航
 
-这一页用于定位 benchmark、测试 helper、示例和测试入口。
+本章代码包含 benchmark record、测试 helper、多请求 workload 和结果文件。
 
 ## 阅读顺序
 
@@ -28,8 +28,3 @@
 ## 对应文档
 
 - [chapter07 导读](../chapter07_benchmark/intro.md)
-- [chapter07 导读](../chapter07_benchmark/intro.md)
-
-## 说明
-
-代码索引页只做补充导航。正文页的“源码直达”应直接链接到具体文件，不应只跳到本页或章节代码目录。

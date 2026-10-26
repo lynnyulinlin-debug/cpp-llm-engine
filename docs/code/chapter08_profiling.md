@@ -1,6 +1,6 @@
 # chapter08_profiling 代码导航
 
-这一页定位 profiling evidence、A/B 判定、测试和运行脚本。Chapter 08 消费 Chapter 07 的实测 benchmark，不重新实现 Runtime。
+本章代码读取 Chapter 07 和真实服务的 benchmark 结果，生成 ProfileRecord、A/B 判定与优化报告。
 
 ## 阅读顺序
 

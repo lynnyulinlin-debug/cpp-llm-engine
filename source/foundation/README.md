@@ -33,7 +33,7 @@ CPU 是默认路线，CUDA 只在需要 GPU backend 时加入。下面的总图�
 
 正文与题目的对应关系见 [Foundation 正文与练习映射](./exercise_map.md)。题库入口是仓库中的 [`exercises/foundation/README.md`](../exercises/foundation/README.md)，负责题目清单、CPU/GPU 资产、做题顺序、编译命令和完成标准。
 
-正文页面只保留概念验证，并用“对应练习”指向题库。不要在正文入口重复题目目录、starter 命令或完整验收细则。
+概念说明和设计理由位于 Foundation 正文；starter、编译命令和完成标准位于题库。
 
 ## 4. 接到主线
 
