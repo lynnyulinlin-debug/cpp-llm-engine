@@ -14,25 +14,13 @@ _A Practical Tutorial for Building a C++ LLM Inference Engine_
 
 ## 开始学习
 
-默认从 [`chapter00_quickstart`](source/chapter00_quickstart/intro.md) 跑通一次 TinyLlama 真实推理，再按 Chapter 01 到 Chapter 09 顺序学习。C++ 或 CMake 基础不足时，先按需完成 [`foundation`](source/foundation/README.md)；需要比较 `llama.cpp`、vLLM、SGLang 和 TensorRT-LLM 时，再查阅 [`reference/ecosystem`](source/reference/ecosystem/README.md)。
+从 [`Chapter 00`](source/chapter00_quickstart/intro.md) 跑通 TinyLlama 真实推理，再按 Chapter 01-09 构建 CPU 推理服务。C++ 或 CMake 基础不足时按需学习 [`Foundation`](source/foundation/README.md)，完整命令和路线见 [USAGE.md](USAGE.md)。
 
-第一期 CPU v1 已形成可运行的教学型推理服务闭环。希望按阶段产物复现时，使用 [`第一期 CPU 学习计划`](source/guides/phase1_cpu_learning_plan.md)；维护者可用 `bash scripts/run_cpu_v1_acceptance.sh` 统一验收六个必做任务，任务 7 再可选体验 GPU。
+CPU v1 已形成从 GGUF、Decoder、Runtime 到 HTTP/SSE 的可运行闭环；希望按阶段复现时使用[第一期 CPU 学习计划](source/guides/phase1_cpu_learning_plan.md)，完成后再选择 CUDA 或多模态扩展。
 
-Foundation 负责补工具链和语言能力，Chapter 00 负责建立真实推理基线。Chapter 09 接收 Chapter 05 的服务化扩展，当前已完成 C++ Service Core、metrics、真实模型 HTTP/SSE completion 和可选 cpp-httplib loopback transport。
+## 教程定位与特点
 
-## 项目定位
-
-学习路径遵循同一条证据链：真实模型基线、算法与数据契约、最小 C++ 实现、测试或 benchmark、成熟框架工程坐标。完成主线后，学习者应能连接权重加载、Tensor、Operator、Decoder、Generation Runtime 和 ServiceCore，并能判断一次实现或优化是否有可复现证据。
-
-Python 用于解释复杂算法并提供独立数值参考，不形成第二套运行时。`llama.cpp`、Tiny-VLLM、nano-vLLM、vLLM、SGLang、TensorRT-LLM 和 DeepInfer 用于回答不同工程问题，不替代本教程的稳定 C++ 主线。
-
-主线覆盖单机 CPU 推理服务和可选的单消费级 NVIDIA GPU backend，并以多模态作为复用现有 Runtime 的扩展方向。多 GPU、模型并行、分离式部署、集群 KV 存储和生产级多租户属于进阶设计参照，不作为当前可运行能力承诺。
-
-## 教程特点
-
-本教程的核心组合是“C++ 可运行实现 + 可复现验证证据 + 成熟框架工程对照”。章节代码负责把概念变成可观察对象，测试和 golden 负责判断结果是否成立，框架对照卡负责把教学对象放回真实系统，而不是用框架名称装饰正文。
-
-每章导读中的框架对照卡统一回答五个问题：本章实现什么、主要对照哪些框架、成熟系统还增加了什么、教学实现与生产实现差在哪里、下一步从哪个源码入口继续阅读。详细且容易随版本变化的源码坐标集中维护在 [`reference/ecosystem`](source/reference/ecosystem/README.md)，章节只保留稳定概念和入口。
+教程沿“真实基线 → 数据与算法契约 → C++ 实现 → 验证证据 → 成熟框架对照”推进。Python、NumPy 和外部项目只承担解释或独立参考；可运行范围聚焦单机 CPU、可选单消费级 NVIDIA GPU 和多模态输入扩展，不宣称多 GPU、分布式或生产级多租户能力。
 
 | 教程特点 | 学习者获得什么 | 可信度约束 |
 | --- | --- | --- |
@@ -42,47 +30,28 @@ Python 用于解释复杂算法并提供独立数值参考，不形成第二套�
 | **章节级框架对照卡** | 把本章对象映射到 `llama.cpp`、vLLM、SGLang、TensorRT-LLM 等真实工程 | 区分概念相似、接口映射和实现等价，不宣称未验证能力 |
 | 教学与生产分层 | 识别“已实现”“教学设计”“生产级参照”三种深度 | 生产组件只给约束与源码坐标，不写成仓库现成功能 |
 
-## 为什么选择这些基线资产
+## 建设时间线
 
-教程选择模型时优先考虑单机可运行、结构具有代表性、外部实现可对照和结果容易复现，而不是追求排行榜能力。TinyLlama 和 SmolVLM 是首条纵向路径的固定基线，不会写进通用 Tensor、Runtime 或 ServiceCore 接口；后续更换模型时，应复用这些契约并重新生成对应 golden。
+更新时间：**2026-10-26**。时间线只记录已经形成代码和验证入口的里程碑；详细实验条件见[实验资产表](source/reference/experiment_assets.md)。
 
-当前没有引入训练数据集或大规模质量评测集。`Hello TinyLlama`、`Hi`、固定 Apollo 11 图片、2×2 PPM 和合成小 Tensor 属于测试 fixture：它们用于核对 token、shape、checksum、状态和资源释放。模型质量、任务准确率和跨数据分布泛化需要另一套评测设计，不能从这些 fixture 推导。
-
-| 资产 | 选择理由 | 在教程中的责任 | 不用于证明 |
+| 时间 | 里程碑 | 状态 | 可验证产物 |
 | --- | --- | --- | --- |
-| TinyLlama 1.1B Chat Q4_K_M | 约 638 MiB，CPU 可运行；保留 22 层 Llama、RMSNorm、RoPE、GQA、SwiGLU 和量化权重 | GGUF、Tokenizer、Decoder、Runtime、HTTP/SSE 的完整语言主线 | 大模型能力或生产吞吐 |
-| SmolVLM 500M Instruct Q8_0 + mmproj | 规模适合单机；IDEFICS3 明确暴露动态切图、Vision Encoder、Projector 和图文 embedding 交接 | 多模态输入扩展，并复用既有 LLM Runtime | 通用视觉模型支持或多模态质量排名 |
-| `llama.cpp` | 同时支持 GGUF、CPU、CUDA 和 mtmd 多模态路径 | 提供独立外部 baseline，避免自研实现自己证明自己 | 本教程自研 Engine 的替代品 |
-| 固定 prompt、图片和合成输入 | 输入小、hash 可固定、错误容易定位 | 默认 CTest、真实 golden、跨实现数值与生命周期回归 | 训练语料覆盖率或统计显著性 |
+| 2026-08 | 教程骨架与 Foundation | 完成 | 章节主线、基础题库、benchmark trace |
+| 2026-10 | CPU v1 | 完成 | TinyLlama 22 层 Decoder、Runtime、HTTP/SSE 和统一验收 |
+| 2026-10 | GPU v1 | 建设中 | CUDA 资源、量化 Linear、RoPE、KV、GQA 和合成 Decoder；下一步接真实模型 |
+| 2026-10 | 多模态 CPU v1 | 完成 | SmolVLM Vision、Projector、Decoder、ServiceCore 和 profiling golden |
+| 2026-10 | 工程验证 | 完成 | 默认 CPU 回归、文档检查和 GitHub Actions CI |
 
-## 哪些复用，哪些自行实现
+## 基线与实现边界
 
-教程不以“所有组件都从零实现”为目标，而是把实现精力放在推理引擎的执行、状态和资源边界。模型专属且容易因细节产生不兼容的真实分词复用 `llama.cpp`；GGUF 对象化、量化 Embedding、Decoder、Runtime、Serving 和多模态执行由教程代码完成。外部实现和 NumPy 镜像只提供独立证据，不进入默认 C++ 主线。
+模型优先选择单机可运行、结构具有代表性且能由外部实现复核的资产。教程自行实现执行、状态和资源管理；模型专属兼容细节与 NumPy 镜像只提供外部参考。
 
-| 能力 | 当前来源 | 选择原因 | 教程验证方式 |
+| 对象 | 采用方式 | 自研与复用边界 | 主要证据 |
 | --- | --- | --- | --- |
-| Toy Tokenizer | 自行实现的字符映射 | 快速测试接口和错误输入，不冒充真实 BPE | 默认无模型 CTest |
-| 真实 Tokenizer | `llama.cpp` vocabulary API 的 C++ adapter | 保持模型词表、Unicode 和特殊 token 行为一致 | 固定 prompt 的 token ID 与 detokenize 对照 |
-| GGUF Reader 与模型配置 | 自行实现 | 学习 metadata、tensor index、payload 和对象生命周期 | schema、offset、shape、dtype 与真实文件检查 |
-| 文本 Embedding | 自行读取 `token_embd.weight` 并解码 Q4_K/Q8_0 | 量化布局和 lookup 属于模型执行核心 | CPU/NumPy checksum、logits 和 token golden |
-| Decoder、Runtime、ServiceCore | 自行实现 | 覆盖 Attention/FFN、KV、调度、生成和资源释放 | 单测、真实模型 golden、HTTP/SSE 与 benchmark |
-| Vision Encoder、Projector 与图文组装 | 自行实现 | 展示多模态输入怎样进入已有 LLM Runtime | C++/NumPy、`llama.cpp` mtmd 和阶段指标 |
-| `llama.cpp` / NumPy | 外部 baseline 与 reference | 提供独立结果，避免实现与验收使用同一代码 | hash、shape、checksum、top-k 和输出序列 |
-
-## GPU 定位与显存口径
-
-GPU 阶段面向单机、单张 NVIDIA 消费级显卡，CPU 路径始终保留为正确性基线和无 GPU 环境下的完整学习入口。首期使用 TinyLlama 1.1B Q4_K_M，不建设多 GPU、模型并行或分布式调度。
-
-`8 GB` 是首期端到端实现的设计验证目标，不是已经实测出的最低显存；`12 GB` 只代表扩展长上下文、更多请求或更大模型时有更多余量，不作为学习门槛。当前量化模型文件约 638 MiB；按 22 层、K/V width 256、FP16、2048 context 估算，单请求 KV Cache 约 44 MiB。最终支持范围必须在 CUDA 路径完成后记录权重、KV Cache、workspace、CUDA runtime 和 peak allocated，再用实测结果发布。
-
-| 口径 | 当前结论 |
-| --- | --- |
-| 支持形态 | 单机、单张 NVIDIA 消费级显卡，CPU 可独立完成主线 |
-| 模型基线 | TinyLlama 1.1B Q4_K_M，量化权重保持量化表示 |
-| 8 GB | 首期设计和验证目标，不等于最低要求 |
-| 12 GB | 扩展配置，不是推荐门槛 |
-| 最低显存 | 尚未确定，等待 4/6/8 GB 限额或设备实测 |
-| 发布证据 | 模型、context、并发数、权重、KV、workspace、runtime 和峰值显存 |
+| TinyLlama 1.1B Q4_K_M | CPU 语言主线与 GPU 首个目标 | 复用 `llama.cpp` tokenizer；自研 GGUF 对象、Embedding、Decoder、Runtime 和 Serving | token、logits、HTTP/SSE golden |
+| SmolVLM 500M Q8_0 + mmproj | 多模态 CPU 主线 | 复用模型格式与 mtmd baseline；自研图像管线、Vision、Projector 和图文执行 | C++/NumPy checksum、服务与 profiling golden |
+| `llama.cpp` / NumPy | 独立 reference | 不进入默认 C++ Runtime，不作为自研 Engine 的替代品 | hash、shape、top-k 和输出序列 |
+| 固定 prompt、图片与合成 Tensor | 小型测试 fixture | 只验证接口、数值和生命周期，不代表模型质量或数据集覆盖 | 默认 CTest 与跨实现对照 |
 
 ## 章节入口
 
@@ -113,13 +82,9 @@ Chapter09 虽然放在总主线末尾，但服务化专题可以在完成 Chapte
 | [`guides`](source/guides/README.md) | 工程参考层 | 构建、环境、迁移和工程方法 | 按需使用的操作指南 |
 | [`reference`](source/reference/README.md) | 解释层 | 术语、生态对照、概念映射 | 跨章节查询入口 |
 
-## 使用文档
-
-如果你要选择学习路线和运行代码，阅读 [USAGE.md](USAGE.md)；准备修改和提交时阅读 [CONTRIBUTING.md](CONTRIBUTING.md)；搭建环境或查看 CPU / GPU 分界线时阅读 [docs/guide.md](docs/guide.md)。完整代码架构图也放在阅读指南中，不在 README 重复展开。
-
 ## 进阶优化路线
 
-这条路线面向已经读完主线、想继续深入推理优化的读者。它不是主线替代，而是主线之后的专题延伸。
+完成 Chapter07 的正确性与 benchmark 基线后，可以沿下表继续学习性能专题；这些内容不替代 Chapter08-09 的 profiling 和服务主线。
 
 | Task | 专题方向 | 关注点 |
 | --- | --- | --- |
@@ -130,47 +95,27 @@ Chapter09 虽然放在总主线末尾，但服务化专题可以在完成 Chapte
 | 5 | 量化推理与部署 | `INT4 / INT8`、`W8A16`、`GPTQ / AWQ`、`FP8`、`KV Cache Quantization` |
 | 6 | 扩展选读与专题复盘 | `Inference Performance Comparison` |
 
-这条路线适合在 `chapter07` 之后继续看，也适合把主线中的 `attention`、`generation`、`quantization` 和 `benchmark` 再往优化视角拉深。
+## 使用入口
 
-## 相关入口
+学习步骤、环境配置、贡献规则和查询资产分别维护，README 不复制这些文档的具体命令和细节。
 
-- [USAGE.md](USAGE.md)
-- [CONTRIBUTING.md](CONTRIBUTING.md)
-- [docs/README.md](docs/README.md)
-- [docs/README.en.md](docs/README.en.md)
-- [docs/guide.md](docs/guide.md)
-- [docs/index.md](docs/index.md)
-- [source/reference/README.md](source/reference/README.md)
-- [source/reference/chapter_assets.md](source/reference/chapter_assets.md)
-- [source/reference/experiment_assets.md](source/reference/experiment_assets.md)
-- [source/reference/formulas.md](source/reference/formulas.md)
-- [source/reference/glossary.md](source/reference/glossary.md)
-- [source/reference/ecosystem/README.md](source/reference/ecosystem/README.md)
+| 需要解决的问题 | 入口 |
+| --- | --- |
+| 如何学习和运行 | [USAGE.md](USAGE.md) |
+| CPU/GPU 环境与代码架构 | [docs/guide.md](docs/guide.md) |
+| 如何修改和提交 | [CONTRIBUTING.md](CONTRIBUTING.md) |
+| 章节代码、实验与框架坐标 | [Reference](source/reference/README.md) |
+| 术语与公式 | [术语表](source/reference/glossary.md) · [公式表](source/reference/formulas.md) |
 
-## 验证闭环
+## 验证与 CI
 
-默认 CPU 回归负责无模型、无网络、无 GPU 环境下的主线稳定性；真实模型、transport、性能、CUDA 和多模态实验使用各自入口补充证据。验证从局部数值与状态开始，逐步收口到章节脚本、全局回归和文档发布检查。
-
-![教程验证证据图](source/assets/diagrams/test-pipeline.svg)
-
-## 构建与检查
+默认 CPU 回归不依赖 GGUF、网络下载或 GPU；真实模型、transport、性能和 CUDA 使用各自入口补充证据。GitHub Actions 会在 `main` push 和 pull request 上执行文档检查与默认回归。
 
 ```bash
 npm install
-npm run docs:check-structure
+npm run docs:check-style
 npm run docs:check-links
-npm run code:check-headers
-npm run docs:build
-npm run docs:preview
 npm run test:regression
 ```
 
-`test:regression` 是不依赖 GGUF、网络下载或 GPU 的默认 CPU 回归。真实模型、cpp-httplib transport、性能实验和现有 CUDA 设备测试使用各自的可选验证入口，不包含在这条命令中。
-
-GitHub Actions 会在 `main` push 和 pull request 上执行文档风格、链接构建与默认 CPU 回归。真实模型、GPU 和 socket 验证继续使用各自的本地入口。
-
-如果你的环境需要指定镜像：
-
-```bash
-npm install --registry=https://registry.npmjs.org
-```
+![教程验证证据图](source/assets/diagrams/test-pipeline.svg)
