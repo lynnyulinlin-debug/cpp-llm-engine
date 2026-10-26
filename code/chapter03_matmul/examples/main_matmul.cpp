@@ -1,3 +1,7 @@
+// Chapter 03：MatMul CPU 示例
+// 职责：构造两个 row-major Matrix，执行 MatMulOp 并打印结果。
+// 运行：bash code/chapter03_matmul/scripts/run.sh。
+// 验证：输出 shape=2x2、value(0,0)=58、value(1,1)=154。
 #include "chapter03_matmul/matmul_op.h"
 
 #include <iostream>

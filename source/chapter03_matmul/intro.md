@@ -1,63 +1,74 @@
 # 03.0 MatMul and Compute Backends 构建核心矩阵乘法算子
 
-这一章先回答一个工程问题：推理引擎里最核心的矩阵乘法应该怎样抽象和落地？
+## 1. 本章位置与成功标准
 
-本章会把矩阵乘法封装成一个可复用的算子，先实现 CPU 参考版本，再接入 cuBLAS 作为高效实现。
+本章把矩阵乘法做成可替换、可验证的算子：上层使用 `MatMulOp`，底层先运行 CPU reference，再保留 cuBLAS 和其他 backend 的接入位置。
 
-## 本章和 vLLM / nano-vLLM 的联系
+```bash
+bash code/chapter03_matmul/scripts/run.sh
+```
 
-vLLM / nano-vLLM 里的 Linear、QKV projection、attention output projection 和 FFN 最终都会落到矩阵乘法或等价 kernel 上。本章先把 `MatMul` 做成稳定、可替换、可验证的算子边界，后面读真实项目时就能分清“上层模型语义”和“底层 backend / kernel 实现”。
+成功标准：CPU demo 输出稳定结果，CTest 通过，`Matrix::contract()` 和 `MatMulOp::try_compute()` 把 Tensor 元数据、Operator 与 Backend 的 `Status` 串起来。Chapter03 默认 target 保持 CPU-only；独立的 `code/cuda` 已用同一个 core `MatmulRequest` 完成 cuBLAS target 和 CPU/GPU 数值对照。
 
-更具体地说，本章处在真实推理执行链的中间层：
+![Chapter 03 主图：MatMul 与计算后端](../assets/diagrams/chapter03-main.svg)
 
-- 上层模型说“这里要做一次 Linear / projection / FFN 计算”
-- 算子层把这件事收束成稳定的 `MatMul` 语义
-- backend 层再决定交给 CPU reference、cuBLAS，还是后续更快的 kernel
+![Chapter 03 Operator、Backend 与 Kernel 分层](../assets/diagrams/chapter03-operator-backend-kernel.svg)
 
-学习本章时，最重要的不是记住某个库名，而是先分清：你现在看到的是“算子语义边界”，还是“backend 实现细节”。
+阅读源码时沿着 `模型调用 -> MatMulOp -> backend -> kernel / library call -> 数值回归` 走，不先从某个优化库名开始。
 
-## 本章概览
+## 2. 内容地图
 
-| 先看什么 | 这一节讲什么 | 为什么重要 | 对应小节 |
-| --- | --- | --- | --- |
-| 算子基类怎么立 | `Operator` 抽象 | 先把算子接口统一 | [`03.1 Operator Base`](./01_operator_base.md) |
-| `MatMulOp` 怎么设计 | 输入输出、shape 和布局契约 | 先固定矩阵乘法语义 | [`03.2 MatMulOp Design`](./02_matmul_design.md) |
-| CPU reference 做什么 | 可读正确性基线 | 先保证算对 | [`03.3 CPU Reference`](./03_cpu_reference.md) |
-| cuBLAS 怎么接入 | 高性能 backend | 先保证实现可替换 | [`03.4 cuBLAS Implementation`](./04_cublas_implement.md) |
-| 怎么和 PyTorch 对照 | 数值验证 | 先确认结果没有偏离 | [`03.5 Test with PyTorch`](./05_test_with_pytorch.md) |
-| 为什么先写朴素实现 | 复杂度和基线直觉 | 先分清正确性和优化 | [`03.6 Complexity Intuition`](./06_complexity_intuition.md) |
-| 怎么看真实 backend | Linear、QKV、FFN 和 kernel 后端 | 先建立 vLLM / nano-vLLM 阅读坐标 | [`03.7 从 MatMul 到真实推理 backend`](./07_runtime_backend_bridge.md) |
-| 本章怎么收口 | 算子边界和下一章入口 | 进入结构层前先固定计算边界 | [`03.8 本章小结`](./summary.md) |
+完成本章后，可以：
 
-## 阅读入口
+- 为矩阵乘法固定 shape、layout 和输出契约
+- 用 CPU reference 建立可读的正确性基线
+- 理解 backend 如何从 CPU reference 扩展到已验证的 cuBLAS 或后续自定义 kernel
+- 用测试和 PyTorch 数值对照确认 backend 替换没有改变结果
 
-- 前置阅读：[`chapter01_tensor_loader`](../chapter01_tensor_loader/intro.md)、[`chapter02_tensor_ops`](../chapter02_tensor_ops/intro.md)
-- 如果要进入 `cuBLAS` 路径，再回看 [`foundation/03_cuda_environment_basics`](../foundation/03_cuda_environment_basics.md) 和 [`foundation/07_cuda_common_libraries`](../foundation/07_cuda_common_libraries.md)
-- 源码直达：<a href="../_code/chapter03_matmul/include/chapter03_matmul/operator.h"><code>operator.h</code></a>、<a href="../_code/chapter03_matmul/src/matmul_op.cpp"><code>matmul_op.cpp</code></a>、<a href="../_code/chapter03_matmul/tests/chapter03_matmul_test.cpp"><code>chapter03_matmul_test.cpp</code></a>
-- 相关阅读：[`03.1 Operator Base`](./01_operator_base.md)、[`03.2 MatMulOp Design`](./02_matmul_design.md)、[`03.3 CPU Reference`](./03_cpu_reference.md)、[`03.4 cuBLAS Implementation`](./04_cublas_implement.md)、[`03.7 从 MatMul 到真实推理 backend`](./07_runtime_backend_bridge.md)
+本章的公共契约如下：
 
-## 这章在解决什么
+| 接口 | 当前实现 | 后续替换 |
+| --- | --- | --- |
+| `MatmulRequest` | row-major `lhs[M,K] * rhs[K,N]` | device pointer / stream |
+| `MatmulBackend` | `CpuReferenceMatmulBackend` | `code/cuda` cuBLAS、自定义 CUDA kernel |
+| `MatMulOp` | 默认调用 CPU reference | 注入其他 backend |
 
-这一章要做的，是把矩阵乘法收束成一个稳定、可替换、可验证的算子边界：上层只依赖 `MatMulOp`，下层可以在 CPU reference、cuBLAS 或后续 backend 之间切换。
+`compute()` 是便捷入口，失败时抛出异常；`try_compute()` 是跨 backend 入口，返回公共 `Status`。两者执行同一个 backend 请求，不维护两套 MatMul 实现。
 
-推理引擎里的大部分耗时最终都会落到矩阵乘法上，所以这章先立接口，再谈性能。它解决的不是“怎么把乘法写出来”，而是“后面 attention、FFN 和真实 backend dispatch 应该建立在哪条稳定计算边界上”。
+当前 CPU 调用链是：`MatMulOp -> CpuReferenceMatmulBackend -> cpu_reference_matmul_kernel`。前两层负责 shape、请求和 backend 身份，最后一层只负责 row-major 三重循环；后续 SIMD 或 CUDA 可以替换 kernel/backend，不改变上层算子输入输出。
 
-## 这章怎么做
+成熟框架同样要把算子语义与具体 kernel 分开，只是 backend 选择、设备调度和融合范围更大。
 
-最小设计不是“把乘法写出来”，而是先定一条稳定的接口契约：上层只看 `MatMulOp`，下层可以切换 CPU reference、cuBLAS 或 future backend，shape、stride 和 layout contract 必须先说清楚。
+| 对照项 | 内容 |
+| --- | --- |
+| 本章教学对象 | MatMul 契约、Operator、Backend 和 CPU reference kernel |
+| 主对照框架 | `llama.cpp` ggml backend、TensorRT-LLM kernels |
+| 成熟组件 | GEMM tactic、设备调度、算子融合、workspace 和多精度 kernel |
+| 重点差异 | 本章优先保留可读 reference 和可替换接口，不把性能库封装成算法实现 |
+| 深入入口 | [`03.7 从 MatMul 到真实推理 backend`](./07_runtime_backend_bridge.md) |
 
-`MatMul` 是“做什么”，`GEMM` 是“怎么高性能地做”。前者是算子语义，后者是实现范式。
+## 3. 阅读与源码顺序
 
-这一层讲清楚之后，读 vLLM / nano-vLLM 时就不会把三种东西混在一起：
+| 顺序 | 页面 | 读完后应看到什么 |
+| --- | --- | --- |
+| 1 | [`03.1 Operator Base`](./01_operator_base.md)、[`03.2 MatMulOp Design`](./02_matmul_design.md) | 算子接口、shape 和 layout 契约 |
+| 2 | [`03.3 CPU Reference`](./03_cpu_reference.md) | 可读、可调试的正确性实现 |
+| 3 | [`03.4 cuBLAS Backend Design`](./04_cublas_implement.md) | 同一语义如何规划高性能 backend 接入 |
+| 4 | [`03.5 Test with PyTorch`](./05_test_with_pytorch.md)、[`03.6 Complexity Intuition`](./06_complexity_intuition.md) | 数值和复杂度基线 |
+| 5 | [`03.7 从 MatMul 到真实推理 backend`](./07_runtime_backend_bridge.md) | 找到 Linear、QKV、FFN 和 kernel 的对应实现 |
 
-- 模型层在请求什么计算
-- backend 层在选择哪条实现路径
-- kernel 层在怎样把这条路径跑快
+源码先看 <a href="../_code/chapter03_matmul/include/chapter03_matmul/operator.h"><code>operator.h</code></a>、<a href="../_code/chapter03_matmul/src/matmul_op.cpp"><code>matmul_op.cpp</code></a> 和 <a href="../_code/chapter03_matmul/src/cpu_backend.cpp"><code>cpu_backend.cpp</code></a>；测试入口是 <a href="../_code/chapter03_matmul/tests/chapter03_matmul_test.cpp"><code>chapter03_matmul_test.cpp</code></a>。CUDA 前置知识见 [`foundation/03_cuda_environment_basics`](../foundation/03_cuda_environment_basics.md)，Linear shape 和复杂度见 [`F-LINEAR-01`](../reference/formulas.md#f-linear-01)。
 
-## 收口与下一步
+## 4. 验证
 
-这一章的验证路径很直接：先确认接口边界稳定，再确认 CPU 参考版本的结果正确，最后确认 cuBLAS 路径和 PyTorch 对照一致。
+本章按以下顺序验证：
 
-如果这一层没有先做稳，后面把 `MatMul` 嵌入 attention 和 FFN 时，定位问题会非常困难。
+1. CPU reference 的 shape 和数值正确
+2. 非法 shape、buffer size、空 buffer 和越界访问会明确失败
+3. 独立 cuBLAS target 与 CPU 结果在允许误差内一致，后续 backend 继续复用该门槛
+4. backend 名称和设备类型可观察，便于后续 benchmark 区分路径
+5. Matrix 的 shape/stride/storage 元数据能通过 core contract 校验
 
-下一步进入 `chapter04_attention`，把这个算子边界收束进 attention、FFN 和 residual，开始组装真正的模型结构。
+`MatMul` 表示做什么，`GEMM` 或 kernel 表示怎样更快地做。后续优化应先保留 CPU reference，再比较其他 backend。
+
+**下一章：**Chapter 02 提供 Tensor view，Chapter 03 提供 MatMul / Linear 的执行入口；Chapter 04 将把这些算子组合成 Attention、FFN、Residual 和单层 Decoder。

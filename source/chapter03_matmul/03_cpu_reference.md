@@ -1,10 +1,10 @@
 # 03.3 CPU Reference Implementation CPU 参考实现
 
 
-## 这一页要解决什么
+## 先写可验证的 CPU Reference
 
 先实现一个正确的 CPU 版本 `MatMul`，作为后续 cuBLAS 版本的对照基线。  
-这一页的目标不是最快，而是最容易读懂、最容易验证。
+CPU reference 的目标是最容易读懂、最容易验证。
 
 读完后应能做到：
 
@@ -15,8 +15,8 @@
 ## 阅读入口
 
 - 前置阅读：[`Operator Base`](./01_operator_base.md)、[`MatMulOp 设计`](./02_matmul_design.md)
-- 源码直达：<a href="../_code/chapter03_matmul/src/matrix.cpp"><code>matrix.cpp</code></a>、<a href="../_code/chapter03_matmul/src/matmul_op.cpp"><code>matmul_op.cpp</code></a>、<a href="../_code/chapter03_matmul/tests/chapter03_matmul_test.cpp"><code>chapter03_matmul_test.cpp</code></a>
-- 相关阅读：[`cuBLAS 实现`](./04_cublas_implement.md)、[`PyTorch 对照测试`](./05_test_with_pytorch.md)
+- 源码直达：<a href="../_code/chapter03_matmul/src/matrix.cpp"><code>matrix.cpp</code></a>、<a href="../_code/chapter03_matmul/src/cpu_kernel.cpp"><code>cpu_kernel.cpp</code></a>、<a href="../_code/chapter03_matmul/src/matmul_op.cpp"><code>matmul_op.cpp</code></a>、<a href="../_code/chapter03_matmul/tests/chapter03_matmul_test.cpp"><code>chapter03_matmul_test.cpp</code></a>
+- 相关阅读：[`cuBLAS 接入设计`](./04_cublas_implement.md)、[`PyTorch 对照测试`](./05_test_with_pytorch.md)
 
 ## 核心实现
 
@@ -32,6 +32,8 @@ CPU 参考实现通常最直观，也最适合用来定位布局、转置和维�
 - 然后用三重循环累加
 - 最后返回结果
 
+`MatMulOp::try_compute()` 负责 Matrix 与公共请求之间的适配，`CpuReferenceMatmulBackend` 只负责分派，`cpu_reference_matmul_kernel()` 校验 request 并执行三重循环。shape mismatch 不再只能依赖异常捕获，也可以直接检查返回的 `Status`。
+
 实现时不要一开始就追求 cache 友好。  
 参考实现的任务是成为正确性基线，不是成为最快版本。
 
@@ -42,7 +44,7 @@ assert(A.cols() == B.rows());
 Tensor C(A.rows(), B.cols());
 ```
 
-源码锚点：`code/chapter03_matmul/src/matmul_op.cpp`
+源码锚点：`code/chapter03_matmul/src/cpu_kernel.cpp`
 
 这样“边界检查”和“核心计算”就会同时出现在代码里，读者也更容易把形状错误和累加错误区分开。
 
@@ -61,6 +63,7 @@ Tensor C(A.rows(), B.cols());
 - 与手工小矩阵结果一致
 - 与后续 cuBLAS 结果一致
 - 错误维度输入能被正确拒绝
+- 空 buffer、零维度和超大 shape 能在进入循环前失败
 
 对于小矩阵，最好直接写出手算结果。  
 这样一旦数值不对，你可以立刻判断是维度顺序错了，还是累加逻辑错了。
@@ -79,7 +82,7 @@ for (std::size_t i = 0; i < M; ++i) {
 }
 ```
 
-源码锚点：`code/chapter03_matmul/src/matmul_op.cpp`
+源码锚点：`code/chapter03_matmul/src/cpu_kernel.cpp`
 
 这段循环的价值在于可读性，而不是性能。
 

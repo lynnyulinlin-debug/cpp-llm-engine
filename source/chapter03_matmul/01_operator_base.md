@@ -1,7 +1,7 @@
 # 03.1 Operator Base 算子基类
 
 
-## 这一页要解决什么
+## 定义统一 Operator 入口
 
 定义所有前向算子都能继承的基础接口，让本章的 `MatMul` 能先用同一种方式接入主流程。
 
@@ -15,7 +15,7 @@
 
 - 前置阅读：[`chapter03 导读`](./intro.md)、[`MatMulOp 设计`](./02_matmul_design.md)
 - 源码直达：<a href="../_code/chapter03_matmul/include/chapter03_matmul/operator.h"><code>operator.h</code></a>、<a href="../_code/chapter03_matmul/src/operator.cpp"><code>operator.cpp</code></a>
-- 相关阅读：[`CPU Reference`](./03_cpu_reference.md)、[`cuBLAS 实现`](./04_cublas_implement.md)
+- 相关阅读：[`CPU Reference`](./03_cpu_reference.md)、[`cuBLAS 接入设计`](./04_cublas_implement.md)
 
 ## 核心设计
 

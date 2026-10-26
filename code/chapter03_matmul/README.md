@@ -1,24 +1,29 @@
-# Chapter 03: MatMul
+# Chapter 03：MatMul 与计算后端
 
-This directory contains the minimal implementation for `chapter03_matmul`.
+本目录把 CPU reference、算子接口和 backend 分派连接起来，再为 cuBLAS 保留扩展边界。完整学习说明见 [`source/chapter03_matmul`](../../source/chapter03_matmul/intro.md)。
 
-## Scope
+## 本章资产总览
 
-- Operator base class
-- MatMulOp design
-- CPU reference implementation
-- cuBLAS implementation
-- PyTorch comparison tests
+| 资产 | 作用 |
+| --- | --- |
+| `include/` | `Operator`、`MatMulOp`、backend 和请求契约 |
+| `src/operator.cpp` | 算子公共行为 |
+| `src/matmul_op.cpp` | MatMul 算子、`try_compute` 和 backend 请求适配 |
+| `src/cpu_backend.cpp` | CPU reference backend 分派 |
+| `src/cpu_kernel.cpp` | row-major CPU 三重循环 kernel |
+| `src/matrix.cpp` | 教学矩阵存储与计算 |
+| `tests/chapter03_matmul_test.cpp` | 数值正确性、shape 和边界检查 |
+| `tests/operator_smoke_test.cpp` | Operator/backend 接口 smoke |
+| `examples/main_matmul.cpp` | demo 输出和调用示例 |
+| `scripts/run.sh` | 隔离构建、CTest 和 demo 入口 |
+| `code/core` | 共享 `Backend`、`Operator`、`Status` 契约 |
 
-## How to run
+## 运行与验证
 
-- `bash scripts/run.sh`
+从仓库根目录执行：
 
-## Current status
+```bash
+bash code/chapter03_matmul/scripts/run.sh
+```
 
-- Library, demo, and test targets are available
-- CPU reference path is verified
-- CPU reference path is verified as the semantic baseline
-- cuBLAS path is wired as the high-performance backend, but the operator interface remains the source of truth
-- This chapter is the operator baseline for later attention / FFN work
-- The current code keeps the interface explicit so backend swaps do not blur the operator contract
+`Matrix::contract()` 把连续二维存储适配为公共 Tensor 元数据；`try_compute()` 用 `Status` 贯通 Operator 与 backend，原 `compute()` 继续提供异常式兼容入口。GPU backend 或 cuBLAS 必须复用同一输入输出约定和数值结果。

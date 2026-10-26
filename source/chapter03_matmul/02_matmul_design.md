@@ -1,21 +1,21 @@
 # 03.2 MatMulOp Design `MatMulOp` 设计
 
 
-## 这一页要解决什么
+## 固定 MatMul 的输入输出契约
 
-这一页要把 `MatMulOp` 的边界先定下来。读完后，读者应该能说清楚三件事：
+先把 `MatMulOp` 的输入输出契约定下来。读完后，读者应该能说清楚三件事：
 
 - 这个算子接收什么输入
 - 它输出什么结果
 - CPU reference 和 cuBLAS 为什么是同一个接口下的两种实现
 
-矩阵乘法是后面很多模块的公共底座。如果这一层设计不清楚，attention 和 FFN 的问题会和布局问题混在一起，排错会很慢。
+矩阵乘法是后面很多模块的公共底座。如果 MatMul 契约不清楚，attention 和 FFN 的问题会和布局问题混在一起，排错会很慢。
 
 ## 阅读入口
 
 - 前置阅读：[`Operator Base`](./01_operator_base.md)、[`CPU Reference`](./03_cpu_reference.md)
 - 源码直达：<a href="../_code/chapter03_matmul/include/chapter03_matmul/matmul_op.h"><code>matmul_op.h</code></a>、<a href="../_code/chapter03_matmul/src/matmul_op.cpp"><code>matmul_op.cpp</code></a>
-- 相关阅读：[`cuBLAS 实现`](./04_cublas_implement.md)、[`PyTorch 对照测试`](./05_test_with_pytorch.md)
+- 相关阅读：[`cuBLAS 接入设计`](./04_cublas_implement.md)、[`PyTorch 对照测试`](./05_test_with_pytorch.md)
 
 ## 核心设计
 
@@ -30,6 +30,8 @@
 - 下层可以切换 CPU reference 或 cuBLAS
 - 布局转换只发生在边界内，不向上层泄漏
 
+当前代码提供两个调用层级：教学示例使用 `compute(lhs, rhs)`；需要显式处理错误的 Engine/backend 代码使用 `try_compute(lhs, rhs, &output)`。后者先检查两个 `Matrix::contract()` 对应的 shape 和连续布局，再把原始 buffer 适配为 `MatmulRequest`，错误沿 `Status` 返回。
+
 这里最容易出错的不是矩阵乘法本身，而是内部 layout 到库调用参数的映射。  
 因此设计阶段必须先明确项目内部使用什么布局，再决定如何翻译成 cuBLAS 所需的参数。
 
@@ -42,7 +44,7 @@
 这里的接口约定也要明确：`forward(A, B)` 表示 `A * B`，也就是左乘语义。  
 只要这个语义在 CPU 和 cuBLAS 后端之间保持一致，上层在拼接 Q/K/V 或组织 FFN 输入时就不会因为参数顺序而写反。
 
-## 为什么这一层必须单独抽出来
+## 为什么 MatMul 需要独立契约
 
 如果把矩阵乘法直接埋进模型代码里，后面很快会出现三个问题：
 
@@ -50,7 +52,7 @@
 - backend 切换会扩散到每个调用点
 - attention、FFN、projection 的排错边界会变得很模糊
 
-所以 `MatMulOp` 这一层的真正作用，不只是“包装一次乘法”，而是把职责切开：
+所以 `MatMulOp` 的作用不只是“包装一次乘法”，还要把职责切开：
 
 - 上层只说“我要一次什么形状、什么语义的乘法”
 - backend 层决定“这次乘法由谁来算”

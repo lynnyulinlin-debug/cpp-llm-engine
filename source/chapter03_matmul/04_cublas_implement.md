@@ -1,93 +1,49 @@
-# 03.4 cuBLAS Implementation cuBLAS 实现
+# 03.4 cuBLAS Backend cuBLAS 接入
 
+本节用已验证的 `cublasSgemm` backend 说明 row-major 与 column-major 的适配。CPU reference 和 CUDA backend 复用同一个 `MatmulRequest`，GPU target 保持独立，不影响 CPU 默认回归。
 
-## 这一页要解决什么
-
-用 `cublasGemmEx` 实现高效矩阵乘法，并正确处理转置标志与内存布局。
-
-读完后应能做到：
-
-- 理解 cuBLAS 在本章中的作用
-- 理解如何把内部张量布局映射到 cuBLAS 调用
-- 理解转置参数和内存布局的关系
+读完后应能解释三个问题：项目的 MatMul 语义为什么不随 backend 改变，row-major 数据怎样交给 cuBLAS，以及 handle、stream 和 device buffer 分别由谁持有。
 
 ## 阅读入口
 
 - 前置阅读：[`MatMulOp 设计`](./02_matmul_design.md)、[`CPU Reference`](./03_cpu_reference.md)
-- 源码直达：<a href="../_code/chapter03_matmul/src/matmul_op.cpp"><code>matmul_op.cpp</code></a>、<a href="../_code/chapter03_matmul/src/matrix.cpp"><code>matrix.cpp</code></a>、<a href="../_code/chapter03_matmul/tests/chapter03_matmul_test.cpp"><code>chapter03_matmul_test.cpp</code></a>
-- 相关阅读：[`PyTorch 对照测试`](./05_test_with_pytorch.md)、[`复杂度直觉`](./06_complexity_intuition.md)
+- 源码直达：<a href="../_code/cuda/include/cpp_llm_engine/cuda/cublas_matmul_backend.h"><code>cublas_matmul_backend.h</code></a>、<a href="../_code/cuda/src/cublas_matmul_backend.cpp"><code>cublas_matmul_backend.cpp</code></a>
+- 测试直达：<a href="../_code/cuda/tests/cuda_cublas_matmul_test.cu"><code>cuda_cublas_matmul_test.cu</code></a>
 
-## 核心实现
+## Row-major 映射
 
-这一步把“正确的参考实现”升级成“高效实现”。如果布局处理不对，结果会错得很隐蔽，所以这一页必须和 CPU baseline 紧密对照。
+core 固定的数学语义是：
 
-这一页的核心内容：
-
-- `cublasGemmEx`
-- `cublasHandle_t`
-- `transa` / `transb`
-- row-major 与 column-major 的映射
-
-工程实现上，建议把 cuBLAS 调用包在一个很薄的适配层里。适配层只做三件事：
-
-1. 统一输入输出接口
-2. 翻译 layout / transpose 参数
-3. 管理 handle 和临时资源
-
-这样如果后续想切换其他 GPU backend，不需要重写上层算子逻辑。
-
-row-major 到 cuBLAS 的映射示例：
-
-如果项目内部统一使用 row-major，而你要计算 `C = A * B`，那么在 cuBLAS 里通常会把同一块内存按 column-major 的视角解释成转置后的矩阵来算。
-
-一个常见的等价写法是：
-
-- 内部语义：`C = A * B`
-- cuBLAS 视角：计算 `C^T = B^T * A^T`
-- 对应设置：`transa = CUBLAS_OP_T`，`transb = CUBLAS_OP_T`
-
-这样做的原因是：cuBLAS 默认按 column-major 理解输入，而项目内部可能按 row-major 存储。  
-把这层翻译说清楚之后，读者在看 cuBLAS 文档时就不会把“数学上的转置”和“内存布局上的解释”混为一谈。
-
-实现建议：
-
-- 先保持接口和 CPU 版本一致
-- 只替换底层计算路径
-- 保留和 CPU baseline 相同的测试入口
-
-## 这一页在真实项目里对应什么
-
-教程这里接 `cuBLAS`，不是因为真实项目只会用 `cuBLAS`，而是因为它足够清楚地表达了一个 backend 层问题：同样的 `MatMul` 语义，可以交给不同实现路径。
-
-如果说 `03.2` 负责立住“算子语义边界”，这一页负责的就是下一步：backend 怎样承接这条边界，而不把上层语义改坏。
-
-所以本页只解决一件事：backend 怎样把稳定语义翻译成高性能实现。它不试图提前展开调度、continuous batching 或 profiling 主线，也不重新定义 `MatMul` 本身的语义。
-
-## 验证与排查
-
-验证时重点看：
-
-- 和 CPU 参考实现数值接近
-- 和 PyTorch 对照误差可接受
-- 布局转换后输出正确
-
-如果 cuBLAS 版本和 CPU 参考版本在小样本上完全一致，通常说明接口和布局映射已经过了第一道关。
-
-最小适配层可以先长这样：
-
-```cpp
-Tensor matmul_cublas(const Tensor& a, const Tensor& b, cublasHandle_t handle) {
-    // 1. 校验 shape
-    // 2. 翻译 layout / transpose
-    // 3. 调用 cublasGemmEx
-    // 4. 返回输出 Tensor
-}
+```text
+C[M,N] = A[M,K] * B[K,N]
 ```
 
-关键不是把 cuBLAS API 直接暴露给上层，而是把它包在一个可替换的 backend 里。
+cuBLAS 默认按 column-major 解释内存。当前实现不复制或转置数据，而是交换传入的 A/B：`B[K,N]` 的 row-major 内存被解释为 column-major `B^T[N,K]`，`A[M,K]` 同理被解释为 `A^T[K,M]`。因此 cuBLAS 实际计算：
 
-常见问题：
+```text
+C^T[N,M] = B^T[N,K] * A^T[K,M]
+```
 
-- 转置标志设置反了
-- 行主序和列主序混用
-- 输入输出维度与 GEMM 参数不一致
+| SGEMM 参数 | 当前值 | 原因 |
+| --- | --- | --- |
+| 第一个矩阵 | `request.rhs` | 作为 `B^T[N,K]` 解释 |
+| 第二个矩阵 | `request.lhs` | 作为 `A^T[K,M]` 解释 |
+| `transa/transb` | `CUBLAS_OP_N / CUBLAS_OP_N` | 内存视角已经完成转置解释 |
+| `m/n/k` | `N / M / K` | 输出按 `C^T[N,M]` 计算 |
+| `lda/ldb/ldc` | `N / K / N` | 对应三个 column-major 矩阵的行数 |
+
+## 资源与错误边界
+
+`CublasMatmulBackend` 独占 move-only `cublasHandle_t`，不使用进程全局 handle。每次 `compute()` 显式接收 `CudaStream` 并调用 `cublasSetStream`，因此 handle 与执行上下文可以在下一阶段一起管理。
+
+`CublasStatus` 保留原始 `cublasStatus_t`、操作名和可读错误，并能转换为 core `Status`。backend 在调用库函数前拒绝空 handle、无效 stream、空指针、零维和超出 cuBLAS `int` 范围的维度。
+
+## 验证
+
+从仓库根目录运行：
+
+```bash
+CUDA_HOME=/usr/local/cuda-12.8 bash code/cuda/scripts/run.sh
+```
+
+测试用 `1x1x1`、`2x3x4`、`7x5x9` 和 `31x33x17` 与 CPU 三重循环逐元素对照。固定 `256x256x256` workload 经过 1 次 warmup 后使用 event 记录 10 轮 SGEMM；D2H 和结果检查位于计时区间之外。

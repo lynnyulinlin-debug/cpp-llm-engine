@@ -14,8 +14,8 @@
 | --- | --- |
 | <a href="/_code/chapter03_matmul/include/chapter03_matmul/operator.h"><code>operator.h</code></a> | 算子抽象 |
 | <a href="/_code/chapter03_matmul/src/operator.cpp"><code>src/operator.cpp</code></a> | 算子基类实现 |
-| <a href="/_code/chapter03_matmul/include/chapter03_matmul/matmul_op.h"><code>matmul_op.h</code></a> | MatMul 接口 |
-| <a href="/_code/chapter03_matmul/src/matmul_op.cpp"><code>src/matmul_op.cpp</code></a> | MatMul 实现 |
+| <a href="/_code/chapter03_matmul/include/chapter03_matmul/matmul_op.h"><code>matmul_op.h</code></a> | MatMul 与 `try_compute` 接口 |
+| <a href="/_code/chapter03_matmul/src/matmul_op.cpp"><code>src/matmul_op.cpp</code></a> | Operator 到 backend 的 `Status` 适配 |
 
 ## 验证与脚本
 
@@ -29,7 +29,6 @@
 ## 对应文档
 
 - [chapter03 导读](../chapter03_matmul/intro.md)
-- [chapter03 小结](../chapter03_matmul/summary.md)
 
 ## 说明
 

@@ -1,9 +1,9 @@
 # 03.6 Complexity Intuition 复杂度直觉
 
 
-## 这一页要解决什么
+## 看懂 MatMul 的复杂度
 
-帮助读者理解为什么 `MatMul` 的参考实现应该先写成朴素循环，而不是一开始就追求复杂优化。
+本节说明为什么 `MatMul` 的参考实现先写成朴素循环，再把性能问题交给 backend。
 
 读完后应能做到：
 
@@ -13,7 +13,7 @@
 
 ## 阅读入口
 
-- 前置阅读：[`CPU Reference`](./03_cpu_reference.md)、[`cuBLAS 实现`](./04_cublas_implement.md)
+- 前置阅读：[`CPU Reference`](./03_cpu_reference.md)、[`cuBLAS 接入设计`](./04_cublas_implement.md)
 - 源码直达：<a href="../_code/chapter03_matmul/src/matrix.cpp"><code>matrix.cpp</code></a>、<a href="../_code/chapter03_matmul/src/matmul_op.cpp"><code>matmul_op.cpp</code></a>
 - 相关阅读：[`PyTorch 对照测试`](./05_test_with_pytorch.md)、[`从 MatMul 到真实推理 backend`](./07_runtime_backend_bridge.md)
 
@@ -71,6 +71,6 @@ for (std::size_t i = 0; i < M; ++i) {
 - 过早优化，导致难以验证
 - 忽略矩阵维度和索引的对应关系
 
-本页小结：
+复杂度小结：
 
-这一页补的是复杂度直觉，而不是新的实现功能。读完后，读者应该能接受为什么 `MatMul` 的 CPU 参考版本先用朴素循环，再把性能交给更合适的后端。
+复杂度小结补充的是性能判断依据。读完后，读者应该能说明为什么 `MatMul` 的 CPU 参考版本先用朴素循环，再把性能交给更合适的后端。

@@ -1,7 +1,7 @@
 # 03.5 PyTorch Comparison Testing PyTorch 对照测试
 
 
-## 这一页要解决什么
+## 用 PyTorch 对照 MatMul
 
 随机生成矩阵，与 PyTorch 的结果对照，验证 `MatMul` 的数值正确性。
 
@@ -13,9 +13,9 @@
 
 ## 阅读入口
 
-- 前置阅读：[`CPU Reference`](./03_cpu_reference.md)、[`cuBLAS 实现`](./04_cublas_implement.md)
+- 前置阅读：[`CPU Reference`](./03_cpu_reference.md)、[`cuBLAS 接入设计`](./04_cublas_implement.md)
 - 源码直达：<a href="../_code/chapter03_matmul/tests/chapter03_matmul_test.cpp"><code>chapter03_matmul_test.cpp</code></a>、<a href="../_code/chapter03_matmul/src/matmul_op.cpp"><code>matmul_op.cpp</code></a>
-- 相关阅读：[`复杂度直觉`](./06_complexity_intuition.md)、[`本章小结`](./summary.md)
+- 相关阅读：[`复杂度直觉`](./06_complexity_intuition.md)、[`章节导读`](./intro.md)
 
 ## 测试设计
 
@@ -42,7 +42,7 @@
 这样就能形成一条清晰的双基线路径：
 
 - 如果 CPU 版本通过、cuBLAS 版本失败，问题大概率在布局翻译或 backend 参数
-- 如果 CPU 和 cuBLAS 都通过，说明基线可信
+- CPU reference 当前必须通过；后续 cuBLAS 实现也通过同一对照后，才能说明 backend 替换可信
 - 如果两者都失败，问题大概率在数学定义或测试输入本身
 
 这样做的好处是，读者可以沿着同一组输入同时检查参考实现、GPU 实现和 PyTorch 基线，而不是为三者分别维护一套不同的测试逻辑。
