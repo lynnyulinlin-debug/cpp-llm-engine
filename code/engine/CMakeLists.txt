@@ -1,0 +1,251 @@
+cmake_minimum_required(VERSION 3.20)
+project(cpp_llm_engine LANGUAGES CXX)
+
+set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
+set(CMAKE_CXX_EXTENSIONS OFF)
+
+option(CHAPTER01_ENABLE_LLAMA_CPP "Build the real llama.cpp tokenizer backend" OFF)
+option(CPP_LLM_ENGINE_ENABLE_CUDA "Build optional CUDA model adapters" OFF)
+set(LLAMA_CPP_ROOT "" CACHE PATH "llama.cpp checkout containing include/ and build/bin/")
+set(CPP_LLM_ENGINE_REAL_MODEL "" CACHE FILEPATH "Optional GGUF used by real-model CTest")
+
+add_subdirectory(
+    ${CMAKE_CURRENT_SOURCE_DIR}/../core
+    ${CMAKE_CURRENT_BINARY_DIR}/core
+)
+
+add_subdirectory(
+    ${CMAKE_CURRENT_SOURCE_DIR}/../chapter01_tensor_loader
+    ${CMAKE_CURRENT_BINARY_DIR}/chapter01_tensor_loader
+)
+
+add_subdirectory(
+    ${CMAKE_CURRENT_SOURCE_DIR}/../chapter05_generation
+    ${CMAKE_CURRENT_BINARY_DIR}/chapter05_generation
+)
+
+add_subdirectory(
+    ${CMAKE_CURRENT_SOURCE_DIR}/../chapter09_serving
+    ${CMAKE_CURRENT_BINARY_DIR}/chapter09_serving
+)
+
+add_library(cpp_llm_engine
+    src/embedding_request_executor.cpp
+    src/engine.cpp
+)
+
+if(CPP_LLM_ENGINE_ENABLE_CUDA)
+    add_subdirectory(
+        ${CMAKE_CURRENT_SOURCE_DIR}/../cuda
+        ${CMAKE_CURRENT_BINARY_DIR}/cuda
+    )
+    target_sources(cpp_llm_engine PRIVATE src/cuda_llama_layer_weights.cpp)
+    target_link_libraries(cpp_llm_engine PUBLIC cpp_llm_engine_cuda)
+    add_executable(cuda_llama_layer_weights_test
+        tests/cuda_llama_layer_weights_test.cpp
+    )
+    target_link_libraries(cuda_llama_layer_weights_test PRIVATE cpp_llm_engine)
+endif()
+
+target_include_directories(cpp_llm_engine
+    PUBLIC
+        ${CMAKE_CURRENT_SOURCE_DIR}/include
+)
+
+target_link_libraries(cpp_llm_engine
+    PUBLIC
+        cpp_llm_engine_core
+        chapter01_tensor_loader
+        chapter05_generation
+)
+
+if(CHAPTER01_ENABLE_LLAMA_CPP)
+    if(NOT TARGET chapter01_real_tokenizer)
+        message(FATAL_ERROR "CHAPTER01_ENABLE_LLAMA_CPP requires chapter01_real_tokenizer")
+    endif()
+    target_sources(cpp_llm_engine PRIVATE src/real_tokenizer_backend.cpp)
+    target_link_libraries(cpp_llm_engine PUBLIC chapter01_real_tokenizer)
+    add_executable(real_tokenizer_engine_smoke
+        examples/real_tokenizer_engine_smoke.cpp
+    )
+    target_link_libraries(real_tokenizer_engine_smoke PRIVATE cpp_llm_engine)
+    set_target_properties(real_tokenizer_engine_smoke PROPERTIES
+        BUILD_RPATH "${LLAMA_CPP_ROOT}/build/bin"
+    )
+    if(TARGET chapter01_real_decoder)
+        target_sources(cpp_llm_engine PRIVATE
+            src/real_llama_engine.cpp
+            src/real_llama_executor_factory.cpp
+        )
+        target_link_libraries(cpp_llm_engine PUBLIC chapter01_real_decoder)
+        add_executable(real_tinyllama_generation_smoke
+            examples/real_tinyllama_generation_smoke.cpp
+        )
+        target_link_libraries(real_tinyllama_generation_smoke PRIVATE cpp_llm_engine)
+        set_target_properties(real_tinyllama_generation_smoke PROPERTIES
+            BUILD_RPATH "${LLAMA_CPP_ROOT}/build/bin"
+        )
+    endif()
+endif()
+
+add_executable(cpp_llm_engine_demo
+    examples/main.cpp
+)
+
+target_link_libraries(cpp_llm_engine_demo
+    PRIVATE
+        cpp_llm_engine
+)
+
+add_executable(cpp_llm_engine_test
+    tests/engine_smoke_test.cpp
+)
+
+add_executable(embedding_request_executor_test
+    tests/embedding_request_executor_test.cpp
+)
+
+add_executable(embedding_request_service_test
+    tests/embedding_request_service_test.cpp
+)
+
+target_link_libraries(embedding_request_executor_test
+    PRIVATE cpp_llm_engine
+)
+
+target_link_libraries(embedding_request_service_test
+    PRIVATE cpp_llm_engine chapter09_serving
+)
+
+target_link_libraries(cpp_llm_engine_test
+    PRIVATE
+        cpp_llm_engine
+)
+
+include(CTest)
+enable_testing()
+add_test(NAME cpp_llm_engine_test COMMAND cpp_llm_engine_test)
+add_test(NAME embedding_request_executor_test COMMAND embedding_request_executor_test)
+add_test(NAME embedding_request_service_test COMMAND embedding_request_service_test)
+if(CPP_LLM_ENGINE_ENABLE_CUDA)
+    add_test(NAME cuda_llama_layer_weights_test COMMAND cuda_llama_layer_weights_test)
+endif()
+
+if(CPP_LLM_ENGINE_REAL_MODEL)
+    if(NOT EXISTS "${CPP_LLM_ENGINE_REAL_MODEL}")
+        message(FATAL_ERROR "CPP_LLM_ENGINE_REAL_MODEL does not exist")
+    endif()
+    if(NOT TARGET real_tinyllama_generation_smoke)
+        message(FATAL_ERROR
+            "CPP_LLM_ENGINE_REAL_MODEL requires CHAPTER01_ENABLE_LLAMA_CPP and CHAPTER06_SOURCE_DIR"
+        )
+    endif()
+    add_test(
+        NAME real_tinyllama_generation_test
+        COMMAND real_tinyllama_generation_smoke
+            "${CPP_LLM_ENGINE_REAL_MODEL}"
+            4
+            "Hello TinyLlama"
+            "29892,306,29915,29885"
+    )
+    set_tests_properties(real_tinyllama_generation_test PROPERTIES
+        LABELS "real_model;slow"
+        PASS_REGULAR_EXPRESSION "golden_tokens_match: true"
+    )
+
+    if(NOT TARGET chapter09_serving)
+        add_subdirectory(
+            ${CMAKE_CURRENT_SOURCE_DIR}/../chapter09_serving
+            ${CMAKE_CURRENT_BINARY_DIR}/chapter09_serving
+        )
+    endif()
+    add_executable(real_tinyllama_serving_smoke
+        examples/real_tinyllama_serving_smoke.cpp
+    )
+    target_link_libraries(real_tinyllama_serving_smoke
+        PRIVATE cpp_llm_engine chapter09_serving
+    )
+    set_target_properties(real_tinyllama_serving_smoke PROPERTIES
+        BUILD_RPATH "${LLAMA_CPP_ROOT}/build/bin"
+    )
+    add_test(
+        NAME real_tinyllama_serving_test
+        COMMAND real_tinyllama_serving_smoke "${CPP_LLM_ENGINE_REAL_MODEL}"
+    )
+    set_tests_properties(real_tinyllama_serving_test PROPERTIES
+        LABELS "real_model;slow;serving"
+        PASS_REGULAR_EXPRESSION "request_isolation_match: true"
+    )
+
+    add_executable(real_tinyllama_http_adapter_smoke
+        examples/real_tinyllama_http_adapter_smoke.cpp
+    )
+    target_link_libraries(real_tinyllama_http_adapter_smoke
+        PRIVATE cpp_llm_engine chapter09_serving
+    )
+    set_target_properties(real_tinyllama_http_adapter_smoke PROPERTIES
+        BUILD_RPATH "${LLAMA_CPP_ROOT}/build/bin"
+    )
+    add_test(
+        NAME real_tinyllama_http_adapter_test
+        COMMAND real_tinyllama_http_adapter_smoke "${CPP_LLM_ENGINE_REAL_MODEL}"
+    )
+    set_tests_properties(real_tinyllama_http_adapter_test PROPERTIES
+        LABELS "real_model;slow;serving;http"
+        PASS_REGULAR_EXPRESSION "sync_golden_match: true"
+    )
+
+    if(TARGET chapter09_cpp_httplib_transport)
+        add_executable(real_tinyllama_http_server
+            examples/real_tinyllama_http_server.cpp
+        )
+        target_link_libraries(real_tinyllama_http_server
+            PRIVATE cpp_llm_engine chapter09_cpp_httplib_transport
+        )
+        set_target_properties(real_tinyllama_http_server PROPERTIES
+            BUILD_RPATH "${LLAMA_CPP_ROOT}/build/bin"
+        )
+    endif()
+
+    add_executable(real_tinyllama_decoder_profile
+        examples/real_tinyllama_decoder_profile.cpp
+    )
+    target_link_libraries(real_tinyllama_decoder_profile PRIVATE cpp_llm_engine)
+    set_target_properties(real_tinyllama_decoder_profile PROPERTIES
+        BUILD_RPATH "${LLAMA_CPP_ROOT}/build/bin"
+    )
+    add_test(
+        NAME real_tinyllama_decoder_profile_test
+        COMMAND real_tinyllama_decoder_profile "${CPP_LLM_ENGINE_REAL_MODEL}" 1
+    )
+    set_tests_properties(real_tinyllama_decoder_profile_test PROPERTIES
+        LABELS "real_model;slow;profiling"
+        PASS_REGULAR_EXPRESSION "ffn_profile_complete=PASS"
+    )
+
+    add_executable(real_tinyllama_serving_benchmark
+        examples/real_tinyllama_serving_benchmark.cpp
+    )
+    target_link_libraries(real_tinyllama_serving_benchmark
+        PRIVATE cpp_llm_engine chapter09_serving
+    )
+    target_compile_definitions(real_tinyllama_serving_benchmark PRIVATE
+        CPP_LLM_ENGINE_BUILD_TYPE="${CMAKE_BUILD_TYPE}"
+    )
+    set_target_properties(real_tinyllama_serving_benchmark PROPERTIES
+        BUILD_RPATH "${LLAMA_CPP_ROOT}/build/bin"
+    )
+    add_test(
+        NAME real_tinyllama_serving_benchmark_test
+        COMMAND real_tinyllama_serving_benchmark
+            "${CPP_LLM_ENGINE_REAL_MODEL}"
+            --warmup 0
+            --iterations 1
+            --output "${CMAKE_CURRENT_BINARY_DIR}/tinyllama_service_benchmark_test.json"
+    )
+    set_tests_properties(real_tinyllama_serving_benchmark_test PROPERTIES
+        LABELS "real_model;slow;serving;benchmark"
+        PASS_REGULAR_EXPRESSION "correctness=PASS"
+    )
+endif()

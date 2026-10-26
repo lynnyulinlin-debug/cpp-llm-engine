@@ -1,0 +1,52 @@
+# engine First Success 代码导航
+
+这一页定位本教程自己的第一个 CPU-only 纵向切片。它复用 Chapter 05 的最小 generation runtime，但增加了仓库级入口，把 prompt、token tensor、Request、Decoder、Generation Runtime 和输出串起来。
+
+## 阅读顺序
+
+1. 先看 `engine.h`，理解 `TokenTensor`、`GenerationResult` 和 `Engine` 边界
+2. 再看 `tokenizer_backend.h`，理解 toy/real tokenizer 的替换边界
+3. 再看 Chapter 01 的 `real_llama_cpu_decoder.h`，理解只读 Model 与请求 Context 的所有权
+4. 阅读 `real_llama_executor_factory.h`，确认一个 Factory 如何为多个请求创建独立 Executor/Context
+5. 对照 `engine.cpp` 和 `real_llama_engine.cpp`，跟踪 toy/real 两条生成路径
+6. 最后运行 demo、真实生成/服务/HTTP smoke 和 CTest
+
+## 核心代码
+
+| 文件 | 作用 |
+| --- | --- |
+| <a href="/_code/engine/include/cpp_llm_engine/engine.h"><code>engine.h</code></a> | 仓库级 Engine 接口 |
+| <a href="/_code/engine/include/cpp_llm_engine/tokenizer_backend.h"><code>tokenizer_backend.h</code></a> | tokenizer backend contract |
+| <a href="/_code/engine/include/cpp_llm_engine/real_tokenizer_backend.h"><code>real_tokenizer_backend.h</code></a> | llama.cpp tokenizer 适配接口 |
+| <a href="/_code/engine/include/cpp_llm_engine/real_llama_engine.h"><code>real_llama_engine.h</code></a> | 真实 TinyLlama 单请求生成接口 |
+| <a href="/_code/engine/include/cpp_llm_engine/real_llama_executor_factory.h"><code>real_llama_executor_factory.h</code></a> | 共享 Model、创建每请求 Executor/Context |
+| <a href="/_code/chapter01_tensor_loader/src/real_llama_cpu_decoder.h"><code>real_llama_cpu_decoder.h</code></a> | 共享 22 层权重的 Model 与独占分层 K/V 的请求 Context |
+| <a href="/_code/chapter01_tensor_loader/src/model_config.h"><code>model_config.h</code></a> | Chapter 01 提供的模型配置边界 |
+| <a href="/_code/engine/src/engine.cpp"><code>engine.cpp</code></a> | token tensor、tokenize 和 generation bridge |
+| <a href="/_code/engine/src/real_llama_engine.cpp"><code>real_llama_engine.cpp</code></a> | 真实 tokenizer、Decoder 与 Chapter05 Runtime bridge |
+| <a href="/_code/engine/examples/real_tinyllama_serving_smoke.cpp"><code>real_tinyllama_serving_smoke.cpp</code></a> | Chapter09 真实双请求隔离与资源释放验证 |
+| <a href="/_code/engine/examples/real_tinyllama_http_adapter_smoke.cpp"><code>real_tinyllama_http_adapter_smoke.cpp</code></a> | 真实同步/SSE completion 与 metrics 验证 |
+| <a href="/_code/engine/examples/real_tinyllama_serving_benchmark.cpp"><code>real_tinyllama_serving_benchmark.cpp</code></a> | 真实双请求阶段计时、吞吐和 JSON 输出 |
+| <a href="/_code/engine/scripts/run_real_serving_benchmark.sh"><code>run_real_serving_benchmark.sh</code></a> | 固定 Release 构建与结果归档入口 |
+| <a href="/_code/engine/examples/main.cpp"><code>examples/main.cpp</code></a> | 命令行 First Success |
+| <a href="/_code/engine/tests/engine_smoke_test.cpp"><code>tests/engine_smoke_test.cpp</code></a> | 纵向切片 smoke test |
+| <a href="/_code/engine/CMakeLists.txt"><code>CMakeLists.txt</code></a> | 独立构建入口 |
+| <a href="/_code/engine/README.md"><code>README.md</code></a> | 运行说明和边界声明 |
+
+## 运行
+
+```bash
+cmake -S code/engine -B code/engine/build
+cmake --build code/engine/build
+code/engine/build/cpp_llm_engine_demo --prompt "hello" --max-new-tokens 4
+ctest --test-dir code/engine/build --output-on-failure
+```
+
+默认命令验证 toy Engine。真实 TinyLlama 路径的构建命令和当前 greedy 输出见 <a href="/_code/engine/README.md"><code>code/engine/README.md</code></a>；它复用 Chapter05 Request/Runtime contract，并通过 Factory 把 22 层 CPU Model 接入 Chapter09 双请求调度和 HTTP adapter。当前范围是单线程 Round Robin 正确性，不含生产并发优化。
+
+## 对应文档
+
+- [Chapter 05 导读](../chapter05_generation/intro.md)
+- [Chapter 05 Generation Runtime](../chapter05_generation/06_end_to_end_generation.md)
+- [Chapter 09 Service Core](../chapter09_serving/01_service_core.md)
+- [Chapter 09 真实模型 HTTP Completion](../chapter09_serving/04_real_http_completion.md)
