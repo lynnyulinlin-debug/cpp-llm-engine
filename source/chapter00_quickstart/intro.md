@@ -1,46 +1,58 @@
 # 00.0 Get Started with a Real Baseline 验证本地推理基线
 
-这一章先回答一个最实际的问题：本地环境怎样最快跑通一次真实推理？
+## 1. 本章位置与成功标准
 
-本章只负责把第一条真实链路跑通：准备依赖、编译 `llama.cpp`、下载一个小模型，并完成第一次推理验证。
+本章先验证本地 quickstart 入口，再用 `llama.cpp` 加载 TinyLlama GGUF 完成一次真实推理。它不实现教程自己的 Tensor、Runtime 或服务。
 
-## 本章概览
+```bash
+bash code/chapter00_quickstart/run.sh
+```
 
-| 先看什么 | 这一节讲什么 | 为什么重要 | 对应小节 |
-| --- | --- | --- | --- |
-| 环境怎么准备 | 基础工具和运行条件 | 先排除环境问题 | [`00.1 Environment Setup`](./01_environment_setup.md) |
-| 怎么编译基线 | 克隆并编译 `llama.cpp` | 先得到可运行基线 | [`00.2 Clone and Build`](./02_clone_and_build_llamacpp.md) |
-| 模型怎么准备 | 下载 TinyLlama | 先拿到真实输入 | [`00.3 Download TinyLlama`](./03_download_tinyllama.md) |
-| 怎么完成首次推理 | 运行第一次本地推理 | 先看到真实输出 | [`00.4 First Inference`](./04_first_inference.md) |
-| 出错怎么排查 | 常见环境和路径问题 | 先把起跑线稳定住 | [`00.5 Troubleshooting`](./05_troubleshooting.md) |
-| 怎么体验 serving baseline | 可选部署 vLLM OpenAI-compatible server | 先看到真实推理服务形态 | [`00.6 Deploy vLLM`](./06_deploy_vllm.md) |
-| 本章怎么收口 | 确认最小基线成立 | 进入主线前先固定状态 | [`00.7 本章小结`](./summary.md) |
+这条命令只验证仓库内的 quickstart smoke executable。真实模型推理按 [`00.4 First Inference`](./04_first_inference.md) 的 `llama-simple` 命令执行。没有 GPU 也可以完成本章；CUDA 编译和 vLLM serving 是可选体验。
 
-## 阅读入口
+![Chapter 00 主图：真实推理基线](../assets/diagrams/chapter00-main.svg)
 
-- 前置阅读：[`foundation`](../foundation/README.md)
-- 源码直达：<a href="../_code/chapter00_quickstart/main_quick.cpp"><code>main_quick.cpp</code></a>、<a href="../_code/chapter00_quickstart/run.sh"><code>run.sh</code></a>、<a href="../_code/chapter00_quickstart/CMakeLists.txt"><code>CMakeLists.txt</code></a>
-- 相关阅读：[`00.1 Environment Setup`](./01_environment_setup.md)、[`00.4 First Inference`](./04_first_inference.md)、[`00.6 Deploy vLLM`](./06_deploy_vllm.md)、[`00.7 本章小结`](./summary.md)
+本章位于基础准备和自研 C++ 引擎之间，产物是一个可运行、可观察的真实推理起点。
 
-## 这章在解决什么
+## 2. 内容地图
 
-这一章只做一件事：把第一条真实推理链路跑通。它不负责教程导航，也不展开讲 C++、CMake 或 CUDA 基础；它要先确认教程所依赖的最小运行环境是成立的。
+完成本章后，可以：
 
-## 这章怎么做
+- 准备 C++、CMake、模型文件和运行环境
+- 编译 `llama.cpp` 并加载 TinyLlama 1.1B GGUF
+- 区分真实 tokenizer 与后续教学 runtime 使用的 toy tokenizer
+- 用一次真实输出确认环境、模型格式和 CPU 推理路径成立
 
-这一章只保留最小但真实的一条路径：
+本章先建立真实推理基线，再从 Chapter 01 开始拆解自研实现。框架对照只用于识别后续要重建的组件。
 
-- 准备依赖
-- 编译 `llama.cpp`
-- 下载小模型
-- 运行第一次推理
-- 可选部署一次 `vLLM` serving baseline
-- 记录成功时的输出形态
+| 对照项 | 内容 |
+| --- | --- |
+| 本章教学对象 | 环境、模型文件、真实 tokenizer 和一次完整推理 |
+| 主对照框架 | `llama.cpp`；可选体验 vLLM 服务入口 |
+| 成熟组件 | GGUF loader、模型执行、采样循环、命令行或 HTTP 入口 |
+| 重点差异 | 本章直接运行成熟实现，不把它当作教程自研引擎 |
+| 深入入口 | [`00.4 First Inference`](./04_first_inference.md)、[`00.6 Deploy vLLM`](./06_deploy_vllm.md)、[生态对照](../reference/framework_comparison.md) |
 
-这意味着它不追求覆盖所有运行场景，而是先把“教程真的能跑起来”这件事固定住。`vLLM` 小节是可选体验，用来提前看到真实推理服务的形态，不作为后续章节的强制依赖。
+## 3. 阅读与源码顺序
 
-## 收口与下一步
+| 顺序 | 页面 | 读完后应看到什么 |
+| --- | --- | --- |
+| 1 | [`00.1 Environment Setup`](./01_environment_setup.md) | 工具链和 CPU 运行条件 |
+| 2 | [`00.2 Clone and Build`](./02_clone_and_build_llamacpp.md) | 可执行的 `llama.cpp` |
+| 3 | [`00.3 Download TinyLlama`](./03_download_tinyllama.md) | 本地 GGUF 模型文件 |
+| 4 | [`00.4 First Inference`](./04_first_inference.md) | 第一次真实输出 |
+| 5 | [`00.5 Troubleshooting`](./05_troubleshooting.md) | 常见路径和构建错误的排查顺序 |
+| 6 | [`00.6 Deploy vLLM`](./06_deploy_vllm.md) | 可选 serving baseline |
 
-这一章的验证很直接：能成功编译、能下载并加载模型、能看到第一次推理的输出。它把教程的起跑线固定在一个可复现的状态上。
+前置阅读是 [`foundation`](../foundation/README.md)。源码入口是 <a href="../_code/chapter00_quickstart/main_quick.cpp"><code>main_quick.cpp</code></a>、<a href="../_code/chapter00_quickstart/run.sh"><code>run.sh</code></a> 和 <a href="../_code/chapter00_quickstart/CMakeLists.txt"><code>CMakeLists.txt</code></a>。
 
-下一步进入 `chapter01_tensor_loader`，开始把模型权重安全地读进程序，并把输入语义固定下来。
+## 4. 验证
+
+本章分两步检查可见结果：
+
+1. quickstart smoke executable 编译成功并正常退出
+2. `llama.cpp` 编译成功，TinyLlama GGUF 文件存在并能被加载，真实 tokenizer 能处理 prompt，CPU 推理生成非空文本并正常退出
+
+Chapter 00 的详细命令和故障排查在正文页；不要用本章的成功结果推断教程自己的 Tensor 或 Runtime 已经完成。
+
+**下一章：**本章确认外部环境和真实模型都能工作，Chapter 01 开始建立可替换的 `Tensor`、`ModelLoader`、metadata adapter 和 tokenizer contract。

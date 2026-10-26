@@ -19,7 +19,7 @@
 ## 对应文档
 
 - [chapter00 导读](../chapter00_quickstart/intro.md)
-- [chapter00 小结](../chapter00_quickstart/summary.md)
+- [chapter00 导读](../chapter00_quickstart/intro.md)
 
 ## 说明
 

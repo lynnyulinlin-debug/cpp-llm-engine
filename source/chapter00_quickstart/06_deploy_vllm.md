@@ -4,13 +4,13 @@
 
 `vLLM` 在这里不是本教程要复刻的实现，而是一个 serving baseline。你只需要确认服务能启动、模型能加载、HTTP 请求能返回文本。
 
-## 阅读入口
+**阅读入口**
 
 - 前置阅读：[`00.1 Environment Setup`](./01_environment_setup.md)、[`00.4 First Inference`](./04_first_inference.md)
 - 相关阅读：[`vLLM 生态对照`](../reference/ecosystem/vllm.md)、[`推理引擎服务化基础`](../reference/service_basics.md)、[`05.8 vLLM 对照`](../chapter05_generation/07_vllm_comparison.md)
 - 官方文档：[`Using Docker`](https://docs.vllm.ai/en/latest/deployment/docker/)、[`OpenAI-Compatible Server`](https://docs.vllm.ai/en/latest/serving/openai_compatible_server/)
 
-## 什么时候应该做这一节
+## 运行前判断
 
 适合做：
 
@@ -26,7 +26,7 @@
 
 跳过这一节不会影响后面的 `chapter01` 到 `chapter07`。
 
-## 最小 Docker 启动
+## 启动和请求
 
 官方 `vllm/vllm-openai` 镜像可以直接启动 OpenAI-compatible server。下面使用一个较小的公开模型作为起步示例：
 
@@ -50,7 +50,7 @@ docker run --runtime nvidia --gpus all \
 
 如果你选择其他模型，只替换 `--model` 后面的模型名。模型越大，对显存要求越高。
 
-## 最小请求验证
+### 请求验证
 
 服务启动后，用另一个终端发起一次 Chat Completions 请求：
 
@@ -68,7 +68,7 @@ curl http://localhost:8000/v1/chat/completions \
 
 看到 JSON 返回，并且 `choices` 里有模型输出，就说明 serving baseline 已经跑通。
 
-## 成功后应该观察什么
+## 结果和后续
 
 这里不需要深入源码，只观察四件事：
 
@@ -88,7 +88,7 @@ curl http://localhost:8000/v1/chat/completions \
 | 量化模型影响显存和速度 | `chapter06_quantization` |
 | 服务性能需要 benchmark | `chapter07_benchmark` |
 
-## 边界说明
+### 失败时怎么办
 
 这一节只做部署体验，不解释 `PagedAttention`、continuous batching、block manager 或调度策略。这些内容会在 `chapter05_generation` 里逐步回到主线。
 

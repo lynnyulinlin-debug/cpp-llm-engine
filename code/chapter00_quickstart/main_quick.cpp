@@ -1,3 +1,5 @@
+// Chapter 00：提供不依赖推理库的环境与模型路径 smoke check。
+// 职责：验证 quickstart 可执行程序和可选 GGUF 文件是否可访问。
 #include <filesystem>
 #include <fstream>
 #include <iostream>
