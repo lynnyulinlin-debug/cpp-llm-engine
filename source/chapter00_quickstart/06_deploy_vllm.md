@@ -5,7 +5,7 @@
 **阅读入口**
 
 - 前置阅读：[`00.1 Environment Setup`](./01_environment_setup.md)、[`00.4 First Inference`](./04_first_inference.md)
-- 相关阅读：[`vLLM 生态对照`](../reference/ecosystem/vllm.md)、[`推理引擎服务化基础`](../reference/service_basics.md)、[`05.8 vLLM 对照`](../chapter05_generation/07_vllm_comparison.md)
+- 相关阅读：[`vLLM 生态对照`](../reference/ecosystem/vllm.md)、[`推理引擎服务化基础`](../reference/service_basics.md)、[`05.8 vLLM 对照`](../chapter05_generation/08_vllm_comparison.md)
 - 官方文档：[`Using Docker`](https://docs.vllm.ai/en/latest/deployment/docker/)、[`OpenAI-Compatible Server`](https://docs.vllm.ai/en/latest/serving/openai_compatible_server/)
 
 ## 运行前判断

@@ -24,4 +24,4 @@
 
 ## 主线映射
 
-对应 [`chapter05 Scheduler`](/chapter05_generation/05_scheduler)、[`chapter05 Continuous Batching`](/chapter05_generation/09_continuous_batching) 和 [`推理引擎服务化基础`](/reference/service_basics)。
+对应 [`chapter05 Scheduler`](/chapter05_generation/05_scheduler)、[`chapter05 Continuous Batching`](/chapter05_generation/10_continuous_batching) 和 [`推理引擎服务化基础`](/reference/service_basics)。

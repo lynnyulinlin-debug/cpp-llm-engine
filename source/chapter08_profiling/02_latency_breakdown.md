@@ -4,9 +4,9 @@
 
 **阅读入口**
 
-- 前置阅读：[`08.1 Profiling Basics`](./01_profiling_basics.md)、[`05.9 Request 生命周期`](../chapter05_generation/08_request_lifecycle.md)
+- 前置阅读：[`08.1 Profiling Basics`](./01_profiling_basics.md)、[`05.9 Request 生命周期`](../chapter05_generation/09_request_lifecycle.md)
 - 源码直达：<a href="../_code/chapter05_generation/src/runtime.cpp"><code>runtime.cpp</code></a>、<a href="../_code/chapter05_generation/src/scheduler.cpp"><code>scheduler.cpp</code></a>、<a href="../_code/chapter07_benchmark/src/benchmark.cpp"><code>benchmark.cpp</code></a>
-- 相关阅读：[`05.10 Continuous Batching 入门`](../chapter05_generation/09_continuous_batching.md)、[`07.3 Benchmark Metrics`](../chapter07_benchmark/03_benchmark_metrics.md)
+- 相关阅读：[`05.10 Continuous Batching 入门`](../chapter05_generation/10_continuous_batching.md)、[`07.3 Benchmark Metrics`](../chapter07_benchmark/03_benchmark_metrics.md)
 
 ## 最小阶段拆分
 

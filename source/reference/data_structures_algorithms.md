@@ -2,7 +2,7 @@
 
 这张表按“可实现资产”整理教程中的数据结构和算法。它回答三个问题：资产解决什么问题、代码和验证在哪里、学完后应如何映射到真实推理框架。
 
-它是跨章节的唯一总表。章节 README 继续负责本章文件和练习入口，不重复维护下面的内容。
+需要跨章节查找同类对象时使用本表；单章的文件和练习入口从对应章节 README 进入。
 
 ## 怎么读
 
@@ -27,7 +27,7 @@
 | 数据结构 | Chapter05 `KVCache` / Request token history | 记录 Runtime 已提交的 prompt 和 generated token | [Chapter05](../chapter05_generation/04_kv_cache.md) | <a href="../_code/chapter05_generation/include/chapter05_generation/kv_cache.h"><code>kv_cache.h</code></a> | token append、clear 和 Request 隔离测试 | request token history / sequence state | 教学 CPU token 容器，不保存 K/V tensor |
 | 数据结构 | `RealLlamaCpuModel` / `RealLlamaCpuContext` / 分层 K/V | 共享只读权重，为每个请求隔离 position 和 key/value 数值 | [Chapter05](../chapter05_generation/04_kv_cache.md) | <a href="../_code/chapter01_tensor_loader/src/real_llama_cpu_decoder.h"><code>real_llama_cpu_decoder.h</code></a> | 双 Context 隔离、真实多 token 生成与 chunked prefill | llama.cpp context、vLLM model runner state | 真实 CPU 请求 Context 与 22 层 K/V |
 | 数据结构 | `waiting_queue`、`running_requests` | 管理排队、运行中和终止请求 | [Chapter05](../chapter05_generation/intro.md) | <a href="../_code/chapter05_generation/include/chapter05_generation/scheduler.h"><code>scheduler.h</code></a>、<a href="../_code/chapter09_serving/include/chapter09_serving/serving_core.h"><code>serving_core.h</code></a> | scheduler test、多请求 benchmark | vLLM scheduler、SGLang scheduler | 教学实现；已验证 |
-| 数据结构 | `KvBlockPool` / `BlockTable` | 管理物理 block ID ownership，并将逻辑 token 映射到 block/slot | [Chapter05](../chapter05_generation/10_block_kv_cache.md) | <a href="../_code/chapter05_generation/include/chapter05_generation/serving_preview.h"><code>serving_preview.h</code></a> | 无部分分配、定位、回滚、释放复用和 ServiceCore 补位测试 | vLLM block manager、PagedAttention block table | CPU ownership allocator 已完成；K/V payload 仍在 Context |
+| 数据结构 | `KvBlockPool` / `BlockTable` | 管理物理 block ID ownership，并将逻辑 token 映射到 block/slot | [Chapter05](../chapter05_generation/11_block_kv_cache.md) | <a href="../_code/chapter05_generation/include/chapter05_generation/serving_preview.h"><code>serving_preview.h</code></a> | 无部分分配、定位、回滚、释放复用和 ServiceCore 补位测试 | vLLM block manager、PagedAttention block table | CPU ownership allocator 已完成；K/V payload 仍在 Context |
 | 数据结构 | `ResponseWriter`、`StreamSink` | 将生成事件写成与 transport 无关的响应 | [Chapter09](../chapter09_serving/intro.md) | <a href="../_code/chapter09_serving/include/chapter09_serving/response_writer.h"><code>response_writer.h</code></a> | writer test、cpp-httplib loopback | HTTP/SSE writer、streaming response | 已完成；transport 可替换 |
 | 数据结构 | `ServiceMetrics` | 累计请求终态、token 数和 queue wait/TTFT/completion `_sum/_count` | [Chapter09](../chapter09_serving/01_service_core.md) | <a href="../_code/chapter09_serving/include/chapter09_serving/serving_core.h"><code>serving_core.h</code></a> | 手动时钟精确断言、HTTP metrics、真实模型 count | vLLM/SGLang Prometheus metrics | 在线最小指标闭环已完成 |
 | 数据结构 | `BenchmarkRecord`、`ProfileRecord`、`RealLlamaDecoderProfile` | 保存吞吐、延迟、环境和 Decoder 子阶段耗时 | [Chapter07](../chapter07_benchmark/intro.md)、[Chapter08](../chapter08_profiling/08_real_service_profile.md)、[Chapter09](../chapter09_serving/03_real_service_benchmark.md) | Chapter07/08 record、真实 ServiceCore benchmark、Decoder profile | 教学/真实 JSON、回归 A/B、FFN/QKV/attention 分项 | vLLM benchmark、Nsight/框架 profiler result | 真实 CPU 服务到 Decoder 证据链已接入 |

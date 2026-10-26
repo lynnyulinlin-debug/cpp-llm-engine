@@ -9,7 +9,7 @@
 
 - 前置阅读：[`05.2 N 层 Transformer 组装`](./02_transformer_assembly.md)、[`chapter04_attention`](../chapter04_attention/intro.md)
 - 源码直达：<a href="../_code/chapter05_generation/src/runtime.cpp"><code>runtime.cpp</code></a>、<a href="../_code/chapter05_generation/src/sampler.cpp"><code>sampler.cpp</code></a>、<a href="../_code/chapter05_generation/examples/main_generation.cpp"><code>main_generation.cpp</code></a>
-- 相关阅读：[`05.4 KV Cache`](./04_kv_cache.md)、[`05.5 Scheduler`](./05_scheduler.md)、[`05.6 Sampler`](./05_sampler.md)
+- 相关阅读：[`05.4 KV Cache`](./04_kv_cache.md)、[`05.5 Scheduler`](./05_scheduler.md)、[`05.6 Sampler`](./06_sampler.md)
 
 ## 核心基线
 

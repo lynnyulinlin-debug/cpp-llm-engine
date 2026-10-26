@@ -47,6 +47,6 @@ ctest --test-dir code/engine/build --output-on-failure
 ## 对应文档
 
 - [Chapter 05 导读](../chapter05_generation/intro.md)
-- [Chapter 05 Generation Runtime](../chapter05_generation/06_end_to_end_generation.md)
+- [Chapter 05 Generation Runtime](../chapter05_generation/07_end_to_end_generation.md)
 - [Chapter 09 Service Core](../chapter09_serving/01_service_core.md)
 - [Chapter 09 真实模型 HTTP Completion](../chapter09_serving/04_real_http_completion.md)

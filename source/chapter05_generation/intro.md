@@ -18,15 +18,13 @@ bash code/engine/scripts/run.sh
 
 ![Chapter 05 主图：Generation Runtime](../assets/diagrams/chapter05-main.svg)
 
-## 2. 运行时如何闭环
+## 2. 运行时对象
 
 本章位于模型结构和持续服务之间：模型执行器计算 logits，Generation Runtime 保存 Request 状态并推进下一步，Sampler 从 logits 选择 token。模型执行器可以是本章的教学 Transformer，也可以通过每请求 `RequestModelExecutor` 接入真实 TinyLlama CPU Decoder 或预计算 embedding。
 
 图中的 Request Cache 保存教学 Runtime 可见的 token 历史；真实 Model KV 保存各 Decoder 层的 key/value tensor。两者生命周期都跟随请求，但数据布局和所有者不同。更完整的 API、限流和服务资源管理由 Chapter09 的 Service Core 承接。
 
 ![Chapter 05 Runtime 状态与资源生命周期](../assets/diagrams/chapter05-runtime-state.svg)
-
-## 3. 三种阅读深度
 
 完成本章后，可以：
 
@@ -36,28 +34,19 @@ bash code/engine/scripts/run.sh
 - 用端到端测试确认多个请求不会互相污染，终态资源能够回收
 - 用 token/block budget 组织混合 prefill/decode step，分段推进长 prompt，并观察物理 block 的提交和释放
 
-第一次学习只完成单请求生成和 Request 状态闭环，不需要同时掌握 block allocator 与 vLLM 调度。准备进入服务系统时再学习 Serving Preview；阅读成熟框架源码时再进入生态对照。
+先用 Generation Core 完成单请求闭环，再根据需要进入 Serving Preview 和框架对照。两个入口分别提供详细页面顺序和验证重点。
 
-| 深度 | 阅读范围 | 完成标志 |
+| 路线 | 阅读范围 | 完成标志 |
 | --- | --- | --- |
 | 首轮必读 | [`Generation Core`](./part_a_generation_core.md) 中的 Naive Generation、KV Cache、Scheduler、Sampler、端到端测试和 Request 生命周期 | 能解释并运行 `prefill -> decode -> sample -> terminal` |
 | 第二轮进阶 | [`Serving Preview`](./part_b_serving_preview.md) 中的 continuous batching、chunked prefill 和 Block KV | 能解释 token/block budget、回滚与资源释放 |
-| 按需选读 | Embedding/教学 Transformer 组装、[`vLLM 对照`](./07_vllm_comparison.md) | 需要研究模型适配或成熟框架时再读 |
+| 按需选读 | Embedding/教学 Transformer 组装、[`vLLM 对照`](./08_vllm_comparison.md) | 需要研究模型适配或成熟框架时再读 |
 
-## 4. 阅读与源码顺序
+## 3. 源码入口
 
-首轮源码只看 <a href="../_code/chapter05_generation/src/runtime.cpp"><code>runtime.cpp</code></a>、<a href="../_code/chapter05_generation/src/request.cpp"><code>request.cpp</code></a> 和 <a href="../_code/chapter05_generation/src/sampler.cpp"><code>sampler.cpp</code></a>。进入第二轮后再看 scheduler、serving preview 和 block pool。前置阅读是 [`Chapter04`](../chapter04_attention/intro.md)；KV payload 与 Greedy/Temperature 定义见 [`F-KV-01`](../reference/formulas.md#f-kv-01) 和 [`F-SAMPLE-01`](../reference/formulas.md#f-sample-01)。
+首轮源码看 <a href="../_code/chapter05_generation/src/runtime.cpp"><code>runtime.cpp</code></a>、<a href="../_code/chapter05_generation/src/request.cpp"><code>request.cpp</code></a> 和 <a href="../_code/chapter05_generation/src/sampler.cpp"><code>sampler.cpp</code></a>。进入 Serving Preview 后再看 <a href="../_code/chapter05_generation/src/scheduler.cpp"><code>scheduler.cpp</code></a>、<a href="../_code/chapter05_generation/src/serving_preview.cpp"><code>serving_preview.cpp</code></a> 和 block pool。前置阅读是 [`Chapter04`](../chapter04_attention/intro.md)；KV payload 与 Greedy/Temperature 定义见 [`F-KV-01`](../reference/formulas.md#f-kv-01) 和 [`F-SAMPLE-01`](../reference/formulas.md#f-sample-01)。
 
-| 顺序 | 页面 | 读完后应看到什么 |
-| --- | --- | --- |
-| 1，必读 | [`05.3 Naive Generation`](./03_naive_generation.md) | forward 怎样变成逐 token 循环 |
-| 2，必读 | [`05.4 KV Cache`](./04_kv_cache.md) | 区分 token history、分层 K/V 和 block ownership |
-| 3，必读 | [`05.5 Scheduler`](./05_scheduler.md)、[`05.6 Sampler`](./05_sampler.md) | 谁推进请求，谁选择 token |
-| 4，必读 | [`05.7 端到端生成测试`](./06_end_to_end_generation.md)、[`05.9 Request 生命周期`](./08_request_lifecycle.md) | 固定输出、终态和请求隔离 |
-| 5，进阶 | [`05.10 Continuous Batching`](./09_continuous_batching.md)、[`05.11 Block KV Cache`](./10_block_kv_cache.md) | token/block budget、chunk 和回收 |
-| 6，选读 | [`05.1 Embedding`](./01_embedding_and_position.md)、[`05.2 Transformer`](./02_transformer_assembly.md)、[`05.8 vLLM 对照`](./07_vllm_comparison.md) | 教学模型组装与成熟框架映射 |
-
-## 5. 验证
+## 4. 验证
 
 本章验证以下九件事：
 
@@ -71,6 +60,6 @@ bash code/engine/scripts/run.sh
 8. block 容量不足时不执行请求，终态释放后同一物理 block ID 可以由后续请求复用
 9. 长 prompt 能按 budget 分段追加，只有 final chunk 产生 logits；多个长 prompt 不会被固定顺序长期饿死
 
-Chapter 05 脚本会构建并运行 CTest、generation demo 和 streaming demo。真实模型验证命令见 [`05.7 端到端生成测试`](./06_end_to_end_generation.md)。排查时先看 Request 状态迁移，再看 `prefill/decode` 分支，最后分别检查 token 历史与模型分层 K/V；不要先从 benchmark 数字判断生成逻辑是否正确。
+Chapter 05 脚本会构建并运行 CTest、generation demo 和 streaming demo。真实模型验证命令见 [`05.7 端到端生成测试`](./07_end_to_end_generation.md)。排查时先看 Request 状态迁移，再看 `prefill/decode` 分支，最后分别检查 token 历史与模型分层 K/V；不要先从 benchmark 数字判断生成逻辑是否正确。
 
 **后续：**本章把 `chapter04` 的 decoder 变成可持续推进的 CPU Generation Runtime；Chapter 06 只替换权重表示和 Linear 计算路径，Chapter 07-08 负责测量与归因，Chapter09 再接收 API、限流和服务级多请求扩展。

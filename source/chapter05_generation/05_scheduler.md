@@ -10,7 +10,7 @@
 
 - 前置阅读：[`05.4 KV Cache`](./04_kv_cache.md)、[`05.3 Naive Generation`](./03_naive_generation.md)
 - 源码直达：<a href="../_code/chapter05_generation/src/scheduler.cpp"><code>scheduler.cpp</code></a>、<a href="../_code/chapter05_generation/src/request.cpp"><code>request.cpp</code></a>、<a href="../_code/chapter05_generation/tests/chapter05_scheduler_test.cpp"><code>chapter05_scheduler_test.cpp</code></a>
-- 相关阅读：[`05.6 Sampler`](./05_sampler.md)、[`05.7 端到端生成测试`](./06_end_to_end_generation.md)
+- 相关阅读：[`05.6 Sampler`](./06_sampler.md)、[`05.7 端到端生成测试`](./07_end_to_end_generation.md)
 
 ## 核心设计
 

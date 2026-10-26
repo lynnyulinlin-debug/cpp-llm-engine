@@ -1,4 +1,4 @@
-# 01.8 Model Metadata and GGUF Boundary 模型元数据与 GGUF 边界
+# 01.5 Model Metadata and GGUF 模型元数据与 GGUF
 
 ## 加载链
 
@@ -6,7 +6,7 @@
 
 本节先实现 GGUF metadata 到内部配置的最小转换：外部格式解析器读取 metadata，Chapter 01 将其归一化为 `ModelMetadata` 和 `ModelConfig`，后续 runtime 消费内部配置。
 
-### 外部格式与内部配置
+**外部格式与内部配置**
 
 ```text
 GGUF / HuggingFace config / other format
@@ -16,11 +16,11 @@ GGUF / HuggingFace config / other format
               -> Tokenizer / Tensor / Decoder
 ```
 
-### 四层加载链
+**四层加载链**
 
 ![Chapter 01 GGUF 四层加载链](../assets/diagrams/chapter01-gguf-loading-chain.svg)
 
-这四层不要合并成一个“大 Loader”。它们分别回答四个不同问题：文件怎么读、metadata 怎么解释、权重数据怎么取、模型对象怎么组装。
+四个对象分别回答文件怎么读、metadata 怎么解释、权重数据怎么取、模型对象怎么组装，使错误能够在对应阶段被发现。
 
 | 层 | 主要输入 | 主要输出 | 职责 | 教程实现 |
 | --- | --- | --- | --- | --- |
@@ -31,12 +31,12 @@ GGUF / HuggingFace config / other format
 
 Tokenizer 也从同一份 GGUF metadata 中读取，但保持独立契约：`TokenizerMetadataAdapter` 当前接收 vocabulary、scores、token types、BOS/EOS 和可选 chat template；它只描述 tokenizer 数据，不在本步实现 BPE/SentencePiece 编码器。
 
-### 每层的边界
+**四个对象如何协作**
 
-1. `GGUF Reader` 只知道文件格式，不知道 Transformer 如何计算。
-2. `Metadata Adapter` 只知道外部 key 和内部字段的对应关系，不读取 tensor 内容。
-3. `Tensor Loader` 只负责把权重变成稳定的 Tensor 对象，不决定模型层结构。
-4. `Model Builder` 只消费统一对象，不应该再解析 GGUF key。
+1. `GGUF Reader` 解析文件结构，输出 metadata 和 tensor index。
+2. `Metadata Adapter` 把外部 key 映射成内部字段。
+3. `Tensor Loader` 根据索引恢复稳定的 Tensor 对象。
+4. `Model Builder` 消费统一对象，校验模型结构并完成装配。
 
 因此后续替换模型格式时，理想变化是：
 
@@ -72,7 +72,7 @@ TensorRT Engine   -> Engine Metadata Adapter
 
 `ModelMetadataAdapter::from_gguf()` 接收一个已经由文件 reader 解析出的 key/value map，当前覆盖 TinyLlama/Llama 风格的最小字段：`general.architecture`、`<architecture>.embedding_length`、`<architecture>.context_length`、`<architecture>.block_count` 以及 BOS/EOS token ID。vocab size 优先读取显式字段，缺少时从 `tokenizer.ggml.tokens` 数组推导；它不负责读取文件字节，也不负责实现 tokenizer 编码。
 
-### 本教程的首个真实模型
+**TinyLlama 真实模型基线**
 
 本教程先以 TinyLlama 1.1B 作为真实模型基线。它用于固定第一条可复现的 GGUF、Llama 风格 metadata 和真实 tokenizer 路径，但内部接口不命名为 `TinyLlamaConfig`：
 
@@ -86,22 +86,20 @@ TinyLlama GGUF
 
 这样既能让初学者用较小模型完成验证，又能让后续的 Llama 2 或其他 Llama-family 模型复用同一套边界。模型族之间的 tokenizer、special tokens 和配置字段不能只凭名称假定兼容，必须以具体模型文件提供的信息为准。
 
-### TinyLlama Decoder 层级
+**TinyLlama Decoder 层级**
 
 TinyLlama metadata 中的 `block_count=22` 对应 `blk.0` 到 `blk.21` 共 22 个重复 Decoder Block。每个 Block 包含 Attention 和 FFN 的九个权重 Tensor；`token_embd.weight`、`output_norm.weight` 和 `output.weight` 位于 Block 堆栈之外，不计入这 22 层。
 
 ![TinyLlama 22 层 Decoder 层级结构](../assets/diagrams/chapter01-tinyllama-decoder-hierarchy.svg)
 
-### 为什么不直接让 ModelLoader 读取 GGUF
+**格式解析与模型构建的分工**
 
-`ModelLoader` 的职责是把 tensor 文件内容转换成 Tensor 对象；metadata adapter 的职责是把外部配置转换成统一字段。两者可以来自同一个文件，但职责不应混成一个类：
+文件解析器把 tensor 内容转换成 Tensor 对象，metadata adapter 把外部配置转换成统一字段。两类结果来自同一个文件，再由模型构造阶段检查是否匹配：
 
 ```text
 metadata adapter -> ModelMetadata -> ModelConfig
 tensor loader    -> Tensor map
 ```
-
-之后再由模型构造阶段检查二者是否匹配。
 
 ## 关系与验证
 
@@ -113,7 +111,7 @@ Chapter 00 使用 `llama.cpp` 直接处理 TinyLlama GGUF 和真实 tokenizer。
 
 Chapter 01 现在提供 `gguf_inspect` 示例，可以对 Chapter 00 下载的 TinyLlama GGUF 做真实的 header、metadata、tokenizer metadata 和 tensor index 检查。先验证真实文件的索引信息，再在 Chapter 06 解码量化 payload。
 
-### llama.cpp logits 对照
+**llama.cpp logits 对照**
 
 完整 22 层 smoke 使用同一组 6 个 token 分别运行自研 CPU 路径和 llama.cpp。llama.cpp reference 关闭 Flash Attention，并把 K/V Cache 设为 F32，使两边的 Attention 精度设置更接近。22 层累积后的单点最大误差容易受矩阵乘加顺序影响，因此验收同时检查整体方向、平均误差和候选排序；当前门槛是 cosine 不低于 `0.999`、mean absolute error 不高于 `0.15`、RMSE 不高于 `0.20`、top-5 至少重合 `4/5`。
 
@@ -127,7 +125,7 @@ Chapter 01 现在提供 `gguf_inspect` 示例，可以对 Chapter 00 下载的 T
 | 4-token greedy sequence | `29892 306 29915 29885`，双方一致 | 连续 decode 没有立即发生候选漂移 |
 | 最终判定 | `PASS` | 可以进入采样和生成循环接入 |
 
-### Model 与 Context 的所有权
+**Model 与 Context 的所有权**
 
 权重只加载一次，请求状态按请求创建。Context 通过共享的只读模型数据保持权重存活，因此销毁请求只释放该请求的 K/V，不会卸载模型，也不会影响其他 Context。
 
@@ -137,7 +135,7 @@ Chapter 01 现在提供 `gguf_inspect` 示例，可以对 Chapter 00 下载的 T
 | `RealLlamaCpuContext` | position、每层 K/V、attention score 统计 | 单个请求或单条序列 | 只由所属请求修改，可独立 reset / 释放 |
 | Chapter05 `Request` | prompt token、生成 token、状态、停止原因 | admission 到 terminal cleanup | 由 Runtime / Scheduler 推进 |
 
-### 一套执行实现，两级验证
+**一套执行实现，两级验证**
 
 模型数学只保留在 `RealLlamaCpuModel` / `RealLlamaCpuContext`。Chapter01 固定 token IDs，检查两个 Context 的隔离、logits 误差与 llama.cpp greedy 序列；Engine 使用真实 tokenizer 和 Chapter05 Runtime，检查文本输入、Request、EOS/token budget、采样与 detokenize 的完整闭环。
 
@@ -147,7 +145,7 @@ Chapter 01 现在提供 `gguf_inspect` 示例，可以对 Chapter 00 下载的 T
 | `real_tinyllama_generation_test` | `Hello TinyLlama`，连续运行两次 | token `29892 306 29915 29885`、Request 完成、两次 Context 输出一致 | 否，通过 `CPP_LLM_ENGINE_REAL_MODEL` 显式启用 |
 | 默认 Chapter01/Engine CTest | fixture / toy input | 格式契约、状态机和轻量集成 | 是 |
 
-### 验证结果
+**验证结果**
 
 当前测试验证：
 

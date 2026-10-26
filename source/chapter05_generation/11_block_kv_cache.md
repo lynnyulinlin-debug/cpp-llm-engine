@@ -1,12 +1,12 @@
 # 05.11 Block KV Cache 与 CPU Allocator
 
-前一节已经区分 Request token history、真实分层 K/V 和 block ownership。本节只处理第三项：把逻辑 token 位置映射到可分配、可回收的物理 block ID。
+前一节已经区分 Request token history、真实分层 K/V 和 block ownership。本节处理第三项：把逻辑 token 位置映射到可分配、可回收的物理 block ID。
 
 **阅读入口**
 
-- 前置阅读：[`05.4 KV Cache`](./04_kv_cache.md)、[`05.10 Continuous Batching 入门`](./09_continuous_batching.md)
+- 前置阅读：[`05.4 KV Cache`](./04_kv_cache.md)、[`05.10 Continuous Batching 入门`](./10_continuous_batching.md)
 - 源码直达：<a href="../_code/chapter05_generation/src/kv_cache.cpp"><code>kv_cache.cpp</code></a>、<a href="../_code/chapter05_generation/src/serving_preview.cpp"><code>serving_preview.cpp</code></a>、<a href="../_code/chapter05_generation/tests/serving_preview_test.cpp"><code>serving_preview_test.cpp</code></a>
-- 相关阅读：[`05.8 Runtime 框架对照`](./07_vllm_comparison.md)、[`推理引擎运行时系统`](../reference/runtime_systems.md)、[`vLLM`](../reference/ecosystem/vllm.md) 与 [`SGLang`](../reference/ecosystem/sglang.md) 项目卡
+- 相关阅读：[`05.8 Runtime 框架对照`](./08_vllm_comparison.md)、[`推理引擎运行时系统`](../reference/runtime_systems.md)、[`vLLM`](../reference/ecosystem/vllm.md) 与 [`SGLang`](../reference/ecosystem/sglang.md) 项目卡
 
 ## 为什么要 block
 

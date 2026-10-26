@@ -23,4 +23,4 @@
 
 ## 主线映射
 
-对应 [`chapter01_tensor_loader/01_tensor_interface`](/chapter01_tensor_loader/01_tensor_interface)。
+对应 [`chapter01 Tensor 对象`](/chapter01_tensor_loader/01_tensor_object)。

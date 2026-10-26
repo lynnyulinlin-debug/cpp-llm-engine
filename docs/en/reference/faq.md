@@ -40,7 +40,7 @@ Separate correctness tests from benchmark measurements. Fix logic first, then me
 
 ### 4.2 Why should I read the chapter `intro.md` first?
 
-The `intro.md` shows the chapter's position, learning content, source order, and verification criteria. The old `summary.md` files remain only for compatibility with existing links and no longer provide separate navigation.
+The `intro.md` shows the chapter's position, learning content, source order, and verification criteria. Chapter conclusions and verification steps are kept there instead of in separate `summary.md` pages.
 
 ## 5. How to use this page
 

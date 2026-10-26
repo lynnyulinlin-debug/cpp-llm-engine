@@ -1,12 +1,12 @@
 # 05.10 Continuous Batching 入门
 
-朴素生成通常按“一个请求跑完再跑下一个”理解，但真实 serving runtime 更关心吞吐和等待时间。Continuous Batching 的核心是：每个 decode step 都重新组织当前可运行的请求，让新请求可以插入，让已完成请求及时离开。
+朴素生成通常按“一个请求跑完再跑下一个”理解，Serving Runtime 还要兼顾吞吐和等待时间。Continuous Batching 在每个 decode step 重新组织可运行请求，让新请求插入并让完成请求及时离开。
 
 **阅读入口**
 
-- 前置阅读：[`05.5 Scheduler`](./05_scheduler.md)、[`05.9 Request 生命周期`](./08_request_lifecycle.md)
+- 前置阅读：[`05.5 Scheduler`](./05_scheduler.md)、[`05.9 Request 生命周期`](./09_request_lifecycle.md)
 - 源码直达：<a href="../_code/chapter05_generation/src/scheduler.cpp"><code>scheduler.cpp</code></a>、<a href="../_code/chapter05_generation/src/serving_preview.cpp"><code>serving_preview.cpp</code></a>、<a href="../_code/chapter05_generation/tests/serving_preview_test.cpp"><code>serving_preview_test.cpp</code></a>
-- 相关阅读：[`05.11 Block KV Cache 阅读入口`](./10_block_kv_cache.md)、[`05.8 Runtime 框架对照`](./07_vllm_comparison.md)、[`Mini-SGLang 项目卡`](../reference/ecosystem/mini_sglang.md)
+- 相关阅读：[`05.11 Block KV Cache 阅读入口`](./11_block_kv_cache.md)、[`05.8 Runtime 框架对照`](./08_vllm_comparison.md)、[`Mini-SGLang 项目卡`](../reference/ecosystem/mini_sglang.md)
 
 ## 它解决什么问题
 

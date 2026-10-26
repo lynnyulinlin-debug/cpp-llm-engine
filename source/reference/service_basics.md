@@ -84,7 +84,7 @@ SLA 解决的是“系统承诺的响应边界是什么”。
 
 服务化基础先固定 production serving 的基础语义。
 
-相关阅读：[`05.9 Request 生命周期`](../chapter05_generation/08_request_lifecycle.md)、[`05.10 Continuous Batching 入门`](../chapter05_generation/09_continuous_batching.md)、[`推理引擎内存管理`](./memory_management.md)、[`推理引擎回归测试`](./regression_testing.md)
+相关阅读：[`05.9 Request 生命周期`](../chapter05_generation/09_request_lifecycle.md)、[`05.10 Continuous Batching 入门`](../chapter05_generation/10_continuous_batching.md)、[`推理引擎内存管理`](./memory_management.md)、[`推理引擎回归测试`](./regression_testing.md)
 
 ## 7. 使用顺序
 

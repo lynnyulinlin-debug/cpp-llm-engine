@@ -1,6 +1,6 @@
 # 05.9 Request 生命周期
 
-生成 runtime 不是一次函数调用，而是一批请求在多个 step 之间不断流转。`Request` 在这里从“输入参数”提升为运行时对象，用于说明 vLLM / nano-vLLM 里的 scheduler 到底在调度什么。
+Generation Runtime 推进一批请求在多个 step 之间流转。`Request` 从输入参数变成运行时对象，用于说明 vLLM / nano-vLLM 里的 Scheduler 调度什么。
 
 ![Request 状态与资源生命周期](../assets/diagrams/chapter05-runtime-state.svg)
 
@@ -8,7 +8,7 @@
 
 - 前置阅读：[`05.3 Naive Generation`](./03_naive_generation.md)、[`05.5 Scheduler`](./05_scheduler.md)
 - 源码直达：<a href="../_code/chapter05_generation/src/request.cpp"><code>request.cpp</code></a>、<a href="../_code/chapter05_generation/src/scheduler.cpp"><code>scheduler.cpp</code></a>
-- 相关阅读：[`05.10 Continuous Batching 入门`](./09_continuous_batching.md)、[`推理引擎输入链路`](../reference/input_pipeline.md)、[`推理引擎服务化基础`](../reference/service_basics.md)
+- 相关阅读：[`05.10 Continuous Batching 入门`](./10_continuous_batching.md)、[`推理引擎输入链路`](../reference/input_pipeline.md)、[`推理引擎服务化基础`](../reference/service_basics.md)
 
 ## 一个请求最少要记录什么
 

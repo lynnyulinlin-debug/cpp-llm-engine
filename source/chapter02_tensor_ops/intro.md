@@ -41,7 +41,7 @@ bash code/chapter02_tensor_ops/scripts/run.sh
 | 1 | [`02.1 Shared Underlying Storage`](./01_shared_ptr_memory.md) | storage 和 view 的所有权关系 |
 | 2 | [`02.2 Reshape`](./02_reshape.md) | 只改 shape、不复制数据 |
 | 3 | [`02.3 Slice`](./03_slice.md) | 通过 offset 观察局部窗口 |
-| 4 | [`02.4 Unit Tests`](./04_uint_tests.md) | shape、offset、共享 storage 和异常边界 |
+| 4 | [`02.4 Unit Tests`](./04_unit_tests.md) | shape、offset、共享 storage 和异常边界 |
 | 5 | [`02.5 Tensor 与 View 框架对照`](./05_framework_tensor_comparison.md) | 在 ggml 和 vLLM 中定位对应数据结构 |
 
 源码先看 <a href="../_code/chapter02_tensor_ops/include/chapter02_tensor_ops/tensor.h"><code>tensor.h</code></a>、<a href="../_code/chapter02_tensor_ops/src/tensor.cpp"><code>tensor.cpp</code></a> 和 <a href="../_code/chapter02_tensor_ops/tests/chapter02_tensor_ops_test.cpp"><code>chapter02_tensor_ops_test.cpp</code></a>。前置阅读是 [`chapter01_tensor_loader`](../chapter01_tensor_loader/intro.md)；内存生命周期的扩展说明见 [`推理引擎内存管理`](../reference/memory_management.md)，numel、stride 和 offset 统一写法见 [`F-TENSOR-01/02`](../reference/formulas.md#f-tensor-01)。

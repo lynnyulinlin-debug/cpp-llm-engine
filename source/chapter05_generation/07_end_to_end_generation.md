@@ -1,13 +1,12 @@
 # 05.7 End-to-End Generation Testing 端到端生成测试
 
-
 ## 验证完整生成链路
 
 完成一次端到端生成测试：输入 prompt，输出固定数量的 token，确认生成链路完整可用。
 
 **阅读入口**
 
-- 前置阅读：[`05.4 KV Cache`](./04_kv_cache.md)、[`05.5 Scheduler`](./05_scheduler.md)、[`05.6 Sampler`](./05_sampler.md)
+- 前置阅读：[`05.4 KV Cache`](./04_kv_cache.md)、[`05.5 Scheduler`](./05_scheduler.md)、[`05.6 Sampler`](./06_sampler.md)
 - 源码直达：<a href="../_code/chapter05_generation/src/runtime.cpp"><code>runtime.cpp</code></a>、<a href="../_code/chapter05_generation/tests/chapter05_generation_test.cpp"><code>chapter05_generation_test.cpp</code></a>、<a href="../_code/chapter05_generation/tests/runtime_smoke_test.cpp"><code>runtime_smoke_test.cpp</code></a>
 - 相关阅读：[`章节导读`](./intro.md)、[`chapter06_quantization`](../chapter06_quantization/intro.md)
 

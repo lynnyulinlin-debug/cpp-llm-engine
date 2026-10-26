@@ -1,6 +1,6 @@
 # 05.8 Generation Runtime 框架对照
 
-本章把 `prefill -> decode -> sample -> output` 做成可观察状态机。成熟 Runtime 在相同链路上增加动态批处理、分页缓存、前缀复用、抢占和异步执行。
+Chapter05 把 `prefill -> decode -> sample -> output` 做成可观察状态机。成熟 Runtime 在相同链路上增加动态批处理、分页缓存、前缀复用、抢占和异步执行。
 
 ## 问题维度
 

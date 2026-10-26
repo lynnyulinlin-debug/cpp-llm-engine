@@ -48,5 +48,5 @@
 ## 对应文档
 
 - [chapter01 导读](../chapter01_tensor_loader/intro.md)
-- [输入契约与 Tokenizer](../chapter01_tensor_loader/07_input_contract_and_tokenizer.md)
-- [模型元数据与 GGUF 边界](../chapter01_tensor_loader/08_model_metadata_and_gguf_boundary.md)
+- [输入契约与 Tokenizer](../chapter01_tensor_loader/04_input_contract_and_tokenizer.md)
+- [模型元数据与 GGUF](../chapter01_tensor_loader/05_model_metadata_and_gguf.md)

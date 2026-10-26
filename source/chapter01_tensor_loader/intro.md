@@ -46,18 +46,18 @@ bash code/chapter01_tensor_loader/run.sh
 | 主对照框架 | `llama.cpp` model loader、vLLM model loader |
 | 成熟组件 | 分片加载、设备放置、并行权重映射、延迟加载和多模型格式 |
 | 重点差异 | 本章以 TinyLlama GGUF 和 CPU 路径固定输入契约，成熟框架还要处理分布式和多后端 |
-| 深入入口 | [`01.9 Loader 框架对照`](./09_framework_loader_comparison.md) |
+| 深入入口 | [`01.6 Loader 框架对照`](./06_framework_loader_comparison.md) |
 
 ## 3. 阅读与源码顺序
 
 | 顺序 | 页面 | 读完后应看到什么 |
 | --- | --- | --- |
-| 1 | [`01.1 Tensor Interface`](./01_tensor_interface.md)、[`01.2 Tensor Implement`](./02_tensor_implement.md) | Tensor 的数据表示和生命周期 |
-| 2 | [`01.3 Custom Binary Format`](./03_custom_binary_format.md)、[`01.4 Python Converter`](./04_python_converter.md) | 文件布局和训练侧导出路径 |
-| 3 | [`01.5 ModelLoader`](./05_model_loader.md)、[`01.6 Verify and Print`](./06_verify_and_print.md) | 文件如何恢复成可检查的 Tensor |
-| 4 | [`01.7 Input Contract and Tokenizer`](./07_input_contract_and_tokenizer.md) | 文本如何变成 token IDs |
-| 5 | [`01.8 Model Metadata and GGUF Boundary`](./08_model_metadata_and_gguf_boundary.md) | 外部 metadata 如何进入内部配置 |
-| 6 | [`01.9 Loader 框架对照`](./09_framework_loader_comparison.md) | 从教学加载链定位成熟框架源码 |
+| 1，必读 | [`01.1 Tensor Object`](./01_tensor_object.md) | Tensor 的数据表示、存储和生命周期 |
+| 2，选读 | [`01.2 Teaching Weight Format`](./02_teaching_weight_format.md) | 用 CIE1 fixture 理解文件格式契约 |
+| 3，必读 | [`01.3 ModelLoader and Validation`](./03_model_loader_validation.md) | 文件如何恢复成可检查的 Tensor |
+| 4，必读 | [`01.4 Input Contract and Tokenizer`](./04_input_contract_and_tokenizer.md) | 文本如何变成 token IDs |
+| 5，必读 | [`01.5 Model Metadata and GGUF`](./05_model_metadata_and_gguf.md) | GGUF 如何进入配置、权重和执行对象 |
+| 6，进阶 | [`01.6 Loader 框架对照`](./06_framework_loader_comparison.md) | 从本章加载链定位成熟框架源码 |
 
 源码先看 <a href="../_code/chapter01_tensor_loader/src/tensor.h"><code>tensor.h</code></a>、<a href="../_code/chapter01_tensor_loader/src/model_loader.cpp"><code>model_loader.cpp</code></a> 和 <a href="../_code/chapter01_tensor_loader/tests/chapter01_tensor_loader_test.cpp"><code>chapter01_tensor_loader_test.cpp</code></a>。前置阅读是 [`chapter00_quickstart`](../chapter00_quickstart/intro.md)；输入侧扩展见 [`推理引擎输入链路`](../reference/input_pipeline.md)。
 

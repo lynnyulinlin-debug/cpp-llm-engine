@@ -6,7 +6,7 @@
 
 - 前置阅读：[`02.1 Shared Underlying Storage`](../chapter02_tensor_ops/01_shared_ptr_memory.md)、[`05.4 KV Cache`](../chapter05_generation/04_kv_cache.md)
 - 源码直达：<a href="../_code/chapter05_generation/src/kv_cache.cpp"><code>kv_cache.cpp</code></a>、<a href="../_code/chapter06_quantization/src/quantized_linear.cpp"><code>quantized_linear.cpp</code></a>、<a href="../_code/chapter06_quantization/src/dequantize_op.cpp"><code>dequantize_op.cpp</code></a>
-- 相关阅读：[`05.11 Block KV Cache 阅读入口`](../chapter05_generation/10_block_kv_cache.md)、[`06.8 量化在 Serving Runtime 里的位置`](../chapter06_quantization/08_quantization_in_serving_runtime.md)
+- 相关阅读：[`05.11 Block KV Cache 阅读入口`](../chapter05_generation/11_block_kv_cache.md)、[`06.8 量化在 Serving Runtime 里的位置`](../chapter06_quantization/08_quantization_in_serving_runtime.md)
 
 ## 常见信号
 

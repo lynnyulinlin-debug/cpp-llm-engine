@@ -1,6 +1,5 @@
 # 05.6 Sampler 采样器
 
-
 ## 把 Logits 变成 Token
 
 先用 Greedy 把模型输出的 logits 转成 token，再理解 Temperature、Top-K 和 Top-p 的扩展位置。采样是生成链路的最后一项决策，不改变模型前向。
@@ -9,7 +8,7 @@
 
 - 前置阅读：[`05.5 Scheduler`](./05_scheduler.md)、[`05.4 KV Cache`](./04_kv_cache.md)、[`05.3 Naive Generation`](./03_naive_generation.md)
 - 源码直达：<a href="../_code/chapter05_generation/src/sampler.cpp"><code>sampler.cpp</code></a>、<a href="../_code/chapter05_generation/src/runtime.cpp"><code>runtime.cpp</code></a>、<a href="../_code/chapter05_generation/tests/sampler_test.cpp"><code>sampler_test.cpp</code></a>
-- 相关阅读：[`05.7 端到端生成测试`](./06_end_to_end_generation.md)、[`章节导读`](./intro.md)
+- 相关阅读：[`05.7 端到端生成测试`](./07_end_to_end_generation.md)、[`章节导读`](./intro.md)
 
 ## 核心设计
 

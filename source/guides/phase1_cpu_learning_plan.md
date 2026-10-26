@@ -29,7 +29,7 @@
 | 章节 | 首轮必读 | 第二轮进阶 / 按需选读 |
 | --- | --- | --- |
 | Chapter00 | 00.1-00.4 环境、构建、模型、首次推理 | 00.5 排错按需；00.6 vLLM baseline 选读 |
-| Chapter01 | 01.5-01.8 Loader、验证、Tokenizer、GGUF metadata | 01.1-01.4 教学格式深入；01.9 框架对照 |
+| Chapter01 | 01.1、01.3-01.5 Tensor、Loader、Tokenizer、GGUF | 01.2 教学格式；01.6 框架对照 |
 | Chapter02 | 02.1-02.4 Storage、reshape、slice、测试 | 02.5 框架 Tensor/View 对照 |
 | Chapter03 | 03.1-03.3 Operator、MatMul、CPU reference | 03.5-03.7 数值/复杂度/真实 backend；03.4 cuBLAS 留到 GPU 阶段 |
 | Chapter04 | 04.1-04.5 Attention、Norm/FFN、Decoder、首层接线 | 04.6 成熟框架对照 |

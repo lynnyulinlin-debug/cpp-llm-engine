@@ -24,4 +24,4 @@
 
 ## 主线映射
 
-对应 [`foundation/09_minimal_cpp_cuda_project`](/foundation/09_minimal_cpp_cuda_project)、[`chapter01_tensor_loader/01_tensor_interface`](/chapter01_tensor_loader/01_tensor_interface) 和 [`chapter02_tensor_ops/03_slice`](/chapter02_tensor_ops/03_slice)。
+对应 [`foundation/09_minimal_cpp_cuda_project`](/foundation/09_minimal_cpp_cuda_project)、[`chapter01 Tensor 对象`](/chapter01_tensor_loader/01_tensor_object) 和 [`chapter02_tensor_ops/03_slice`](/chapter02_tensor_ops/03_slice)。
