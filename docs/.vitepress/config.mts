@@ -70,16 +70,17 @@ function numberedText(index: string | number, text: string) {
 }
 
 function chapterGroup(chapterCode: string, text: string, base: string, pages: Array<{ text: string; file: string; section?: boolean }>) {
-  let pageNumber = 0
   return {
     text,
     collapsed: true,
     items: [
       { text: numberedText(`${chapterCode}.0`, '本章导读'), link: `${base}/intro` },
       ...pages.map((page) => {
-        if (!page.section) pageNumber += 1
+        const pageNumber = page.file.match(/^(\d+)_/)?.[1]
         return {
-          text: page.section ? page.text : numberedText(`${chapterCode}.${pageNumber}`, page.text),
+          text: page.section || !pageNumber
+            ? page.text
+            : numberedText(`${chapterCode}.${Number.parseInt(pageNumber, 10)}`, page.text),
           link: `${base}/${page.file.replace(/\.md$/, '')}`,
         }
       }),
