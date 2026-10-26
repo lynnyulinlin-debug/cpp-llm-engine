@@ -1,8 +1,10 @@
 # 06.8 量化在 Serving Runtime 里的位置
 
-前面几个小节已经把 INT8 权重、反量化和精度验证连起来。本页再补一个工程坐标：在 vLLM / nano-vLLM 这类 serving runtime 中，量化通常会影响 loader、模型配置、kernel 路径、KV cache 策略和 benchmark 判断，而不只是一个 `DequantizeOp`。
+前面几个小节已经把 INT8 权重、反量化和精度验证连起来。本节补充它在 vLLM / nano-vLLM serving runtime 中的实际落点：loader、模型配置、kernel 路径、KV cache 策略和 benchmark，而不只是一个 `DequantizeOp`。
 
-## 阅读入口
+![Weight-only Quantization 路径](../assets/diagrams/chapter06-quantization-weight-only.svg)
+
+**阅读入口**
 
 - 前置阅读：[`06.5 Quantized Linear`](./05_linear_with_quant.md)、[`06.6 Accuracy Validation`](./06_accuracy_validation.md)
 - 源码直达：<a href="../_code/chapter06_quantization/src/quantized_linear.cpp"><code>quantized_linear.cpp</code></a>、<a href="../_code/chapter06_quantization/src/dequantize_op.cpp"><code>dequantize_op.cpp</code></a>
@@ -20,7 +22,7 @@
 
 ## 权重量化和 KV Cache 量化不是一回事
 
-本章主线先做权重量化，因为它最稳定、最容易验证，也最适合初学者建立链路感。权重量化主要影响模型参数的存储和 Linear 计算路径。
+本章先做权重量化，因为它可以直接用 loader、Tensor 和 Linear 测试验证。它主要影响模型参数的存储和 Linear 计算路径。
 
 KV Cache 量化则发生在 runtime 运行过程中，直接影响长上下文和多请求服务的显存压力。它通常还会牵涉 attention backend、cache block 管理和 decode 精度，所以不应该和权重量化混在同一个最小实现里。
 

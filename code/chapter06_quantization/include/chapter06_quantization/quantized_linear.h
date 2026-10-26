@@ -1,3 +1,5 @@
+// Chapter 06：声明教学 INT8 weight-only Linear。
+// 职责：保存量化权重，并通过反量化 baseline 完成前向计算。
 #pragma once
 
 #include "chapter06_quantization/dequantize_op.h"

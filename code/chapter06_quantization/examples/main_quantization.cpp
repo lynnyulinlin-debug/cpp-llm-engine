@@ -1,3 +1,5 @@
+// Chapter 06：演示 INT8 weight-only Linear 的最小执行路径。
+// 验证：输出浮点 Linear、量化 Linear 及二者误差，帮助理解表示变化。
 #include "chapter06_quantization/dequantize_op.h"
 #include "chapter06_quantization/linear_layer.h"
 #include "chapter06_quantization/quantized_linear.h"

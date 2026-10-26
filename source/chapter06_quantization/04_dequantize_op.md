@@ -1,7 +1,7 @@
 # 06.4 DequantizeOp 反量化算子
 
 
-## 这一页要解决什么
+## 把量化值还原为可计算值
 
 实现 `DequantizeOp`，把 INT8 数据反量化回 FP16 或同类浮点表示，供后续计算使用。
 
@@ -11,7 +11,7 @@
 - 理解 scale 和 dtype 转换的关系
 - 理解反量化在推理链路中的位置
 
-## 阅读入口
+**阅读入口**
 
 - 前置阅读：[`06.2 Extend Tensor`](./02_extend_tensor.md)、[`06.3 Load Quantized Weights`](./03_load_quantized_weights.md)
 - 源码直达：<a href="../_code/chapter06_quantization/src/dequantize_op.cpp"><code>dequantize_op.cpp</code></a>、<a href="../_code/chapter06_quantization/src/tensor.cpp"><code>tensor.cpp</code></a>、<a href="../_code/chapter06_quantization/tests/chapter06_quantization_test.cpp"><code>chapter06_quantization_test.cpp</code></a>
@@ -21,7 +21,7 @@
 
 量化权重不一定能直接参与所有算子计算。反量化是把压缩表示重新变成可计算表示的重要桥梁。
 
-这一页的核心内容：
+反量化算子需要覆盖：
 
 - INT8 -> FP16
 - scale 应用
@@ -32,6 +32,8 @@
 如果后续出现融合需求，也应该在这个明确的语义之上扩展，而不是一开始就把逻辑写散。
 
 本教程的最小实现采用全局标量 `scale`（对称量化）。对于更复杂的量化格式，比如每通道或分组量化，`scale` 应该作为 `Tensor` 传入，与 `q` 的形状或分组结构对齐，并在逐元素反量化时正确索引。接口可以先保持为 `dequantize(q, scale)`，只是 `scale` 的类型从 `float` 扩展为 `Tensor`。
+
+真实 TinyLlama 使用的 GGUF Q4_K 不是简单的 int8 加标量 scale，而是每 256 个元素一个 144 字节 super-block。对应的 CPU reference 实现位于 `code/chapter06_quantization/src/q4k_dequantize.cpp`，负责读取 half scale、minimum、分组 scales 和 4-bit quants。它与前面的 INT8 `DequantizeOp` 并列存在，不替换 INT8 教学路径。
 
 源码锚点：`code/chapter06_quantization/src/dequantize_op.cpp`
 

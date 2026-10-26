@@ -1,7 +1,7 @@
 # 06.1 Quantization Basics 量化基础
 
 
-## 这一页要解决什么
+## 先看量化如何改变数值
 
 理解量化的基本原理、数值映射和误差来源，为后续 INT8 推理路径做准备。
 
@@ -12,7 +12,7 @@
 - 理解 INT8、INT16 等数值表示之间的转换
 - 理解量化误差为什么会出现
 
-## 阅读入口
+**阅读入口**
 
 - 前置阅读：[`chapter06 导读`](./intro.md)、[`chapter05_generation`](../chapter05_generation/intro.md)
 - 源码直达：<a href="../_code/chapter06_quantization/src/tensor.cpp"><code>tensor.cpp</code></a>、<a href="../_code/chapter06_quantization/src/dequantize_op.cpp"><code>dequantize_op.cpp</code></a>、<a href="../_code/chapter06_quantization/tests/chapter06_quantization_test.cpp"><code>chapter06_quantization_test.cpp</code></a>
@@ -22,7 +22,7 @@
 
 量化不是简单地把位宽变小，而是要在存储、带宽、速度和精度之间做权衡。先理解基础原理，后面的实现和验证才不会变成“只会调参数”。
 
-这一页的核心内容：
+量化基础需要掌握：
 
 - 量化的目的
 - INT8 / INT16 映射关系

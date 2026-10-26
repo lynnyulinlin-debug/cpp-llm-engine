@@ -1,55 +1,77 @@
 # 06.0 Reduce Memory and Bandwidth Cost 增加量化推理路径
 
-这一章先回答一个部署问题：怎样用更低的内存和带宽成本跑同一条推理链路？
+## 1. 本章位置与成功标准
 
-本章会支持 INT8 量化权重，并在推理路径中完成反量化计算。它接住的是 `chapter05` 已经稳定下来的生成 runtime，把权重表示迁移到量化版本。
+本章把量化权重接入推理路径，并用 CPU reference、fused path 和数值对照确认结果没有被做坏。
 
-## 本章和 vLLM / nano-vLLM 的联系
-
-在 vLLM / nano-vLLM 这类 serving runtime 里，量化不只是一个离线转换脚本，而会影响权重加载、模型配置、kernel 选择、显存预算和 benchmark 判断。本章先实现可解释的 INT8 权重路径，再补一节说明它在真实 runtime 中通常落到哪些边界上。
-
-```mermaid
-flowchart LR
-    W[FP16 weights] --> Q[quantize]
-    Q --> L[loader]
-    L --> T[Tensor dtype]
-    T --> D[dequantize]
-    D --> M[Linear / runtime]
-    M --> V[verification]
+```bash
+bash code/chapter06_quantization/scripts/run.sh
 ```
 
-## 本章概览
+真实 TinyLlama Q4_K/Q6_K 检查需要 Chapter 00 下载的 GGUF 文件。两种格式都已完成 CPU block reference、Linear reference/scalar fused/AVX2 fused、统一 backend policy、Decoder 单变量 A/B 和组合服务回归；GPU 路径已完成 CUDA dequantize + Float32 Workspace + cuBLAS SGEMM 基线。SmolVLM 使用的 Q8_0 已进入 CPU reference、scalar fused、统一 policy 和真实 32 层 Decoder，SIMD/GPU 路径仍待建设。
 
-| 先看什么 | 这一节讲什么 | 为什么重要 | 对应小节 |
-| --- | --- | --- | --- |
-| 量化为什么有效 | scale、zero point、误差来源 | 先建立成本和精度直觉 | [`06.1 Quantization Basics`](./01_quantization_basics.md) |
-| Tensor 怎么表达 INT8 | dtype、shape 和 buffer 约束 | 先让运行时看得懂新表示 | [`06.2 Extend Tensor`](./02_extend_tensor.md) |
-| 权重怎么进入程序 | 量化权重、scale 和 loader | 先把文件表示接进 runtime | [`06.3 Load Quantized Weights`](./03_load_quantized_weights.md) |
-| 反量化怎么计算 | INT8 到可计算表示的转换 | 先让误差边界可观察 | [`06.4 DequantizeOp`](./04_dequantize_op.md) |
-| Linear 怎么接量化 | dequantize 与 Linear 路径组合 | 先让主干算子继续工作 | [`06.5 Quantized Linear`](./05_linear_with_quant.md) |
-| 怎么判断能不能接受 | FP16 对照和误差验证 | 部署判断必须有基线 | [`06.6 Accuracy Validation`](./06_accuracy_validation.md) |
-| 怎么看真实生态 | TensorRT-LLM、Gemma、vLLM 对照 | 先把量化链路放回工程坐标 | [`06.7 TensorRT-LLM / Gemma / vLLM 对照`](./07_tensorrt_gemma_vllm_comparison.md) |
-| 量化如何进入 serving | loader、kernel、KV cache 和 benchmark 边界 | 先理解真实 runtime 里量化落在哪些层 | [`06.8 量化在 Serving Runtime 里的位置`](./08_quantization_in_serving_runtime.md) |
-| 本章怎么收口 | 表示变化、精度边界和下一章入口 | 进入 benchmark 前先固定判断标准 | [`06.9 本章小结`](./summary.md) |
+本章接住 Chapter 05 的生成 runtime，只替换权重表示和 Linear 计算路径。
 
-## 阅读入口
+![Chapter 06 主图：量化推理路径](../assets/diagrams/chapter06-main.svg)
 
-- 前置阅读：[`chapter05_generation`](../chapter05_generation/intro.md)、[`chapter05 小结`](../chapter05_generation/summary.md)
-- 源码直达：<a href="../_code/chapter06_quantization/src/tensor.cpp"><code>tensor.cpp</code></a>、<a href="../_code/chapter06_quantization/src/dequantize_op.cpp"><code>dequantize_op.cpp</code></a>、<a href="../_code/chapter06_quantization/src/quantized_linear.cpp"><code>quantized_linear.cpp</code></a>
-- 相关阅读：正文页按上面的 `本章概览` 顺序阅读；扩展工程视角见 [`TensorRT-LLM`](../reference/ecosystem/tensorrt_llm.md)、[`Gemma`](../reference/ecosystem/gemma.md)、[`vLLM`](../reference/ecosystem/vllm.md)
+## 2. 内容地图
 
-## 这章在解决什么
+完成本章后，可以：
 
-这一章把量化从“格式转换”变成一条可解释、可验证、可继续优化的部署路径。重点不是多加一个 dtype，而是让量化权重能够进入 loader、Tensor、DequantizeOp 和 Linear 路径，并且还能和 FP16 基线对照。
+- 用 INT8 + scale 说明量化、反量化和误差来源
+- 让 Tensor、loader 和 Linear 识别新的权重表示
+- 读取 GGUF Q4_K/Q6_K/Q8_0 block，并比较不同 block size、scale 和 quant 布局
+- 区分 scalar reference、fused reference 和 SIMD backend
+- 用误差、延迟和 payload 大小判断量化路径是否值得保留
 
-## 这章怎么做
+本章的 INT8、GGUF CPU 和 GGUF CUDA 路径遵循同一学习顺序：先读懂表示，再读解码，再测结果。量化权重和 KV Cache 量化不是同一件事；本章先完成前者，KV Cache 继续留在 runtime / serving 侧。
 
-最小设计先从权重量化开始：文件里保存 INT8 权重和 scale，loader 读回量化表示，Tensor 记录 dtype，计算前通过反量化回到可乘加表示，最后用精度验证确认误差是否可接受。
+成熟框架会把量化格式、kernel 能力和模型兼容性一起纳入 backend 选择。本章先用真实 GGUF block 和 CPU A/B 固定判断方法，再用 GPU 非融合路径固定设备端 correctness 和测量口径。
 
-这一章不追求一次做完整低比特生态。它先固定三条边界：省了什么、误差从哪里来、这条链路是否值得进入后续 benchmark。
+| 对照项 | 内容 |
+| --- | --- |
+| 本章教学对象 | INT8、Q4_K/Q6_K/Q8_0、反量化、CPU fused Linear 和 GPU 非融合基线 |
+| 主对照框架 | `llama.cpp` ggml quants、TensorRT-LLM quantized kernels、vLLM quantization |
+| 成熟组件 | 校准、混合精度、GPU fused kernel、多格式调度和硬件能力探测 |
+| 重点差异 | 先证明 block 解码、数值误差和非融合 GPU 路径，再决定是否融合 |
+| 深入入口 | [`06.7 TensorRT-LLM / Gemma / vLLM 对照`](./07_tensorrt_gemma_vllm_comparison.md) |
 
-## 收口与下一步
+| 路径 | 数据组织 | 先看什么 |
+| --- | --- | --- |
+| INT8 reference | 每元素 int8 + 标量 scale | `Tensor -> DequantizeOp -> QuantizedLinear` |
+| GGUF Q4_K | 256 个值 / 144 字节 super-block | `GgufTensorLoader -> QuantizedLinearPolicy -> scalar/AVX2 backend` |
+| GGUF Q6_K | 256 个值 / 210 字节 super-block | `GgufTensorLoader -> QuantizedLinearPolicy -> scalar/AVX2 backend` |
+| GGUF Q8_0 | 32 个值 / 34 字节 block | `GgufTensorLoader -> QuantizedLinearPolicy -> scalar backend` |
+| GGUF CUDA baseline | packed device payload + Float32 Workspace | `CudaQuantizedMatrix -> CUDA dequantize -> cuBLAS SGEMM` |
 
-到本章结束，应能完成一次 INT8 权重进入推理链路的验证，标出反量化在 runtime 中的位置，并用 FP16 基线完成结果对照。
+![Chapter 06 Weight-only Quantization 路径](../assets/diagrams/chapter06-quantization-weight-only.svg)
 
-下一步进入 `chapter07_benchmark`，把正确性验证和性能测量体系补完整。
+## 3. 阅读与源码顺序
+
+| 顺序 | 页面 | 读完后应看到什么 |
+| --- | --- | --- |
+| 1 | [`06.1 Quantization Basics`](./01_quantization_basics.md)、[`06.2 Extend Tensor`](./02_extend_tensor.md) | dtype、scale、shape 和 buffer 约束 |
+| 2 | [`06.3 Load Quantized Weights`](./03_load_quantized_weights.md)、[`06.4 DequantizeOp`](./04_dequantize_op.md) | 量化权重如何进入计算 |
+| 3 | [`06.5 Quantized Linear`](./05_linear_with_quant.md) | 反量化 Linear、Q4_K 和 Q6_K fused 路径 |
+| 4 | [`06.6 Accuracy Validation`](./06_accuracy_validation.md) | FP 基线、误差和通过标准 |
+| 5 | [`06.7 TensorRT-LLM / Gemma / vLLM 对照`](./07_tensorrt_gemma_vllm_comparison.md)、[`06.8 量化在 Serving Runtime 中的位置`](./08_quantization_in_serving_runtime.md) | 量化在真实框架中的落点 |
+
+Q4_K 和 Q6_K 都已有 CPU Linear reference/fused 路径和 GPU 非融合基线，且 Q6_K 已完成真实 TinyLlama tensor 对照。源码先看 <a href="../_code/chapter06_quantization/src/q4k_dequantize.cpp"><code>q4k_dequantize.cpp</code></a>、<a href="../_code/chapter06_quantization/src/q4k_kernel.cpp"><code>q4k_kernel.cpp</code></a>、<a href="../_code/cuda/src/quantized_dequantize_backend.cu"><code>quantized_dequantize_backend.cu</code></a> 和 <a href="../_code/core/include/cpp_llm_engine/core/quantization_contract.h"><code>quantization_contract.h</code></a>。前置阅读是 [`chapter05_generation`](../chapter05_generation/intro.md)，反量化、压缩率和误差口径见 [`F-QUANT-01/02`](../reference/formulas.md#f-quant-01)。
+
+![Chapter 06 Q4_K 后端路径](../assets/diagrams/chapter06-q4k-backend.svg)
+
+## 4. 验证
+
+`Q4KLinearReference` 是 CPU 正确性基线，scalar fused 是默认 CPU 计算路径，AVX2 是可选 CPU 优化；GPU dequantize + SGEMM 是设备端正确性和性能测量基线。任何 fused CUDA 实现都必须复用相同 payload、输入和误差阈值做 A/B。
+
+本章按以下顺序验证：
+
+1. dtype、block size、payload byte 和 shape 检查正确
+2. Q4_K reference 能还原 block 数值
+3. 多 block fused 输出与 reference 输出在允许误差内一致
+4. Q4_K/Q6_K/Q8_0 block、Linear 路径和统一 policy 测试通过，Q8_0 token-prefill 与 embedding-prefill logits 一致
+5. GPU Q4_K/Q6_K 最终 Linear 与 CPU reference 一致，Workspace 在相同容量下复用
+6. 两种真实 tensor 对照通过，Decoder 的三个 CPU 量化作用域通过单变量实验和组合后的 golden、计时闭合与双请求服务回归
+7. benchmark 同时记录延迟、误差、shape、warmup、iterations 和执行路径
+
+**下一章：**本章只改变权重表示和计算成本，不改变 Request、Scheduler 或输出语义；Chapter 07 将统一比较正确性、延迟、吞吐和资源成本。

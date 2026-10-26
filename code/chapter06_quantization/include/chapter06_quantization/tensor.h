@@ -1,3 +1,5 @@
+// Chapter 06：声明量化教学示例使用的最小二维 Tensor。
+// 边界：只覆盖 F32 与 INT8，不替代 code/core 的跨章 TensorContract。
 #pragma once
 
 #include <cstddef>

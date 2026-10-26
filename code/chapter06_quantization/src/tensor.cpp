@@ -1,3 +1,5 @@
+// Chapter 06：实现量化教学 Tensor 的存储、形状与 dtype 访问。
+// 边界：对象只服务本章 INT8/F32 示例和单元测试。
 #include "chapter06_quantization/tensor.h"
 
 #include <stdexcept>

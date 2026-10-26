@@ -1,3 +1,5 @@
+// Chapter 06：实现教学浮点 Linear 及其确定性权重和 bias。
+// 用途：作为 QuantizedLinear 的小规模 correctness 对照。
 #include "chapter06_quantization/linear_layer.h"
 
 namespace chapter06_quantization {

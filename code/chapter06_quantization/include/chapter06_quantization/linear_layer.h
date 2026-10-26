@@ -1,3 +1,5 @@
+// Chapter 06：声明浮点 Linear correctness baseline。
+// 职责：提供与量化 Linear 共享形状语义的教学参考实现。
 #pragma once
 
 #include "chapter06_quantization/tensor.h"

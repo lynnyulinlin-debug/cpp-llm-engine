@@ -1,7 +1,7 @@
 # 06.3 Load Quantized Weights 加载量化权重
 
 
-## 这一页要解决什么
+## 把量化权重读入程序
 
 修改 `ModelLoader`，让它可以读取量化权重文件或 GGUF 中的量化数据。
 
@@ -11,7 +11,7 @@
 - 理解 loader 如何识别量化 dtype
 - 理解量化数据如何进入程序内部
 
-## 阅读入口
+**阅读入口**
 
 - 前置阅读：[`06.1 Quantization Basics`](./01_quantization_basics.md)、[`06.2 Extend Tensor`](./02_extend_tensor.md)
 - 源码直达：<a href="../_code/chapter06_quantization/src/tensor.cpp"><code>tensor.cpp</code></a>、<a href="../_code/chapter06_quantization/src/quantized_linear.cpp"><code>quantized_linear.cpp</code></a>、<a href="../_code/chapter06_quantization/tests/chapter06_quantization_test.cpp"><code>chapter06_quantization_test.cpp</code></a>
@@ -21,7 +21,7 @@
 
 模型只有在加载环节真正读懂量化格式，后面的反量化和量化 Linear 才有意义。
 
-这一页的核心内容：
+量化权重加载需要覆盖：
 
 - 量化权重文件解析
 - 量化 dtype 识别

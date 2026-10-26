@@ -1,7 +1,7 @@
 # 06.2 Extend Tensor 扩展 Tensor
 
 
-## 这一页要解决什么
+## 让 Tensor 表达量化权重
 
 让 `Tensor` 支持 INT8 dtype，为量化权重和量化计算打基础。
 
@@ -11,7 +11,7 @@
 - 理解 INT8 张量在存储层面的变化
 - 理解扩展 dtype 后对后续算子的影响
 
-## 阅读入口
+**阅读入口**
 
 - 前置阅读：[`06.1 Quantization Basics`](./01_quantization_basics.md)、[`chapter05_generation`](../chapter05_generation/intro.md)
 - 源码直达：<a href="../_code/chapter06_quantization/include/chapter06_quantization/tensor.h"><code>tensor.h</code></a>、<a href="../_code/chapter06_quantization/src/tensor.cpp"><code>tensor.cpp</code></a>、<a href="../_code/chapter06_quantization/tests/chapter06_quantization_test.cpp"><code>chapter06_quantization_test.cpp</code></a>
@@ -21,7 +21,7 @@
 
 量化不是单独存在的。它必须落到张量表达上，才能让模型加载、算子和验证走通。
 
-这一页的核心内容：
+Tensor 扩展需要覆盖：
 
 - 在 `Tensor` 中加入 INT8 dtype
 - 保留元信息和存储表示

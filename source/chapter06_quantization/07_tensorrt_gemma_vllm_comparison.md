@@ -1,95 +1,38 @@
-# 06.7 TensorRT-LLM / Gemma / vLLM 对照：把量化放回真实生态里看
+# 06.7 量化实现与成熟框架对照
 
-到这里，你已经把量化链路接进了一条稳定的生成 runtime。  
-这一节不再重复讲 INT8、反量化和精度验证，而是把本章这条链路放到 `TensorRT-LLM`、`Gemma` 和 `vLLM` 里对照着看，帮你分清：
+本章把量化拆成格式解析、block 解码、Linear 执行、backend policy 和数值 A/B。成熟框架还要根据设备能力、模型层和吞吐目标选择量化路径。
 
-- 哪些是量化链路本身必须保住的边界
-- 哪些是高性能 engine 里的量化做法
-- 哪些是模型家族和 serving runtime 会真正影响到的地方
+## 职责映射
 
-## 本节概览
+| 教程对象 | 成熟框架中的对应物 | 阅读重点 |
+| --- | --- | --- |
+| Q4_K/Q6_K block reader | ggml quantized type/format | scale、min、quant bits 怎样布局 |
+| reference dequantize | reference quant kernels | fused 实现用什么结果校验 |
+| scalar/AVX2 fused Linear | CPU quantized GEMV/GEMM | 是否避免完整反量化中间量 |
+| `QuantizedLinearPolicy` | quantization method/backend dispatch | dtype、硬件和 shape 怎样选择实现 |
+| Decoder/ServiceCore A/B | engine accuracy/performance regression | 优化是否同时守住输出与性能 |
 
-| 本章里的东西 | `TensorRT-LLM` 里会看什么 | `Gemma` 里会看什么 | `vLLM` 里会看什么 |
-| --- | --- | --- | --- |
-| 量化权重 | engine 级量化和部署路径 | 具体模型家族的兼容性和精度表现 | 量化后 runtime 的吞吐和服务行为 |
-| `DequantizeOp` | 算子融合和执行路径 | 模型结构如何影响还原误差 | 运行时里如何保持 cache 和调度稳定 |
-| 量化 Linear | 高性能 GPU engine 中的算子实现 | 量化后还能不能保持可接受误差 | 量化后还能不能继续服务高并发场景 |
-| 精度验证 | 部署前的工程判断 | 模型家族作为验证对象 | serving 场景下的回归边界 |
+## 源码入口
 
-## 阅读入口
+先选一种量化格式，从 block 定义追到实际 Linear kernel，再看框架如何注册和选择该实现。
 
-- 前置阅读：[`06.5 Quantized Linear`](./05_linear_with_quant.md)、[`06.6 Accuracy Validation`](./06_accuracy_validation.md)
-- 源码直达：<a href="../_code/chapter06_quantization/src/quantized_linear.cpp"><code>quantized_linear.cpp</code></a>、<a href="../_code/chapter06_quantization/src/dequantize_op.cpp"><code>dequantize_op.cpp</code></a>、<a href="../_code/chapter06_quantization/tests/chapter06_quantization_test.cpp"><code>chapter06_quantization_test.cpp</code></a>
-- 相关阅读：[`06.8 量化在 Serving Runtime 里的位置`](./08_quantization_in_serving_runtime.md)、[`TensorRT-LLM`](../reference/ecosystem/tensorrt_llm.md)、[`vLLM`](../reference/ecosystem/vllm.md)
+| 框架 | 官方入口 | 带着什么问题读 |
+| --- | --- | --- |
+| ggml / `llama.cpp` | [`ggml-quants.c`](https://github.com/ggml-org/llama.cpp/blob/master/ggml/src/ggml-quants.c)、[`ggml-cpu`](https://github.com/ggml-org/llama.cpp/tree/master/ggml/src/ggml-cpu) | block 布局怎样进入 CPU dot/matmul |
+| vLLM | [`quantization`](https://github.com/vllm-project/vllm/tree/main/vllm/model_executor/layers/quantization) | quant method 怎样绑定到模型 Linear |
+| TensorRT-LLM | [`kernels`](https://github.com/NVIDIA/TensorRT-LLM/tree/main/cpp/tensorrt_llm/kernels) | GPU quantized kernel 怎样组织输入和 workspace |
 
-## 工程映射
+## 教程保留与省略
 
-本章已经把量化做成了一条清楚的链路：
+| 已实现 | 暂不实现 | 后续位置 |
+| --- | --- | --- |
+| INT8 教学格式、真实 Q4_K/Q6_K | AWQ、GPTQ、FP8 等多格式 | 格式扩展 |
+| block reference 与 fused CPU Linear | GPU quantized GEMM | GPU backend |
+| scalar/AVX2 显式策略 | 自动硬件调优和 tactic selection | Profiling 后端策略 |
+| tensor、Decoder、服务级回归 | 校准和训练后量化工具链 | 模型准备工具 |
 
-- 权重先变成更小的表示
-- loader 再把它读进程序
-- `DequantizeOp` 把它送回可计算状态
-- `Linear` 和后续算子继续沿着原来的 runtime 跑
-- 精度验证负责告诉你这条路值不值得保留
+## 源码阅读问题
 
-`TensorRT-LLM`、`Gemma` 和 `vLLM` 分别对应这条链路里最常遇到的三个问题：
-
-1. engine 怎么接量化
-2. 模型家族会不会放大量化误差
-3. 量化后的 runtime 还能不能继续服务
-
-所以这节的作用，不是再补一遍背景，而是把本章已经做出来的量化路径放回真实生态里看它会落到哪里。
-
-先看什么：
-
-阅读顺序如下：
-
-1. 先看本章的量化权重和 `DequantizeOp`
-2. 再看 `TensorRT-LLM` 怎么把量化放进 engine 和部署路径
-3. 再看 `Gemma` 会怎样影响形状、兼容性和误差判断
-4. 最后看 `vLLM` 怎么把量化后的 runtime 继续跑成高吞吐服务
-
-这四步里，前两步最接近“量化怎么做”，后两步更像“量化做完以后会碰到什么”。
-
-中间推导：
-
-往回推这三者为什么都要看，通常会得到几个约束：
-
-- 量化不能只停留在文件层，必须进到 runtime
-- 反量化不能是黑盒，必须能说清楚误差从哪里来
-- 模型家族不同，量化后能接受的误差边界就可能不同
-- 高吞吐 serving 里，量化不能破坏调度和 cache 的稳定性
-- 高性能 engine 里，量化会变成部署策略的一部分，而不是单独的文件格式
-
-把这些约束摆出来后，就能看懂为什么本章和这三类生态是同一条主线上的不同落点：
-
-- 本章先把量化链路做清楚
-- `TensorRT-LLM` 看的是高性能 engine 怎么接这条链路
-- `Gemma` 看的是模型家族会把这条链路放大成什么问题
-- `vLLM` 看的是量化后的 runtime 还能不能继续稳定服务
-
-## 学习边界
-
-本节完成后，应当能够把下面几件事说清楚：
-
-- 为什么量化权重不能只看成“更小的文件”
-- 为什么 `DequantizeOp` 必须和 loader、Tensor dtype、Linear 一起看
-- 为什么 `Gemma` 更适合拿来观察量化后的误差和兼容性
-- 为什么 `vLLM` 更适合拿来观察量化后的运行时行为
-
-把这些对应关系讲明白，就说明你已经不只是知道量化怎么实现，而是知道量化在真实生态里会被谁接住、被谁验证、被谁继续跑下去。
-
-这一节不负责复刻 `TensorRT-LLM`、`Gemma` 或 `vLLM` 的全部能力。
-
-它只负责把本章最小量化链路和这三个生态的关注点对齐，让你知道：
-
-- 哪些概念已经在本章里出现
-- 哪些设计只是把这些概念做得更完整
-- 哪些地方是工程落点，不是量化本身
-
-参考页：
-
-- [TensorRT-LLM](../reference/ecosystem/tensorrt_llm.md)
-- [Gemma](../reference/ecosystem/gemma.md)
-- [vLLM](../reference/ecosystem/vllm.md)
-- <a href="../_code/chapter06_quantization/src/tensor.cpp"><code>tensor.cpp</code></a>、<a href="../_code/chapter06_quantization/src/dequantize_op.cpp"><code>dequantize_op.cpp</code></a>、<a href="../_code/chapter06_quantization/src/quantized_linear.cpp"><code>quantized_linear.cpp</code></a>
+1. 量化格式的 block layout 在 loader、Tensor 和 kernel 之间怎样保持一致？
+2. fused Linear 省掉了哪个中间量，误差基线来自哪里？
+3. backend policy 的选择依据是硬件能力、shape、格式，还是三者共同决定？

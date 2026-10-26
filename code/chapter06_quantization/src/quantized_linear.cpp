@@ -1,3 +1,5 @@
+// Chapter 06：实现教学 INT8 weight-only Linear。
+// 路径：构造量化权重，反量化为 F32，再执行矩阵乘和 bias。
 #include "chapter06_quantization/quantized_linear.h"
 
 #include <vector>
