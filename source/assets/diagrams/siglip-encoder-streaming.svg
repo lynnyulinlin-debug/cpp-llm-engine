@@ -1,0 +1,65 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="560" viewBox="0 0 1200 560" role="img" aria-labelledby="title desc">
+  <title id="title">SigLIP 12 层 Vision Encoder 的逐层权重执行</title>
+  <desc id="desc">Patch embedding 进入12层循环，每次只加载一个 Q8_0 block、解码执行并释放，最后执行 post LayerNorm。</desc>
+  <defs>
+    <linearGradient id="background" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#f8f3e8"/>
+      <stop offset="1" stop-color="#e4f0ec"/>
+    </linearGradient>
+    <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto">
+      <path d="M0 0 L10 5 L0 10 Z" fill="#284b45"/>
+    </marker>
+    <style>
+      .title { font: 700 28px 'Noto Sans CJK SC', sans-serif; fill: #173832; }
+      .subtitle { font: 500 15px 'Noto Sans CJK SC', sans-serif; fill: #5a716c; }
+      .heading { font: 700 18px 'Noto Sans CJK SC', sans-serif; fill: #173832; }
+      .body { font: 500 14px 'Noto Sans CJK SC', sans-serif; fill: #284b45; }
+      .small { font: 500 12px 'Noto Sans CJK SC', sans-serif; fill: #60756f; }
+      .box { stroke: #284b45; stroke-width: 2; rx: 15; }
+      .flow { stroke: #284b45; stroke-width: 2.5; fill: none; marker-end: url(#arrow); }
+      .loop { stroke: #b35c33; stroke-width: 2.5; fill: none; marker-end: url(#arrow); stroke-dasharray: 8 6; }
+    </style>
+  </defs>
+  <rect width="1200" height="560" fill="url(#background)"/>
+  <text x="55" y="55" class="title">SigLIP Vision Encoder：12 层计算，内存只保留一层权重</text>
+  <text x="55" y="85" class="subtitle">MM-P5A 先验证少量 patch 的逐层数值；1024-token 性能优化留到 profiling 阶段</text>
+
+  <rect x="55" y="175" width="190" height="150" class="box" fill="#fff8df"/>
+  <text x="80" y="215" class="heading">Patch Embedding</text>
+  <text x="80" y="253" class="body">[patches, 768]</text>
+  <text x="80" y="285" class="small">F32 patch + position</text>
+
+  <rect x="315" y="135" width="455" height="235" class="box" fill="#e8f0fa"/>
+  <text x="345" y="177" class="heading">Block i · i = 0..11</text>
+  <rect x="345" y="205" width="120" height="105" rx="12" fill="#f7eadc" stroke="#78928b"/>
+  <text x="363" y="238" class="body">加载 Q8_0</text>
+  <text x="363" y="270" class="small">单层 27.0 MiB</text>
+  <rect x="495" y="205" width="120" height="105" rx="12" fill="#e9f3e6" stroke="#78928b"/>
+  <text x="516" y="238" class="body">解码执行</text>
+  <text x="516" y="270" class="small">Attention + MLP</text>
+  <rect x="645" y="205" width="95" height="105" rx="12" fill="#f8e8dc" stroke="#78928b"/>
+  <text x="664" y="238" class="body">释放</text>
+  <text x="664" y="270" class="small">进入 i+1</text>
+  <path d="M465 257 H495" class="flow"/>
+  <path d="M615 257 H645" class="flow"/>
+  <path d="M693 310 V355 H405 V310" class="loop"/>
+  <text x="440" y="332" class="small">每层保存 checksum；hidden shape 始终不变</text>
+
+  <rect x="840" y="175" width="155" height="150" class="box" fill="#eef3e6"/>
+  <text x="863" y="215" class="heading">Post Norm</text>
+  <text x="863" y="253" class="body">LayerNorm</text>
+  <text x="863" y="285" class="small">12 层后的输出</text>
+
+  <rect x="1045" y="175" width="110" height="150" class="box" fill="#dcece7"/>
+  <text x="1067" y="215" class="heading">输出</text>
+  <text x="1067" y="253" class="body">768</text>
+  <text x="1067" y="285" class="small">给 Projector</text>
+
+  <path d="M245 250 H315" class="flow"/>
+  <path d="M770 250 H840" class="flow"/>
+  <path d="M995 250 H1045" class="flow"/>
+
+  <rect x="315" y="430" width="680" height="75" rx="14" fill="#fffdf7" stroke="#78928b" stroke-width="2"/>
+  <text x="342" y="461" class="body">4-patch 验证：12 层 C++ ↔ NumPy checksum；decoded 单层权重 28,351,488 bytes</text>
+  <text x="342" y="488" class="small">当前进程最大 RSS 46,600 KiB · 不代表完整 1024-token workload 峰值</text>
+</svg>

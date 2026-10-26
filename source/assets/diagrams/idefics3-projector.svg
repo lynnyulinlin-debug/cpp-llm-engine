@@ -1,0 +1,67 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="600" viewBox="0 0 1200 600" role="img" aria-labelledby="title desc">
+  <title id="title">IDEFICS3 Projector 的空间合并与宽度映射</title>
+  <desc id="desc">32乘32个768维视觉 token 每4乘4合并，形成8乘8个12288维向量，再经Q8_0 Linear得到64个960维视觉 embedding。</desc>
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#f7f1e3"/>
+      <stop offset="1" stop-color="#dcebe6"/>
+    </linearGradient>
+    <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto">
+      <path d="M0 0 L10 5 L0 10 Z" fill="#244a43"/>
+    </marker>
+    <style>
+      .title { font: 700 28px 'Noto Sans CJK SC', sans-serif; fill: #173832; }
+      .subtitle { font: 500 15px 'Noto Sans CJK SC', sans-serif; fill: #5b706b; }
+      .heading { font: 700 19px 'Noto Sans CJK SC', sans-serif; fill: #173832; }
+      .body { font: 500 15px 'Noto Sans CJK SC', sans-serif; fill: #284b45; }
+      .small { font: 500 13px 'Noto Sans CJK SC', sans-serif; fill: #60756f; }
+      .box { stroke: #284b45; stroke-width: 2; rx: 16; }
+      .flow { stroke: #284b45; stroke-width: 2.5; fill: none; marker-end: url(#arrow); }
+      .cell { stroke: #78928b; stroke-width: 1; fill: #edf4ef; }
+      .active { stroke: #a5522c; stroke-width: 2; fill: #f6d9c9; }
+    </style>
+  </defs>
+  <rect width="1200" height="600" fill="url(#bg)"/>
+  <text x="55" y="55" class="title">IDEFICS3 Projector：保留空间邻接，再对齐语言模型宽度</text>
+  <text x="55" y="86" class="subtitle">完整 tile：1024 个 patch token → 64 个 visual embedding；correctness 先验证一个完整 4×4 窗口</text>
+
+  <rect x="55" y="145" width="260" height="315" class="box" fill="#fffaf0"/>
+  <text x="82" y="183" class="heading">Vision Encoder 输出</text>
+  <text x="82" y="210" class="body">32 × 32 × 768</text>
+  <g transform="translate(87 240)">
+    <rect x="0" y="0" width="38" height="38" class="active"/><rect x="38" y="0" width="38" height="38" class="active"/><rect x="76" y="0" width="38" height="38" class="active"/><rect x="114" y="0" width="38" height="38" class="active"/>
+    <rect x="0" y="38" width="38" height="38" class="active"/><rect x="38" y="38" width="38" height="38" class="active"/><rect x="76" y="38" width="38" height="38" class="active"/><rect x="114" y="38" width="38" height="38" class="active"/>
+    <rect x="0" y="76" width="38" height="38" class="active"/><rect x="38" y="76" width="38" height="38" class="active"/><rect x="76" y="76" width="38" height="38" class="active"/><rect x="114" y="76" width="38" height="38" class="active"/>
+    <rect x="0" y="114" width="38" height="38" class="active"/><rect x="38" y="114" width="38" height="38" class="active"/><rect x="76" y="114" width="38" height="38" class="active"/><rect x="114" y="114" width="38" height="38" class="active"/>
+    <rect x="152" y="0" width="38" height="38" class="cell"/><rect x="152" y="38" width="38" height="38" class="cell"/><rect x="152" y="76" width="38" height="38" class="cell"/><rect x="152" y="114" width="38" height="38" class="cell"/>
+  </g>
+  <text x="87" y="420" class="small">橙色：左上 4×4 验证窗口</text>
+
+  <rect x="390" y="175" width="270" height="255" class="box" fill="#e8f0fa"/>
+  <text x="420" y="218" class="heading">Spatial Merge</text>
+  <text x="420" y="252" class="body">4 × 4 × 768 = 12288</text>
+  <text x="420" y="292" class="small">向量内部顺序</text>
+  <text x="420" y="320" class="body">dy → dx → hidden</text>
+  <rect x="420" y="350" width="205" height="42" rx="9" fill="#fff" stroke="#78928b"/>
+  <text x="438" y="377" class="small">[64, 12288]</text>
+
+  <rect x="735" y="175" width="190" height="255" class="box" fill="#f6e5d6"/>
+  <text x="765" y="218" class="heading">Q8_0 Linear</text>
+  <text x="765" y="260" class="body">W: 960 × 12288</text>
+  <text x="765" y="298" class="small">按需解码为 F32</text>
+  <text x="765" y="326" class="small">45 MiB 权重</text>
+
+  <rect x="1000" y="175" width="155" height="255" class="box" fill="#dcece7"/>
+  <text x="1027" y="218" class="heading">Visual</text>
+  <text x="1027" y="247" class="heading">Embedding</text>
+  <text x="1027" y="295" class="body">[64, 960]</text>
+  <text x="1027" y="330" class="small">送入图文拼接</text>
+
+  <path d="M315 302 H390" class="flow"/>
+  <path d="M660 302 H735" class="flow"/>
+  <path d="M925 302 H1000" class="flow"/>
+
+  <rect x="390" y="490" width="535" height="65" rx="14" fill="#fffdf7" stroke="#78928b" stroke-width="2"/>
+  <text x="420" y="518" class="body">最小真实闭环：16×768 → 1×12288 → 1×960</text>
+  <text x="420" y="542" class="small">C++ 与独立 NumPy/gguf-py 对照空间顺序、shape 和数值</text>
+</svg>

@@ -1,0 +1,84 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="690" viewBox="0 0 1200 690" role="img" aria-labelledby="title desc">
+  <title id="title">多模态请求阶段与现有 Runtime 的交接</title>
+  <desc id="desc">图片与文本经过多模态输入管线组成统一 embedding，再通过每请求适配器进入已有 Chapter05 Runtime 和 Chapter09 ServiceCore。</desc>
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#f8f3e7"/>
+      <stop offset="1" stop-color="#e7f1ee"/>
+    </linearGradient>
+    <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="#314b45"/>
+    </marker>
+    <style>
+      .title { font: 700 28px 'Noto Sans CJK SC', sans-serif; fill: #17352f; }
+      .subtitle { font: 500 15px 'Noto Sans CJK SC', sans-serif; fill: #58716a; }
+      .group { font: 700 16px 'Noto Sans CJK SC', sans-serif; fill: #8a5a36; }
+      .label { font: 700 17px 'Noto Sans CJK SC', sans-serif; fill: #17352f; }
+      .body { font: 500 14px 'Noto Sans CJK SC', sans-serif; fill: #314b45; }
+      .small { font: 500 13px 'Noto Sans CJK SC', sans-serif; fill: #58716a; }
+      .box { stroke: #314b45; stroke-width: 2; rx: 14; }
+      .pipeline { fill: none; stroke: #b97847; stroke-width: 2; stroke-dasharray: 8 6; rx: 20; }
+      .arrow { stroke: #314b45; stroke-width: 2.4; fill: none; marker-end: url(#arrow); }
+      .metric { stroke: #6d8b83; stroke-width: 1.6; fill: #f7fbf9; rx: 12; }
+    </style>
+  </defs>
+
+  <rect width="1200" height="690" fill="url(#bg)"/>
+  <text x="55" y="55" class="title">多模态只扩展输入管线，生成与服务复用现有主线</text>
+  <text x="55" y="84" class="subtitle">七阶段指标定位请求成本；统一 embedding 是多模态与 LLM Runtime 的稳定交接点</text>
+
+  <rect x="45" y="120" width="710" height="390" class="pipeline"/>
+  <text x="70" y="151" class="group">多模态输入管线</text>
+
+  <rect x="70" y="180" width="150" height="82" class="box" fill="#e8f0fa"/>
+  <text x="92" y="213" class="label">图片解码</text>
+  <text x="92" y="239" class="small">JPEG / PPM -> RGB</text>
+
+  <rect x="270" y="180" width="150" height="82" class="box" fill="#e8f0fa"/>
+  <text x="292" y="213" class="label">动态切图</text>
+  <text x="292" y="239" class="small">tiles + overview</text>
+
+  <rect x="470" y="180" width="150" height="82" class="box" fill="#e8f0fa"/>
+  <text x="488" y="213" class="label">Vision Encoder</text>
+  <text x="500" y="239" class="small">每个视觉输入一次</text>
+
+  <rect x="470" y="305" width="150" height="82" class="box" fill="#e8f0fa"/>
+  <text x="500" y="338" class="label">Projector</text>
+  <text x="492" y="364" class="small">hidden 768 -> 960</text>
+
+  <rect x="70" y="330" width="170" height="82" class="box" fill="#fff6dc"/>
+  <text x="90" y="363" class="label">Prompt tokenize</text>
+  <text x="90" y="389" class="small">text chunks -> token ids</text>
+
+  <rect x="270" y="420" width="230" height="66" class="box" fill="#f3e7d4"/>
+  <text x="292" y="449" class="label">Embedding Composition</text>
+  <text x="308" y="472" class="small">text + visual，width 960</text>
+
+  <path d="M220 221 H270" class="arrow"/>
+  <path d="M420 221 H470" class="arrow"/>
+  <path d="M545 262 V305" class="arrow"/>
+  <path d="M470 346 H435 Q420 346 420 365 V420" class="arrow"/>
+  <path d="M155 412 V438 Q155 453 270 453" class="arrow"/>
+
+  <rect x="800" y="170" width="330" height="86" class="box" fill="#f3e7d4"/>
+  <text x="828" y="205" class="label">EmbeddingRequestExecutor</text>
+  <text x="828" y="232" class="small">统一 embedding + 每请求 Decoder Context</text>
+
+  <rect x="800" y="305" width="330" height="100" class="box" fill="#e7f3e8"/>
+  <text x="828" y="341" class="label">Chapter05 Generation Runtime</text>
+  <text x="828" y="369" class="body">prefill / decode / sample / KV lifecycle</text>
+  <text x="828" y="391" class="small">图片来源不进入调度与采样逻辑</text>
+
+  <rect x="800" y="455" width="330" height="86" class="box" fill="#e7f3e8"/>
+  <text x="828" y="490" class="label">Chapter09 ServiceCore</text>
+  <text x="828" y="517" class="small">admission / HTTP / SSE / service metrics</text>
+
+  <path d="M500 453 H690 Q730 453 730 213 H800" class="arrow"/>
+  <path d="M965 256 V305" class="arrow"/>
+  <path d="M965 405 V455" class="arrow"/>
+
+  <rect x="70" y="555" width="1060" height="86" class="metric"/>
+  <text x="94" y="588" class="label">请求阶段指标</text>
+  <text x="94" y="616" class="body">elapsed seconds · invocation count · request-owned peak live bytes · visual inputs/rows · prompt positions</text>
+  <text x="94" y="637" class="small">不包含共享模型权重、allocator bookkeeping 或整个进程 RSS</text>
+</svg>

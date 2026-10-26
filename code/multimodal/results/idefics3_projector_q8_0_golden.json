@@ -1,0 +1,27 @@
+{
+  "model": "SmolVLM-500M-Instruct mmproj Q8_0",
+  "model_sha256": "d1eb8b6b23979205fdf63703ed10f788131a3f812c7b1f72e0119d5d81295150",
+  "input": "tests/fixtures/two_by_two.ppm",
+  "input_sha256": "15ad661e5a579cbe4c99f207871db9be5ab582b040a961d7ec42bad7aff6d561",
+  "selected_positions": "0,1,2,3,32,33,34,35,64,65,66,67,96,97,98,99",
+  "encoder_shape": "16x768",
+  "merged_shape": "1x12288",
+  "output_shape": "1x960",
+  "checksum_absolute_tolerance": 0.1,
+  "value_absolute_tolerance": 0.00001,
+  "decoded_projector_weight_bytes": 47185920,
+  "cpp": {
+    "encoder_checksum": 2936.059681,
+    "merged_checksum": 2936.059681,
+    "merged_first": 0.2685272396,
+    "output_checksum": -12771.36878,
+    "first": 1.650054455
+  },
+  "numpy_reference": {
+    "encoder_checksum": 2936.03708,
+    "merged_checksum": 2936.03708,
+    "merged_first": 0.268529624,
+    "output_checksum": -12771.3258,
+    "first": 1.6500597
+  }
+}

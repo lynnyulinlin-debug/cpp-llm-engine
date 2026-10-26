@@ -1,0 +1,87 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="610" viewBox="0 0 1200 610" role="img" aria-labelledby="title desc">
+  <title id="title">SigLIP 首个 Block 的 CPU 计算路径</title>
+  <desc id="desc">图片 patch 经过 patch projection 和 position embedding 后，依次执行 LayerNorm、全注意力、残差、LayerNorm、GELU MLP 和第二次残差。</desc>
+  <defs>
+    <linearGradient id="background" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#f8f3e8"/>
+      <stop offset="1" stop-color="#e4f0ec"/>
+    </linearGradient>
+    <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto">
+      <path d="M0 0 L10 5 L0 10 Z" fill="#284b45"/>
+    </marker>
+    <style>
+      .title { font: 700 28px 'Noto Sans CJK SC', sans-serif; fill: #173832; }
+      .subtitle { font: 500 15px 'Noto Sans CJK SC', sans-serif; fill: #5a716c; }
+      .heading { font: 700 17px 'Noto Sans CJK SC', sans-serif; fill: #173832; }
+      .body { font: 500 14px 'Noto Sans CJK SC', sans-serif; fill: #284b45; }
+      .small { font: 500 12px 'Noto Sans CJK SC', sans-serif; fill: #60756f; }
+      .box { stroke: #284b45; stroke-width: 2; rx: 14; }
+      .flow { stroke: #284b45; stroke-width: 2.5; fill: none; marker-end: url(#arrow); }
+      .residual { stroke: #b35c33; stroke-width: 2.5; fill: none; marker-end: url(#arrow); stroke-dasharray: 7 5; }
+    </style>
+  </defs>
+  <rect width="1200" height="610" fill="url(#background)"/>
+  <text x="55" y="55" class="title">SigLIP 单个视觉 Block：先固定数学，再接 Q8_0 权重</text>
+  <text x="55" y="85" class="subtitle">视觉 token 使用全注意力；矩阵保持 [token, hidden]，两条橙色虚线表示 residual</text>
+
+  <rect x="55" y="145" width="190" height="120" class="box" fill="#fff8df"/>
+  <text x="78" y="180" class="heading">Patch + Position</text>
+  <text x="78" y="215" class="body">[tokens, 768]</text>
+  <text x="78" y="242" class="small">F32 真实 payload 已接入</text>
+
+  <rect x="300" y="145" width="155" height="120" class="box" fill="#e8f0fa"/>
+  <text x="327" y="180" class="heading">LayerNorm 1</text>
+  <text x="327" y="215" class="body">gamma / beta</text>
+  <text x="327" y="242" class="small">epsilon = 1e-6</text>
+
+  <rect x="510" y="125" width="235" height="160" class="box" fill="#e9f3e6"/>
+  <text x="535" y="162" class="heading">Full Self-Attention</text>
+  <text x="535" y="198" class="body">Q / K / V · 12 heads</text>
+  <text x="535" y="228" class="body">scale + stable softmax</text>
+  <text x="535" y="258" class="small">不使用 causal mask</text>
+
+  <rect x="800" y="145" width="150" height="120" class="box" fill="#f8e8dc"/>
+  <text x="831" y="180" class="heading">Residual 1</text>
+  <text x="831" y="215" class="body">x + attention</text>
+
+  <path d="M245 205 H300" class="flow"/>
+  <path d="M455 205 H510" class="flow"/>
+  <path d="M745 205 H800" class="flow"/>
+  <path d="M150 265 V325 H875 V265" class="residual"/>
+
+  <rect x="800" y="385" width="150" height="120" class="box" fill="#e8f0fa"/>
+  <text x="826" y="420" class="heading">LayerNorm 2</text>
+  <text x="826" y="455" class="body">gamma / beta</text>
+
+  <rect x="510" y="365" width="235" height="160" class="box" fill="#f2eadb"/>
+  <text x="535" y="402" class="heading">GELU MLP</text>
+  <text x="535" y="438" class="body">768 → intermediate</text>
+  <text x="535" y="468" class="body">intermediate → 768</text>
+  <text x="535" y="498" class="small">tanh 近似 GELU</text>
+
+  <rect x="300" y="385" width="155" height="120" class="box" fill="#f8e8dc"/>
+  <text x="327" y="420" class="heading">Residual 2</text>
+  <text x="327" y="455" class="body">residual 1 + MLP</text>
+
+  <rect x="55" y="385" width="190" height="120" class="box" fill="#dcece7"/>
+  <text x="83" y="420" class="heading">Block Output</text>
+  <text x="83" y="455" class="body">[tokens, 768]</text>
+  <text x="83" y="482" class="small">供下一视觉 Block 使用</text>
+
+  <path d="M875 265 V385" class="flow"/>
+  <path d="M800 445 H745" class="flow"/>
+  <path d="M510 445 H455" class="flow"/>
+  <path d="M300 445 H245" class="flow"/>
+  <path d="M875 325 V345 H378 V385" class="residual"/>
+
+  <rect x="990" y="145" width="155" height="360" rx="14" fill="#fffdf7" stroke="#78928b" stroke-width="2"/>
+  <text x="1014" y="182" class="heading">验证分工</text>
+  <text x="1014" y="225" class="body">合成 F32</text>
+  <text x="1014" y="253" class="small">逐项中间值</text>
+  <text x="1014" y="298" class="body">真实 F32</text>
+  <text x="1014" y="326" class="small">Patch Embedding</text>
+  <text x="1014" y="371" class="body">真实 Q8_0</text>
+  <text x="1014" y="399" class="small">首 Block 已验证</text>
+  <text x="1014" y="444" class="body">12 层串联</text>
+  <text x="1014" y="472" class="small">MM-P5A 已验证</text>
+</svg>

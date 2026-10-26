@@ -1,0 +1,33 @@
+{
+  "model": "SmolVLM-500M-Instruct mmproj Q8_0",
+  "model_sha256": "d1eb8b6b23979205fdf63703ed10f788131a3f812c7b1f72e0119d5d81295150",
+  "input": "tests/fixtures/two_by_two.ppm",
+  "input_sha256": "15ad661e5a579cbe4c99f207871db9be5ab582b040a961d7ec42bad7aff6d561",
+  "patch_count": 4,
+  "checksum_absolute_tolerance": 0.02,
+  "value_absolute_tolerance": 0.000001,
+  "cpp": {
+    "patch_checksum": -54456.0,
+    "embedding_checksum": 3832.870312,
+    "embedding_first": 0.02341967821,
+    "norm1_checksum": -4134.476124,
+    "attention_checksum": -66.59934474,
+    "residual1_checksum": 3766.27096,
+    "norm2_checksum": -5973.380193,
+    "ffn_checksum": -21400.76647,
+    "output_checksum": 5051.34963,
+    "first": 0.02374182269
+  },
+  "numpy_reference": {
+    "patch_checksum": -54456.0,
+    "embedding_checksum": 3832.87026,
+    "embedding_first": 0.0234196782,
+    "norm1_checksum": -4134.47993,
+    "attention_checksum": -66.5996162,
+    "residual1_checksum": 3766.27067,
+    "norm2_checksum": -5973.3892,
+    "ffn_checksum": -21400.765,
+    "output_checksum": 5051.34918,
+    "first": 0.0237418152
+  }
+}

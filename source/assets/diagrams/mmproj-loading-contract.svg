@@ -1,0 +1,67 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="560" viewBox="0 0 1200 560" role="img" aria-labelledby="title desc">
+  <title id="title">mmproj 从 GGUF 文件到视觉执行契约</title>
+  <desc id="desc">Chapter01 GgufReader 读取索引，多模态 schema 产生视觉配置和198个 tensor 布局；F32 embedding 与 Q8_0 block payload 均已可执行。</desc>
+  <defs>
+    <linearGradient id="background" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#f8f3e8"/>
+      <stop offset="1" stop-color="#e6f1ed"/>
+    </linearGradient>
+    <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto">
+      <path d="M0 0 L10 5 L0 10 Z" fill="#284b45"/>
+    </marker>
+    <style>
+      .title { font: 700 28px 'Noto Sans CJK SC', sans-serif; fill: #173832; }
+      .subtitle { font: 500 15px 'Noto Sans CJK SC', sans-serif; fill: #5a716c; }
+      .heading { font: 700 18px 'Noto Sans CJK SC', sans-serif; fill: #173832; }
+      .body { font: 500 14px 'Noto Sans CJK SC', sans-serif; fill: #284b45; }
+      .small { font: 500 12px 'Noto Sans CJK SC', sans-serif; fill: #60756f; }
+      .box { stroke: #284b45; stroke-width: 2; rx: 15; }
+      .flow { stroke: #284b45; stroke-width: 2.5; fill: none; marker-end: url(#arrow); }
+      .future { stroke-dasharray: 8 6; }
+    </style>
+  </defs>
+  <rect width="1200" height="560" fill="url(#background)"/>
+  <text x="55" y="55" class="title">mmproj：先证明权重“放在哪里”，再执行视觉网络</text>
+  <text x="55" y="85" class="subtitle">MM-P3 固定布局；MM-P4A/P4B 已按需读取 F32 embedding 与 Q8_0 block</text>
+
+  <rect x="55" y="155" width="200" height="210" class="box" fill="#fff8df"/>
+  <text x="80" y="195" class="heading">mmproj GGUF</text>
+  <text x="80" y="235" class="body">40 metadata</text>
+  <text x="80" y="270" class="body">198 tensor descriptors</text>
+  <text x="80" y="305" class="body">109 MiB payload</text>
+  <text x="80" y="338" class="small">SmolVLM 500M / Q8_0</text>
+
+  <rect x="325" y="155" width="210" height="210" class="box" fill="#e8f0fa"/>
+  <text x="350" y="195" class="heading">GgufReader</text>
+  <text x="350" y="235" class="body">检查 magic / version</text>
+  <text x="350" y="270" class="body">解析 metadata</text>
+  <text x="350" y="305" class="body">记录 name / shape</text>
+  <text x="350" y="338" class="small">复用 Chapter01 格式层</text>
+
+  <rect x="605" y="125" width="250" height="130" class="box" fill="#eef3e6"/>
+  <text x="630" y="165" class="heading">VisionModelConfig</text>
+  <text x="630" y="200" class="body">512 / 16 / hidden 768</text>
+  <text x="630" y="228" class="small">12 blocks · 12 heads · output 960</text>
+
+  <rect x="605" y="285" width="250" height="130" class="box" fill="#eef3e6"/>
+  <text x="630" y="325" class="heading">VisionTensorLayout</text>
+  <text x="630" y="360" class="body">6 + 16 × 12 = 198</text>
+  <text x="630" y="388" class="small">名称唯一 · shape 精确匹配</text>
+
+  <rect x="930" y="155" width="215" height="210" class="box" fill="#f5ead8"/>
+  <text x="955" y="195" class="heading">Payload Loader</text>
+  <text x="955" y="235" class="body">按 offset 读取</text>
+  <text x="955" y="270" class="body">F32 已接入</text>
+  <text x="955" y="305" class="body">Q8_0 已接入</text>
+  <text x="955" y="338" class="small">数学接口与格式解码分离</text>
+
+  <path d="M255 260 H325" class="flow"/>
+  <path d="M535 230 H580 V190 H605" class="flow"/>
+  <path d="M535 290 H580 V350 H605" class="flow"/>
+  <path d="M855 190 H895 V260 H930" class="flow"/>
+  <path d="M855 350 H895 V260" class="flow"/>
+
+  <rect x="325" y="455" width="530" height="62" rx="14" fill="#d9ebe5" stroke="#4d756b"/>
+  <text x="350" y="482" class="body">默认回归：合成 index，不下载模型</text>
+  <text x="350" y="505" class="small">可选验收：真实 schema + 首个 1×768 Patch Embedding</text>
+</svg>

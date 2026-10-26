@@ -1,0 +1,222 @@
+{
+  "schema_version": 1,
+  "benchmark": "smolvlm_dynamic_tiles_service_cpu",
+  "measurement_scope": "repeated-cold-process; model loading excluded from stage timers",
+  "workload": {
+    "question": "What historic event is shown? Answer in one short sentence.",
+    "decoder_layers": 32,
+    "tile_grid": "2x3",
+    "visual_inputs": 7,
+    "visual_rows": 448,
+    "sequence_shape": "486x960",
+    "requests_per_iteration": 2,
+    "generated_tokens_per_iteration": 2
+  },
+  "assets": {
+    "model_sha256": "9d4612de6a42214499e301494a3ecc2be0abdd9de44e663bda63f1152fad1bf4",
+    "mmproj_sha256": "d1eb8b6b23979205fdf63703ed10f788131a3f812c7b1f72e0119d5d81295150",
+    "image_sha256": "2dff664c0c8aaea18aff8cbe7e868845b775e90cdd7a0bac98df709b131deaa3"
+  },
+  "environment": {
+    "cpu_model": "AMD Ryzen 9 9955HX 16-Core Processor",
+    "hardware_concurrency": 32,
+    "platform": "Linux-6.5.0-41-generic-x86_64-with-glibc2.35",
+    "python": "3.11.5",
+    "linked_blas": "libopenblas.so.0 => /opt/sogoupinyin/files/lib/libopenblas.so.0 (0x0000793b3a400000)",
+    "openblas_num_threads": "library-default",
+    "omp_num_threads": "library-default",
+    "build_type": "Release"
+  },
+  "warmup": 0,
+  "iterations": 2,
+  "samples": [
+    {
+      "wall_seconds": 177.11520707700402,
+      "input_pipeline_seconds": 176.9484604,
+      "request_peak_live_bytes": 17203200,
+      "stages": {
+        "image_decode": {
+          "seconds": 0.001431955,
+          "invocations": 1,
+          "peak_live_bytes": 936960
+        },
+        "dynamic_tiling": {
+          "seconds": 0.025765898,
+          "invocations": 1,
+          "peak_live_bytes": 5505024
+        },
+        "prompt_tokenization": {
+          "seconds": 0.038042092,
+          "invocations": 1,
+          "peak_live_bytes": 1893120
+        },
+        "vision_encoder": {
+          "seconds": 16.24305275,
+          "invocations": 7,
+          "peak_live_bytes": 17203200
+        },
+        "projector": {
+          "seconds": 0.066412546,
+          "invocations": 7,
+          "peak_live_bytes": 8011776
+        },
+        "embedding_composition": {
+          "seconds": 7.9479e-05,
+          "invocations": 1,
+          "peak_live_bytes": 3759360
+        },
+        "language_prefill": {
+          "seconds": 160.5736757,
+          "invocations": 1,
+          "peak_live_bytes": 1866240
+        }
+      }
+    },
+    {
+      "wall_seconds": 177.18539398300345,
+      "input_pipeline_seconds": 177.0111388,
+      "request_peak_live_bytes": 17203200,
+      "stages": {
+        "image_decode": {
+          "seconds": 0.001271423,
+          "invocations": 1,
+          "peak_live_bytes": 936960
+        },
+        "dynamic_tiling": {
+          "seconds": 0.025076376,
+          "invocations": 1,
+          "peak_live_bytes": 5505024
+        },
+        "prompt_tokenization": {
+          "seconds": 0.039456782,
+          "invocations": 1,
+          "peak_live_bytes": 1893120
+        },
+        "vision_encoder": {
+          "seconds": 16.46299014,
+          "invocations": 7,
+          "peak_live_bytes": 17203200
+        },
+        "projector": {
+          "seconds": 0.069038544,
+          "invocations": 7,
+          "peak_live_bytes": 8011776
+        },
+        "embedding_composition": {
+          "seconds": 8.3166e-05,
+          "invocations": 1,
+          "peak_live_bytes": 3759360
+        },
+        "language_prefill": {
+          "seconds": 160.4132224,
+          "invocations": 1,
+          "peak_live_bytes": 1866240
+        }
+      }
+    }
+  ],
+  "summary": {
+    "wall_seconds": {
+      "min": 177.11520707700402,
+      "mean": 177.15030053000373,
+      "p50": 177.15030053000373,
+      "max": 177.18539398300345,
+      "cv_percent": 0.01980998784350006
+    },
+    "input_pipeline_seconds": {
+      "min": 176.9484604,
+      "mean": 176.97979959999998,
+      "p50": 176.97979959999998,
+      "max": 177.0111388,
+      "cv_percent": 0.01770778364018727
+    },
+    "request_peak_live_bytes": 17203200,
+    "stages": {
+      "image_decode": {
+        "seconds": {
+          "min": 0.001271423,
+          "mean": 0.001351689,
+          "p50": 0.001351689,
+          "max": 0.001431955,
+          "cv_percent": 5.938200281277716
+        },
+        "invocations_per_iteration": 1,
+        "peak_live_bytes": 936960
+      },
+      "dynamic_tiling": {
+        "seconds": {
+          "min": 0.025076376,
+          "mean": 0.025421137,
+          "p50": 0.025421137,
+          "max": 0.025765898,
+          "cv_percent": 1.3561981905057945
+        },
+        "invocations_per_iteration": 1,
+        "peak_live_bytes": 5505024
+      },
+      "prompt_tokenization": {
+        "seconds": {
+          "min": 0.038042092,
+          "mean": 0.038749437,
+          "p50": 0.038749437,
+          "max": 0.039456782,
+          "cv_percent": 1.8254329733874628
+        },
+        "invocations_per_iteration": 1,
+        "peak_live_bytes": 1893120
+      },
+      "vision_encoder": {
+        "seconds": {
+          "min": 16.24305275,
+          "mean": 16.353021445,
+          "p50": 16.353021445,
+          "max": 16.46299014,
+          "cv_percent": 0.6724671362405785
+        },
+        "invocations_per_iteration": 7,
+        "peak_live_bytes": 17203200
+      },
+      "projector": {
+        "seconds": {
+          "min": 0.066412546,
+          "mean": 0.067725545,
+          "p50": 0.067725545,
+          "max": 0.069038544,
+          "cv_percent": 1.938705698123205
+        },
+        "invocations_per_iteration": 7,
+        "peak_live_bytes": 8011776
+      },
+      "embedding_composition": {
+        "seconds": {
+          "min": 7.9479e-05,
+          "mean": 8.13225e-05,
+          "p50": 8.13225e-05,
+          "max": 8.3166e-05,
+          "cv_percent": 2.2669003043438125
+        },
+        "invocations_per_iteration": 1,
+        "peak_live_bytes": 3759360
+      },
+      "language_prefill": {
+        "seconds": {
+          "min": 160.4132224,
+          "mean": 160.49344904999998,
+          "p50": 160.49344904999998,
+          "max": 160.5736757,
+          "cv_percent": 0.04998749199726304
+        },
+        "invocations_per_iteration": 1,
+        "peak_live_bytes": 1866240
+      }
+    }
+  },
+  "correctness": {
+    "all_iterations": true,
+    "sync_and_sse_token": [
+      17600
+    ],
+    "terminal_resources_released": true,
+    "inflight_after_release": 0
+  }
+}

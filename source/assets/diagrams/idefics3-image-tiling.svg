@@ -1,0 +1,87 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="690" viewBox="0 0 1200 690" role="img" aria-labelledby="title desc">
+  <title id="title">IDEFICS3 动态切图与视觉输入链路</title>
+  <desc id="desc">640乘488图片按256 image token预算生成一张overview和三乘二局部tile，随后转换为CHW和patch tensor。</desc>
+  <defs>
+    <linearGradient id="background" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#f8f3e8"/>
+      <stop offset="1" stop-color="#e8f2ef"/>
+    </linearGradient>
+    <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto">
+      <path d="M0 0 L10 5 L0 10 Z" fill="#284b45"/>
+    </marker>
+    <style>
+      .title { font: 700 28px 'Noto Sans CJK SC', sans-serif; fill: #173832; }
+      .subtitle { font: 500 15px 'Noto Sans CJK SC', sans-serif; fill: #5a716c; }
+      .heading { font: 700 18px 'Noto Sans CJK SC', sans-serif; fill: #173832; }
+      .body { font: 500 14px 'Noto Sans CJK SC', sans-serif; fill: #284b45; }
+      .small { font: 500 12px 'Noto Sans CJK SC', sans-serif; fill: #60756f; }
+      .box { stroke: #284b45; stroke-width: 2; rx: 15; }
+      .flow { stroke: #284b45; stroke-width: 2.5; fill: none; marker-end: url(#arrow); }
+    </style>
+  </defs>
+  <rect width="1200" height="690" fill="url(#background)"/>
+  <text x="55" y="55" class="title">IDEFICS3：一张图片如何变成 7 组视觉输入</text>
+  <text x="55" y="85" class="subtitle">固定示例：640×488 RGB，tile 512，patch 16，merge 4，image-token budget 256</text>
+
+  <rect x="55" y="145" width="190" height="150" class="box" fill="#fff8df"/>
+  <text x="80" y="180" class="heading">原始图片</text>
+  <rect x="80" y="200" width="140" height="79" rx="6" fill="#d7e7ef" stroke="#5f7d88"/>
+  <path d="M90 267 L125 232 L150 252 L173 225 L210 267 Z" fill="#7698a5"/>
+  <circle cx="108" cy="220" r="9" fill="#e6b85c"/>
+  <text x="112" y="318" class="body">640 × 488 RGB8</text>
+
+  <rect x="315" y="135" width="205" height="170" class="box" fill="#f5ead8"/>
+  <text x="340" y="170" class="heading">Token 预算</text>
+  <text x="340" y="205" class="body">256 image tokens</text>
+  <text x="340" y="234" class="body">× 16² patch</text>
+  <text x="340" y="263" class="body">× 4² merge</text>
+  <line x1="340" y1="275" x2="490" y2="275" stroke="#ad7953" stroke-width="2"/>
+  <text x="340" y="296" class="small">1,048,576 pixel budget</text>
+
+  <rect x="590" y="120" width="300" height="225" class="box" fill="#eef3e6"/>
+  <text x="615" y="155" class="heading">Refined Image</text>
+  <rect x="615" y="175" width="250" height="166" fill="#263d39" stroke="#284b45" stroke-width="2"/>
+  <rect x="631" y="175" width="218" height="166" fill="#d7e7ef"/>
+  <path d="M631 285 L685 230 L725 265 L770 210 L849 292 L849 341 L631 341 Z" fill="#7698a5"/>
+  <line x1="698.3" y1="175" x2="698.3" y2="341" stroke="#fff" stroke-width="2"/>
+  <line x1="781.6" y1="175" x2="781.6" y2="341" stroke="#fff" stroke-width="2"/>
+  <line x1="615" y1="258" x2="865" y2="258" stroke="#fff" stroke-width="2"/>
+  <text x="615" y="369" class="body">1536 × 1024，3 × 2 grid</text>
+  <text x="615" y="393" class="small">内容 1343×1024，水平居中 padding</text>
+
+  <path d="M245 220 H315" class="flow"/>
+  <path d="M520 220 H590" class="flow"/>
+
+  <path d="M740 405 V438 H310 V465" class="flow"/>
+  <path d="M740 405 V438 H785 V465" class="flow"/>
+
+  <rect x="170" y="465" width="280" height="155" class="box" fill="#e8f0fa"/>
+  <text x="195" y="500" class="heading">Overview × 1</text>
+  <rect x="195" y="520" width="105" height="80" rx="5" fill="#d7e7ef" stroke="#5f7d88"/>
+  <path d="M200 590 L230 550 L255 575 L275 542 L295 590 Z" fill="#7698a5"/>
+  <text x="320" y="548" class="body">512 × 512</text>
+  <text x="320" y="577" class="small">全局语义</text>
+  <text x="320" y="598" class="small">序列中的第 1 张</text>
+
+  <rect x="520" y="465" width="360" height="155" class="box" fill="#e8f0fa"/>
+  <text x="545" y="500" class="heading">Local Tiles × 6</text>
+  <g transform="translate(545 520)">
+    <rect width="62" height="38" fill="#b9d1db" stroke="#5f7d88"/>
+    <rect x="70" width="62" height="38" fill="#9fbeca" stroke="#5f7d88"/>
+    <rect x="140" width="62" height="38" fill="#b9d1db" stroke="#5f7d88"/>
+    <rect y="46" width="62" height="38" fill="#9fbeca" stroke="#5f7d88"/>
+    <rect x="70" y="46" width="62" height="38" fill="#b9d1db" stroke="#5f7d88"/>
+    <rect x="140" y="46" width="62" height="38" fill="#9fbeca" stroke="#5f7d88"/>
+  </g>
+  <text x="765" y="548" class="body">每张 512²</text>
+  <text x="765" y="577" class="small">row-major</text>
+  <text x="765" y="598" class="small">从左到右、从上到下</text>
+
+  <rect x="950" y="430" width="200" height="205" class="box" fill="#e5f1e6"/>
+  <text x="975" y="468" class="heading">每张图继续处理</text>
+  <text x="975" y="507" class="body">Normalize CHW</text>
+  <text x="975" y="540" class="body">1024 × 768 patches</text>
+  <text x="975" y="573" class="body">SigLIP Encoder</text>
+  <text x="975" y="606" class="body">IDEFICS3 Projector</text>
+  <path d="M880 542 H950" class="flow"/>
+</svg>

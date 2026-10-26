@@ -1,0 +1,44 @@
+{
+  "model": "SmolVLM-500M-Instruct Q8_0",
+  "model_sha256": "9d4612de6a42214499e301494a3ecc2be0abdd9de44e663bda63f1152fad1bf4",
+  "mmproj_sha256": "d1eb8b6b23979205fdf63703ed10f788131a3f812c7b1f72e0119d5d81295150",
+  "input_sha256": "15ad661e5a579cbe4c99f207871db9be5ab582b040a961d7ec42bad7aff6d561",
+  "question": "What historic event is shown? Answer in one short sentence.",
+  "prompt_mode": "smolvlm-overview-only",
+  "prompt_token_ids": "1,11126,42,38028,49189,49152,visual,49189,1780,7709,2121,314,3057,47,19842,281,582,1890,6330,30,49279,198,9519,9531,42",
+  "language_architecture": "llama",
+  "language_hidden": 960,
+  "text_token_ids": "1,49279",
+  "sequence_shape": "25x960",
+  "prompt_prefix_tokens": 6,
+  "prompt_suffix_tokens": 18,
+  "prompt_visual_rows": 1,
+  "decoder_layers": 32,
+  "decoder_tokens": 25,
+  "logits_size": 49280,
+  "top1_token_id": 378,
+  "checksum_absolute_tolerance": 0.1,
+  "logits_checksum_absolute_tolerance": 20.0,
+  "logit_absolute_tolerance": 0.0001,
+  "cpp": {
+    "text_embedding_checksum": -557.2059398,
+    "sequence_checksum": -18175.59741,
+    "logits_checksum": -11088550.97,
+    "top1_logit": 14.56045628
+  },
+  "numpy_reference": {
+    "text_embedding_checksum": -557.20594,
+    "sequence_checksum": -18175.5725,
+    "logits_checksum": -11088536.0,
+    "top1_logit": 14.560441
+  },
+  "llama_cpp_external_baseline": {
+    "commit": "fcc891545b0f06de346d8f67d1e6c61f9bf0e777",
+    "image_sha256": "2dff664c0c8aaea18aff8cbe7e868845b775e90cdd7a0bac98df709b131deaa3",
+    "tile_grid": "2x3",
+    "visual_chunks": 7,
+    "visual_rows_per_chunk": 64,
+    "visual_positions": 448,
+    "prompt_positions": 486
+  }
+}
