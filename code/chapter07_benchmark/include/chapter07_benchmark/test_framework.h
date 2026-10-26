@@ -1,3 +1,6 @@
+// Chapter 07：声明轻量级 benchmark 测试用例和汇总结构。
+// 职责：为本章示例提供不依赖外部测试库的确定性断言入口。
+// 验证：chapter07_benchmark_test 使用这些结构报告通过和失败数量。
 #pragma once
 
 #include <cstddef>

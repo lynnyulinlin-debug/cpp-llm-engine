@@ -1,3 +1,6 @@
+// Chapter 07：测试结果计算、阶段指标、trace 和 hotspot 输出。
+// 职责：验证 benchmark 数据结构和渲染接口的正确性，不测量机器性能。
+// 验证：由 CTest 和 code/chapter07_benchmark/scripts/run.sh 执行。
 #include "chapter07_benchmark/benchmark.h"
 #include "chapter07_benchmark/test_framework.h"
 #include "chapter07_benchmark/test_helpers.h"

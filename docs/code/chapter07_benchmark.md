@@ -28,7 +28,7 @@
 ## 对应文档
 
 - [chapter07 导读](../chapter07_benchmark/intro.md)
-- [chapter07 小结](../chapter07_benchmark/summary.md)
+- [chapter07 导读](../chapter07_benchmark/intro.md)
 
 ## 说明
 

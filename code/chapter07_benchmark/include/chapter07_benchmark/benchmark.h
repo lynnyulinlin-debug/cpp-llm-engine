@@ -1,3 +1,6 @@
+// Chapter 07：声明 benchmark 结果、阶段样本、trace 和 hotspot 数据结构。
+// 职责：统一性能证据的内存表示和 tokens/s、阶段占比计算接口。
+// 验证：Chapter 07 单元测试覆盖结果计算、样本和 trace 输出。
 #pragma once
 
 #include <cstddef>

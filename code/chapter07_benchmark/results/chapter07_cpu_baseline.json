@@ -1,0 +1,49 @@
+{
+  "schema_version": 1,
+  "benchmark": "chapter07_cpu_multi_request",
+  "device": "cpu",
+  "hardware_concurrency": 32,
+  "warmup": 1,
+  "iterations": 3,
+  "scenarios": [
+    {
+      "request_count": 1,
+      "prompt_tokens": 4,
+      "max_new_tokens": 4,
+      "prefill_ms": 0.00100533,
+      "decode_ms": 0.00446167,
+      "total_ms": 0.005467,
+      "ttft_ms": 0.00219067,
+      "throughput_tokens_per_second": 731663,
+      "generated_tokens": 4,
+      "completed_requests": 1,
+      "correctness": true
+    },
+    {
+      "request_count": 2,
+      "prompt_tokens": 4,
+      "max_new_tokens": 4,
+      "prefill_ms": 0.001964,
+      "decode_ms": 0.008212,
+      "total_ms": 0.010176,
+      "ttft_ms": 0.00302933,
+      "throughput_tokens_per_second": 786164,
+      "generated_tokens": 8,
+      "completed_requests": 2,
+      "correctness": true
+    },
+    {
+      "request_count": 4,
+      "prompt_tokens": 4,
+      "max_new_tokens": 4,
+      "prefill_ms": 0.00372,
+      "decode_ms": 0.0161667,
+      "total_ms": 0.0198867,
+      "ttft_ms": 0.004862,
+      "throughput_tokens_per_second": 804559,
+      "generated_tokens": 16,
+      "completed_requests": 4,
+      "correctness": true
+    }
+  ]
+}

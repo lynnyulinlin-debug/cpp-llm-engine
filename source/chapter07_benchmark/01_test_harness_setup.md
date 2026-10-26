@@ -1,7 +1,7 @@
 # 07.1 Test Harness Basics 测试 harness 基础
 
 
-## 这一页要解决什么
+## 先固定测试入口
 
 引入一个统一的测试 harness，并用它来编写算子和模块的单元测试。
 
@@ -11,7 +11,7 @@
 - 理解如何为算子和模块建立测试入口
 - 理解测试代码和业务代码的边界
 
-## 阅读入口
+**阅读入口**
 
 - 前置阅读：[`chapter07 导读`](./intro.md)、[`chapter05_generation`](../chapter05_generation/intro.md)
 - 源码直达：<a href="../_code/chapter07_benchmark/src/test_helpers.cpp"><code>test_helpers.cpp</code></a>、<a href="../_code/chapter07_benchmark/tests/chapter07_benchmark_test.cpp"><code>chapter07_benchmark_test.cpp</code></a>
@@ -21,19 +21,19 @@
 
 单元测试是整个教程可维护性的基础。如果没有统一测试框架，后面每个章节的验证方式都会不一致。
 
-这一页的核心内容：
+测试入口需要覆盖：
 
 - 统一测试入口
 - 命名测试用例
 - 算子单元测试
 
-测试体系的第一目标不是“复杂”，而是“稳定和可复现”。因此这里应该先把最小测试入口接起来，再逐步增加更系统的测试组织方式。
+测试入口的第一目标是稳定和可复现。因此这里先接起最小测试入口，再逐步增加测试组织方式。
 
 如果后面每章都能沿用同样的测试风格，整个教程的维护成本会低很多。
 
 测试 harness 的文件结构建议和源码结构对齐：`tests/` 目录下为每个算子或模块建立对应的测试文件，比如 `test_matmul.cpp`、`test_attention.cpp`、`test_decoder_layer.cpp`。每个测试文件可以包含多个测试用例，用例命名遵循 `test_<模块>_<场景>` 的格式，比如 `test_matmul_small_shape`、`test_matmul_error_shape`。这种组织方式可以让测试和源码的映射关系一目了然。
 
-这一页最好再强调一个约束：单测应该尽量只依赖局部构造的数据，而不是依赖外部大模型文件。这样测试才快，也才更适合做回归。
+测试入口还要遵守一个约束：单测应该尽量只依赖局部构造的数据，而不是依赖外部大模型文件。这样测试才快，也才更适合做回归。
 
 最小测试结构可以写成：
 

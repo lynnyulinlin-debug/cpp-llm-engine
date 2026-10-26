@@ -1,3 +1,6 @@
+// Chapter 07：实现 benchmark 结果计算、阶段吞吐和 hotspot 数据样本。
+// 职责：提供不依赖计时器的纯计算基线，供 demo、测试和文档示例复用。
+// 验证：chapter07_benchmark_test 检查边界输入和固定样本结果。
 #include "chapter07_benchmark/benchmark.h"
 
 #include <numeric>

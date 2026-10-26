@@ -1,11 +1,11 @@
 # 07.6 Result Interpretation 结果解读与决策模板
 
 
-## 这一页要解决什么
+## 把数字变成决定
 
-把 benchmark 跑出来的数字翻译成工程结论，回答“这个优化到底值不值得保留”。这一页只固定测完之后的判断流程。
+把 benchmark 跑出来的数字翻译成工程结论，回答“这个优化到底值不值得保留”。本节只固定测完之后的判断流程。
 
-## 阅读入口
+**阅读入口**
 
 - 前置阅读：[`07.3 Benchmark Metrics`](./03_benchmark_metrics.md)、[`07.4 Benchmark Script`](./04_benchmark_script.md)
 - 源码直达：<a href="../_code/chapter07_benchmark/src/benchmark.cpp"><code>benchmark.cpp</code></a>、<a href="../_code/chapter07_benchmark/src/test_helpers.cpp"><code>test_helpers.cpp</code></a>、<a href="../_code/chapter07_benchmark/tests/chapter07_benchmark_test.cpp"><code>chapter07_benchmark_test.cpp</code></a>
@@ -13,7 +13,7 @@
 
 ## 判断流程
 
-benchmark 的结果本身不是结论，结论来自结果与目标、基线和参考实现的对照。这一页要做的，就是把 benchmark 从“跑分工具”变成“决策证据”。
+benchmark 的结果本身不是结论，结论来自结果与目标、基线和参考实现的对照。判断流程要把 benchmark 从“跑分工具”变成“决策证据”。
 
 最小判断顺序：
 
@@ -89,7 +89,7 @@ benchmark 的结果本身不是结论，结论来自结果与目标、基线和�
 - 能根据结果明确说出“保留 / 回滚 / 继续优化”
 - 能解释某个优化到底是在改善正确性、延迟还是吞吐
 
-能够对一组结果写出明确的决策说明，而不是只贴数字，这一页就达标了。
+能够对一组结果写出明确的决策说明，而不是只贴数字，结果解读就达标了。
 
 常见问题：
 
@@ -100,7 +100,7 @@ benchmark 的结果本身不是结论，结论来自结果与目标、基线和�
 
 和前后章节怎么接：
 
-这一页承接 `07.5` 的优化建议，把“可以怎么优化”变成“优化后如何判断值不值”，也为 `07.8` 本章小结做铺垫。
+结果解读接续 `07.5` 的优化建议，把“可以怎么优化”变成“优化后如何判断值不值”，并回到章节导读中的验证标准。
 
 收口结论：
 

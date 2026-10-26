@@ -1,7 +1,7 @@
 # 07.2 End-to-End Correctness Testing 端到端正确性测试
 
 
-## 这一页要解决什么
+## 用完整链路证明正确
 
 通过端到端测试，把当前推理结果和 PyTorch golden logits 对照起来，确认整条链路正确。
 
@@ -11,7 +11,7 @@
 - 理解 golden logits 的作用
 - 理解 cosine similarity 的比较方式
 
-## 阅读入口
+**阅读入口**
 
 - 前置阅读：[`07.1 Test Harness Basics`](./01_test_harness_setup.md)、[`chapter05_generation`](../chapter05_generation/intro.md)
 - 源码直达：<a href="../_code/chapter07_benchmark/tests/chapter07_benchmark_test.cpp"><code>chapter07_benchmark_test.cpp</code></a>、<a href="../_code/chapter07_benchmark/src/test_helpers.cpp"><code>test_helpers.cpp</code></a>
@@ -21,7 +21,7 @@
 
 单个模块正确不代表整条链路正确。端到端测试是确认“从输入到输出”都没问题的最直接方式。
 
-这一页的核心内容：
+端到端正确性需要覆盖：
 
 - 输入 prompt
 - 跑完整推理链路
@@ -32,7 +32,7 @@
 
 如果测试输入变了，golden 结果也要同步更新，否则对照就失去意义。
 
-这一页可以把 golden logits 的角色写得更明确：它不是要求数值逐位完全一致，而是要求与参考实现保持足够接近。这样读者就不会把端到端测试误解成一个“必须绝对相等”的测试。
+golden logits 的角色需要明确：它不是要求数值逐位完全一致，而是要求与参考实现保持足够接近。这样读者就不会把端到端测试误解成一个“必须绝对相等”的测试。
 
 `cosine_similarity` 适合捕捉输出向量的整体方向一致性；如果 logits 有系统性缩放偏置，再补 `mean_absolute_error` 或 `mse` 来看量级。两者一起用通常比单一指标更可靠。
 

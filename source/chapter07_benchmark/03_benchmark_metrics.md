@@ -1,7 +1,7 @@
 # 07.3 Benchmark Metrics Benchmark 指标
 
 
-## 这一页要解决什么
+## 固定性能指标
 
 定义统一的性能指标，衡量模型的 prefill 延迟、逐 token 延迟和吞吐能力。  
 没有统一指标，就没法公平比较不同实现。
@@ -12,7 +12,7 @@
 - 理解为什么不同阶段需要不同指标
 - 理解指标如何反映系统性能
 
-## 阅读入口
+**阅读入口**
 
 - 前置阅读：[`07.2 End-to-End Correctness Testing`](./02_e2e_correctness.md)、[`chapter06_quantization`](../chapter06_quantization/intro.md)
 - 源码直达：<a href="../_code/chapter07_benchmark/src/benchmark.cpp"><code>benchmark.cpp</code></a>、<a href="../_code/chapter07_benchmark/src/test_helpers.cpp"><code>test_helpers.cpp</code></a>、<a href="../_code/chapter07_benchmark/examples/main_benchmark.cpp"><code>main_benchmark.cpp</code></a>

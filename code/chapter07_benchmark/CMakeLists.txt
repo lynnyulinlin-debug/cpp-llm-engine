@@ -5,6 +5,11 @@ set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
 
+add_subdirectory(
+    ${CMAKE_CURRENT_SOURCE_DIR}/../chapter05_generation
+    ${CMAKE_CURRENT_BINARY_DIR}/chapter05_generation
+)
+
 add_library(chapter07_benchmark
     src/benchmark.cpp
     src/test_helpers.cpp
@@ -19,6 +24,22 @@ target_compile_features(chapter07_benchmark PUBLIC cxx_std_17)
 
 add_executable(chapter07_benchmark_demo
     examples/main_benchmark.cpp
+)
+
+add_executable(chapter07_runtime_benchmark
+    examples/runtime_benchmark.cpp
+)
+
+add_executable(chapter07_multi_request_benchmark
+    examples/multi_request_benchmark.cpp
+)
+
+target_link_libraries(chapter07_runtime_benchmark
+    PRIVATE chapter05_generation
+)
+
+target_link_libraries(chapter07_multi_request_benchmark
+    PRIVATE chapter05_generation
 )
 
 target_link_libraries(chapter07_benchmark_demo
@@ -37,3 +58,10 @@ include(CTest)
 enable_testing()
 
 add_test(NAME chapter07_benchmark_test COMMAND chapter07_benchmark_test)
+add_test(
+    NAME chapter07_multi_request_benchmark
+    COMMAND chapter07_multi_request_benchmark
+        --warmup 0
+        --iterations 1
+        --output ${CMAKE_CURRENT_BINARY_DIR}/chapter07_multi_request_test.json
+)

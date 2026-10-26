@@ -1,3 +1,6 @@
+// Chapter 07：声明 unit/e2e 检查和文本、JSON、Chrome trace 渲染辅助函数。
+// 职责：把固定 benchmark 样本转换为学习者可读或工具可消费的结果。
+// 验证：Chapter 07 demo 和测试检查各类输出包含预期字段。
 #pragma once
 
 #include <string>

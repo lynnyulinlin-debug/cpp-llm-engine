@@ -1,7 +1,7 @@
 # 07.5 Optimization Tips 优化建议
 
 
-## 这一页要解决什么
+## 先测量再选择优化
 
 列出常见的可选优化方向，例如 CUDA Graph、memory pool 和 async copy，帮助后续定位性能提升空间。
 
@@ -11,7 +11,7 @@
 - 理解为什么优化建议要放在 benchmark 之后
 - 理解性能优化不等于先优化所有地方
 
-## 阅读入口
+**阅读入口**
 
 - 前置阅读：[`07.3 Benchmark Metrics`](./03_benchmark_metrics.md)、[`07.4 Benchmark Script`](./04_benchmark_script.md)
 - 源码直达：<a href="../_code/chapter07_benchmark/src/benchmark.cpp"><code>benchmark.cpp</code></a>、<a href="../_code/chapter07_benchmark/examples/main_benchmark.cpp"><code>main_benchmark.cpp</code></a>
@@ -29,7 +29,7 @@
 
 这些优化项都能在某些工作负载下减少重复开销，但并不一定对所有场景都有效。教程把它们放在 benchmark 之后，就是为了避免“先上优化，再找问题”。
 
-这一页更适合写成“优化备忘录”：告诉读者有哪些常见方向、各自适合解决什么瓶颈、以及为什么必须先测量后决定。
+优化建议适合写成“优化备忘录”：列出常见方向、各自适合解决的瓶颈，以及为什么必须先测量后决定。
 
 可以把优化建议理解成一个决策表：当瓶颈在调度时看 scheduler，当瓶颈在 kernel launch 时看 CUDA Graph，当瓶颈在内存分配时看 memory pool，当瓶颈在拷贝时看 async copy。
 

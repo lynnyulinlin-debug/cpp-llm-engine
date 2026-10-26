@@ -1,3 +1,6 @@
+// Chapter 07：实现 benchmark 检查和 trace/summary 文本、JSON 渲染。
+// 职责：把固定阶段数据转换成终端输出、JSON 和 Chrome trace 格式。
+// 验证：Chapter 07 测试检查 unit/e2e 状态和关键输出字段。
 #include "chapter07_benchmark/test_helpers.h"
 
 #include "chapter07_benchmark/benchmark.h"

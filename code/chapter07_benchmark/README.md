@@ -1,33 +1,29 @@
-# Chapter 07: Benchmark
+# Chapter 07：Benchmark 基准测试与证据
 
-This directory contains the minimal implementation for `chapter07_benchmark`.
+本目录把正确性测试、阶段耗时、事件 trace、热点摘要和 JSON/Chrome trace 组织成可重复的 benchmark 入口。完整学习说明见 [`source/chapter07_benchmark`](../../source/chapter07_benchmark/intro.md)。
 
-## Scope
+## 本章资产总览
 
-- Lightweight test harness setup
-- End-to-end correctness checks
-- Benchmark metrics
-- Benchmark scripts
-- Optimization notes
+| 资产 | 作用 |
+| --- | --- |
+| `src/benchmark.cpp` | benchmark 计时和阶段记录 |
+| `src/test_helpers.cpp` | 固定输入和测试辅助 |
+| `tests/chapter07_benchmark_test.cpp` | correctness 和 benchmark 输出测试 |
+| `examples/main_benchmark.cpp` | 生成阶段、事件和 trace 示例 |
+| `examples/runtime_benchmark.cpp` | Chapter 05 CPU runtime 实测 benchmark |
+| `examples/multi_request_benchmark.cpp` | `1/2/4` 请求场景和 JSON 结果输出 |
+| `scripts/run.sh` | 隔离构建、CTest 和 benchmark 入口 |
+| `results/chapter07_cpu_baseline.json` | 最近一次可复查的 CPU 多请求基线结果 |
+| Chapter 08 | 消费本章 trace 和 hotspot 证据进行 profiling |
 
-## How to run
+## 运行与验证
 
-- `bash scripts/run.sh`
+从仓库根目录执行：
 
-## Current status
+```bash
+bash code/chapter07_benchmark/scripts/run.sh
+```
 
-- Library, demo, and test targets are available
-- Named unit checks, e2e checks, and benchmark summary are wired together
-- This chapter is the verification and performance closure for the tutorial
-- The demo now emits stage-level timing for `input`, `prefill`, `decode`, `sampling`, and `output`
-- The demo also emits a minimal event-level trace so chapter08 can teach evidence before full profilers
-- The demo also emits a minimal hotspot summary so chapter08 can connect traces to function-level ranking
-- The demo also emits a minimal JSON trace artifact so chapter08 can teach structured evidence, not just console text
-- The demo also emits a minimal Chrome-trace-style view so chapter08 can teach timeline-shaped evidence
-- The Chrome-trace-style view now includes minimal host/compute track separation and one sync-point marker
-- The demo now also includes a tiny multi-request timeline to explain overlap and batch-merge waits
-- The current code is intentionally small: it provides a baseline for correctness and performance comparison, not a full profiling or serving system
-- The intended output is decision evidence, not just raw numbers: compare baseline, optimized, and reference behavior under the same conditions
-- Benchmark comparisons should keep inputs, hardware, and runtime flags aligned so the result reflects the change being measured
-- Results should be treated as a reusable record: input shape, device, flags, and script version matter when you revisit an A/B comparison later
-- If this chapter's tests grow more complex later, the migration plan to Google Test is documented in `docs/appendix/gtest_migration.md`
+`runtime_benchmark` 输出的是 Chapter 05 CPU runtime 的实测结果；`main_benchmark` 中的固定 trace 只用于演示结果格式。比较结果时固定输入、设备、编译选项和脚本版本；benchmark 输出用于支持决策，不替代正确性测试。
+
+`multi_request_benchmark` 使用同一个 CPU Runtime 和 Round-robin Scheduler，依次测量 1、2、4 个请求。脚本默认使用 warmup=1、iterations=3，并将结果写入 `code/chapter07_benchmark/results/chapter07_cpu_baseline.json`。耗时用于观察趋势，`correctness`、请求完成数和生成 token 数才是本轮的硬性验收条件。

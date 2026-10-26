@@ -1,53 +1,59 @@
 # 07.0 Prove It Works and It’s Fast 验证正确性并比较性能
 
-这一章把前面的实现收口成一条可以重复验证、可以对照比较、可以追踪结论的工程链路。量化版或优化版接入 runtime 之后，首先要回答的是：有没有把系统做坏，快了多少。
+## 1. 本章位置与成功标准
 
-## 本章和 vLLM / nano-vLLM 的联系
+本章把“对不对”和“快不快”放进同一套可重复的测试和 benchmark 条件中。
 
-vLLM / nano-vLLM 的性能讨论不能只看“能不能生成”，还要看 latency、throughput、prefill / decode、KV cache 和调度开销。本章先把正确性、benchmark 和结果解读分开，后面才能把本教程的最小 runtime 放到真实 serving 系统里对照。
-
-```mermaid
-flowchart TD
-    Unit[Unit tests] --> E2E[End-to-end tests]
-    E2E --> Bench[Benchmark]
-    Bench --> Interpret[Result interpretation]
-    Interpret --> Profile[chapter08_profiling]
+```bash
+bash code/chapter07_benchmark/scripts/run.sh
 ```
 
-## 本章概览
+成功标准：测试通过，CPU runtime benchmark 能输出正确性标记、prefill / decode 阶段时间和吞吐，baseline demo 继续输出结构化 trace；可选真实 ServiceCore benchmark 还要记录 CPU、编译器、Model/Context 隔离和资源释放。比较优化版本前，先固定模型、输入、硬件、batch 和运行参数。
 
-| 先看什么 | 这一节讲什么 | 为什么重要 | 对应小节 |
-| --- | --- | --- | --- |
-| 测试入口怎么统一 | test harness 和测试边界 | 先让验证方式稳定 | [`07.1 Test Harness Basics`](./01_test_harness_setup.md) |
-| 端到端正确性怎么证明 | golden logits 和完整链路对照 | 先确认系统没有被做坏 | [`07.2 End-to-End Correctness Testing`](./02_e2e_correctness.md) |
-| 性能指标怎么定义 | latency、prefill、throughput | 先把比较条件固定下来 | [`07.3 Benchmark Metrics`](./03_benchmark_metrics.md) |
-| benchmark 怎么脚本化 | 运行条件和结果记录 | 先让结果可复查 | [`07.4 Benchmark Script`](./04_benchmark_script.md) |
-| 优化方向怎么判断 | CUDA Graph、memory pool、async copy | 先把优化放在测量之后 | [`07.5 Optimization Tips`](./05_optimization_tips.md) |
-| 数字怎么变成结论 | baseline / optimized / reference | 先把结果翻译成工程决策 | [`07.6 Result Interpretation`](./06_result_interpretation.md) |
-| 怎么对照真实框架 | vLLM、SGLang、TensorRT-LLM、Ollama | 先把 benchmark 放回真实服务场景 | [`07.7 主流对照`](./07_framework_comparison.md) |
-| 本章怎么收口 | 正确性、性能和下一章入口 | 进入 profiling 前先固定证据链 | [`07.8 本章小结`](./summary.md) |
+![Chapter 07 主图：验证与性能证据](../assets/diagrams/chapter07-main.svg)
 
-## 阅读入口
+本章位于实现和 profiling 之间：先证明行为没有改变，再测量变化，最后把结果交给 Chapter 08 解释原因。
 
-- 前置阅读：[`chapter06_quantization`](../chapter06_quantization/intro.md)、[`chapter06 小结`](../chapter06_quantization/summary.md)
-- 如果测试习惯还不稳，先回看 [`foundation/04_debugging_testing_basics`](../foundation/04_debugging_testing_basics.md)
-- 源码直达：<a href="../_code/chapter07_benchmark/src/benchmark.cpp"><code>benchmark.cpp</code></a>、<a href="../_code/chapter07_benchmark/src/test_helpers.cpp"><code>test_helpers.cpp</code></a>、<a href="../_code/chapter07_benchmark/tests/chapter07_benchmark_test.cpp"><code>chapter07_benchmark_test.cpp</code></a>
-- 相关阅读：正文页按上面的 `本章概览` 顺序阅读；长期基线见 [`回归测试`](../reference/regression_testing.md)，扩展视角见 [`training vs inference frameworks`](../reference/framework_comparison.md)
+## 2. 内容地图
 
-## 这章在解决什么
+完成本章后，可以：
 
-这一章把“对不对”和“快不快”拆开。单元测试负责局部正确性，端到端测试负责完整链路，benchmark 负责固定条件下的性能比较。
+- 区分单元测试、端到端正确性测试、回归测试和 benchmark
+- 固定 latency、throughput、prefill、decode、cache 和调度指标
+- 写出可重复执行的 benchmark 脚本和结果记录
+- 从 baseline / optimized / reference 的差异做出保留、回滚或继续实验的决定
 
-如果这三层不分开，读者就很容易看到一个更快的数字后，误以为系统语义也没有问题。
+成熟框架的 benchmark 对象不同，但都必须公开 workload、指标和运行条件。本章先建立可比较证据，再解释框架结果。
 
-## 这章怎么做
+| 对照项 | 内容 |
+| --- | --- |
+| 本章教学对象 | correctness、latency、throughput、阶段时间和结果文件 |
+| 主对照框架 | vLLM benchmarks、TensorRT-LLM benchmarks、`llama-bench` |
+| 成熟组件 | 并发 workload、服务压测、分位延迟、GPU 指标和跨节点测量 |
+| 重点差异 | 本章只比较同机同模型同输入条件，不横比来源不明的吞吐数字 |
+| 深入入口 | [`07.7 主流框架 benchmark 对照`](./07_framework_comparison.md) |
 
-最小设计是四层证据链：先让局部测试证明模块没坏，再用端到端测试证明链路正确，用回归样例确认历史行为没有回来，最后用 benchmark 固定输入、硬件和运行参数比较性能。
+## 3. 阅读与源码顺序
 
-这章不把 profiling 当成 benchmark 的一部分。benchmark 负责告诉你“发生了什么”，profiling 留到 `chapter08_profiling` 解释“为什么会这样”。
+| 顺序 | 页面 | 读完后应看到什么 |
+| --- | --- | --- |
+| 1 | [`07.1 Test Harness Basics`](./01_test_harness_setup.md)、[`07.2 End-to-End Correctness Testing`](./02_e2e_correctness.md) | 测试入口和完整链路正确性 |
+| 2 | [`07.3 Benchmark Metrics`](./03_benchmark_metrics.md)、[`07.4 Benchmark Script`](./04_benchmark_script.md) | 指标定义、固定条件和结果记录 |
+| 3 | [`07.5 Optimization Tips`](./05_optimization_tips.md) | 优化方向必须建立在测量之后 |
+| 4 | [`07.6 Result Interpretation`](./06_result_interpretation.md) | 数字如何转成工程决策 |
+| 5 | [`07.7 主流对照`](./07_framework_comparison.md) | 将本地 benchmark 放回真实 serving 场景 |
 
-## 收口与下一步
+源码先看 <a href="../_code/chapter07_benchmark/examples/runtime_benchmark.cpp"><code>runtime_benchmark.cpp</code></a>、<a href="../_code/chapter07_benchmark/src/benchmark.cpp"><code>benchmark.cpp</code></a> 和 <a href="../_code/chapter07_benchmark/tests/chapter07_benchmark_test.cpp"><code>chapter07_benchmark_test.cpp</code></a>。真实服务测量入口见 <a href="../_code/engine/examples/real_tinyllama_serving_benchmark.cpp"><code>real_tinyllama_serving_benchmark.cpp</code></a>；前置阅读是 [`chapter06_quantization`](../chapter06_quantization/intro.md)，TTFT、TPOT、吞吐和加速比见 [`F-PERF-01/02`](../reference/formulas.md#f-perf-01)，已有结果与复现脚本见[实验与验证资产索引](../reference/experiment_assets.md)，长期回归标准见 [`回归测试`](../reference/regression_testing.md)。
 
-到本章结束，应能形成一份改动评估记录：正确性是否通过、性能指标是否改善、结果是否可复查，以及这次改动应保留还是回滚。
+## 4. 验证
 
-下一步进入 `chapter08_profiling`，做 profiling 和 A/B 对比。
+本章形成四层证据：
+
+1. 单元测试证明局部接口和数值
+2. 端到端测试证明完整链路仍能运行
+3. 回归测试证明旧行为没有回来
+4. benchmark 在固定条件下记录延迟、吞吐、阶段时间和 trace
+
+性能改善只有在正确性先通过后才有意义。benchmark 回答“发生了什么”，下一章的 profiling 才回答“为什么会这样”。
+
+**下一章：**本章产出可复查的输入条件、正确性状态、阶段耗时、吞吐和资源变化；Chapter 08 将根据这些结果拆分热点并用 profiling 和 A/B 实验决定优化。
