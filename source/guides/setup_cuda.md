@@ -8,7 +8,7 @@
 - 你需要编译或运行带 CUDA 支持的章节
 - 你想先确认驱动、工具链和运行时是否可用
 
-如果你只是先跑教程的 CPU 路径，可以暂时不安装 CUDA。`chapter00_quickstart` 和多数基础章节都支持先用 CPU 验证主线。
+CPU 路径可以直接从 `chapter00_quickstart` 和基础章节开始；进入 `code/cuda` 前再安装并验证 CUDA。
 
 ## 2. 版本建议
 
@@ -161,7 +161,7 @@ cmake -B build -DCMAKE_BUILD_TYPE=Release -DGGML_CUDA=ON
 - `g++ --version` 或 `clang++ --version` 可用
 - 你知道自己当前是 CPU 路径还是 GPU 路径
 
-如果你暂时做不到这些，也不影响先从 CPU 路径开始，只要你能编译并跑通 `chapter00` 和 `chapter01`，就已经满足继续学习的大部分前提。
+编译并跑通 `chapter00` 和 `chapter01` 后即可继续 CPU 主线；GPU 验证条件可以在进入 CUDA 扩展时补齐。
 
 ## 13. English Summary
 

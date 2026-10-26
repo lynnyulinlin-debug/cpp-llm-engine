@@ -1,16 +1,16 @@
 # 第一期学习计划：CPU 推理引擎闭环
 
-第一期先完成一条可运行、可解释、可验证的 CPU 纵向链路。六个必做任务从真实推理基线开始，经过输入、Tensor、算子、Decoder 和 Generation Runtime，最终落到最小推理服务。GPU 不混入 CPU 主线，作为可选任务 7 单独体验。
+第一期完成一条可运行、可解释、可验证的 CPU 纵向链路。六个必做任务从真实推理基线开始，经过输入、Tensor、算子、Decoder 和 Generation Runtime，最终落到最小推理服务；任务 7 提供可选 GPU 初探。
 
-本文件是一套可替换的学习编排，不是章节目录的另一种命名。任务可以引用稳定的正文、代码和练习；Chapter00-09 正文不引用本文件的任务编号。后续可以新增其他 CPU、源码阅读、性能优化或 GPU 计划，而不改写章节正文。
+任务按可验证产物组织正文、代码和练习，每项任务对应一份可保存的学习记录。
 
-每项任务只指定一个主阅读入口和一条主验证命令。章节中的其他命令用于拆解和排错，不需要在第一次学习时全部执行。每次结果按[学习验收记录模板](./learning_record_template.md)保存，记录 Git commit、环境、输入、关键输出和能力边界。
+每项任务指定一个主阅读入口和一条主验证命令；其他命令用于拆解和排错。每次结果按[学习验收记录模板](./learning_record_template.md)保存，记录 Git commit、环境、输入、关键输出和适用范围。
 
 ![CPU 与 GPU 学习路线](../assets/diagrams/cpu-gpu-learning-route.svg)
 
 ## 总体顺序
 
-Foundation 不作为必须从头读完的独立阶段。每个任务只领取当前需要的 C++、CMake、数据结构和调试练习；遇到知识缺口再回到对应正文。
+每个任务按需领取 Foundation 中的 C++、CMake、数据结构和调试练习；遇到知识缺口再回到对应正文。
 
 | 顺序 | 任务 | 主要章节 | 完成后的可验证产物 | 运行条件 |
 | --- | --- | --- | --- | --- |
@@ -32,7 +32,7 @@ Foundation 不作为必须从头读完的独立阶段。每个任务只领取当
 | Chapter01 | 01.5-01.8 Loader、验证、Tokenizer、GGUF metadata | 01.1-01.4 教学格式深入；01.9 框架对照 |
 | Chapter02 | 02.1-02.4 Storage、reshape、slice、测试 | 02.5 框架 Tensor/View 对照 |
 | Chapter03 | 03.1-03.3 Operator、MatMul、CPU reference | 03.5-03.7 数值/复杂度/真实 backend；03.4 cuBLAS 留到 GPU 阶段 |
-| Chapter04 | 04.1-04.5 Attention、Norm/FFN、Decoder、首层接线 | 04.6-04.7 成熟框架对照 |
+| Chapter04 | 04.1-04.5 Attention、Norm/FFN、Decoder、首层接线 | 04.6 成熟框架对照 |
 | Chapter05 | 05.3-05.7 与 05.9 Generation Core | 05.10-05.11 Serving Preview；05.1-05.2 smoke model 和 05.8 框架对照按需 |
 | Chapter06 | 06.1、06.4-06.6 原理、反量化、Linear、精度 | 06.2-06.3 dtype/loader 深入；06.7-06.8 框架与 serving 对照 |
 | Chapter07 | 07.1-07.4、07.6 correctness、指标、脚本、解读 | 07.5 优化提示；07.7 框架 benchmark 对照 |
@@ -41,7 +41,7 @@ Foundation 不作为必须从头读完的独立阶段。每个任务只领取当
 
 ## 任务 1：建立真实 CPU 推理基线
 
-目标不是理解 llama.cpp 全部源码，而是固定后续自研引擎必须对照的模型、Tokenizer、prompt 和输出。先按需完成 Foundation 入门组，再运行 Chapter00 的仓库 smoke，最后使用 llama.cpp 运行 TinyLlama。
+本任务固定后续自研引擎对照的模型、Tokenizer、prompt 和输出。先按需完成 Foundation 入门组，再运行 Chapter00 的仓库 smoke，最后使用 llama.cpp 运行 TinyLlama。
 
 建议先做 `FQ01`、`FQ02`、`FQ04`、`FQ05`；如果 C++ 所有权和最小工程仍不熟，再做 `FQ12`、`FQ17`。主线阅读顺序是 [`Foundation 总览`](../foundation/README.md)、[`Chapter00 导读`](../chapter00_quickstart/intro.md)、环境、构建、模型下载和第一次推理。
 
@@ -57,7 +57,7 @@ Foundation 不作为必须从头读完的独立阶段。每个任务只领取当
 
 ## 任务 2：打通输入、Tokenizer 与模型加载
 
-本任务只处理“外部资产怎样变成稳定的程序对象”。不要在这里学习完整 Decoder 数学；先确认 token ID、metadata、Tensor 索引、shape、dtype 和权重 payload 能被可靠读取。
+本任务处理“外部资产怎样变成稳定的程序对象”，先确认 token ID、metadata、Tensor 索引、shape、dtype 和权重 payload 能被可靠读取。完整 Decoder 数学从 Chapter04 开始。
 
 阅读 [`Chapter01 导读`](../chapter01_tensor_loader/intro.md)，按“输入契约与 tokenizer → GGUF metadata → Tensor index/payload → ModelConfig/ModelBuilder”推进。练习选择 `FQ02`、`FQ08` 和 `FQ17`。
 
@@ -89,7 +89,7 @@ Foundation 不作为必须从头读完的独立阶段。每个任务只领取当
 
 ## 任务 4：完成真实 Decoder CPU 前向
 
-先用 Chapter04 理解 Attention、残差和 FFN 的结构，再用 Chapter06 理解 TinyLlama Q4_K/Q6_K 权重如何进入 Linear，最后通过 Engine/Chapter01 的真实 Model/Context 路径运行 22 层 Decoder。教学 Decoder 的 LayerNorm/ReLU 用于拆解结构；真实 TinyLlama 路径使用 RMSNorm、RoPE、GQA 和 SwiGLU，两者通过公共结构契约连接，不应混成同一个实现。
+先用 Chapter04 理解 Attention、残差和 FFN 的结构，再用 Chapter06 理解 TinyLlama Q4_K/Q6_K 权重如何进入 Linear，最后通过 Engine/Chapter01 的真实 Model/Context 路径运行 22 层 Decoder。教学 Decoder 用 LayerNorm/ReLU 拆解结构，真实 TinyLlama 路径使用 RMSNorm、RoPE、GQA 和 SwiGLU，两者通过公共结构契约对照。
 
 | 任务卡 | 内容 |
 | --- | --- |
@@ -103,7 +103,7 @@ Foundation 不作为必须从头读完的独立阶段。每个任务只领取当
 
 ## 任务 5：完成 Generation Runtime
 
-本任务把模型前向变成持续生成系统。首轮只读 Generation Core 的 Naive Generation、KV Cache、Scheduler、Sampler、端到端测试和 Request 生命周期；chunked prefill、continuous batching 和 Block KV 放到第二轮，不要先从 HTTP API 进入。
+本任务把模型前向变成持续生成系统。首轮学习 Generation Core 的 Naive Generation、KV Cache、Scheduler、Sampler、端到端测试和 Request 生命周期；第二轮再进入 chunked prefill、continuous batching 和 Block KV，HTTP API 由任务 6 接入。
 
 练习按 `FQ07 → FQ09 → FQ11 → FQ13 → FQ14 → FQ15 → FQ16` 执行。正文从 [`Generation Core`](../chapter05_generation/part_a_generation_core.md) 进入，再读 [`Serving Preview`](../chapter05_generation/part_b_serving_preview.md)。
 
@@ -119,7 +119,7 @@ Foundation 不作为必须从头读完的独立阶段。每个任务只领取当
 
 ## 任务 6：完成最小 CPU 推理服务
 
-先用 Chapter09 把 Request 接到 admission、waiting/running、取消、超时和回收，再用 Chapter07 固定正确性与 benchmark 条件。Chapter08 首轮只读 Profiling Basics、Latency Breakdown、A/B Experiment 和 Optimization Loop；内存带宽、CUDA Graph、真实案例与框架桥按需深入。网络库只负责 transport，不复制 ServiceCore、Runtime 或 KV 状态。
+先用 Chapter09 把 Request 接到 admission、waiting/running、取消、超时和回收，再用 Chapter07 固定正确性与 benchmark 条件。Chapter08 首轮学习 Profiling Basics、Latency Breakdown、A/B Experiment 和 Optimization Loop；内存带宽、CUDA Graph、真实案例与框架桥按需深入。网络库承载 transport，并通过稳定接口调用 ServiceCore。
 
 | 任务卡 | 内容 |
 | --- | --- |
@@ -134,7 +134,7 @@ Foundation 不作为必须从头读完的独立阶段。每个任务只领取当
 
 ## 可选任务 7：GPU 初探
 
-任务 7 建立 CPU/GPU 对照方法，并运行当前已完成的 GPU 基础层；它仍不等于完整 GPU Decoder。先确认驱动和 Toolkit，用 llama.cpp 的 `GGML_CUDA=ON` 路径固定外部基线，再运行 `code/cuda` 的 DeviceBuffer、stream/event、Vector Add、cuBLAS MatMul、Q4_K/Q6_K 非融合 Quantized Linear、RoPE、连续 device KV Cache 和 causal GQA Attention。Chapter03 解释 MatMul backend 语义，Chapter04 解释 RoPE、KV 与 Attention，Chapter06 解释量化格式，设备实现集中在 `code/cuda`。
+任务 7 建立 CPU/GPU 对照方法，并运行当前 GPU 基础层。先确认驱动和 Toolkit，用 llama.cpp 的 `GGML_CUDA=ON` 路径固定外部基线，再运行 `code/cuda` 的 DeviceBuffer、stream/event、Vector Add、cuBLAS MatMul、Q4_K/Q6_K 非融合 Quantized Linear、RoPE、连续 device KV Cache 和 causal GQA Attention。Chapter03 解释 MatMul backend 语义，Chapter04 解释 RoPE、KV 与 Attention，Chapter06 解释量化格式，设备实现集中在 `code/cuda`。
 
 | 任务卡 | 内容 |
 | --- | --- |
@@ -145,4 +145,4 @@ Foundation 不作为必须从头读完的独立阶段。每个任务只领取当
 | CUDA 小题 | FQ10 的 CPU reference 与 CUDA 结果在允许误差内一致 |
 | 外部基线 | llama.cpp CUDA 路径加载同一 GGUF 并生成文本 |
 | 自研 backend | Vector Add、cuBLAS MatMul、量化 Linear、RoPE、连续 device KV 与 GQA 通过真实 GPU 测试 |
-| 当前边界 | 尚未组装单层和完整 GPU Decoder，不把独立 backend 写成端到端引擎 |
+| 下一里程碑 | 将现有 backend 组装为真实单层和完整 GPU Decoder |

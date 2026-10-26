@@ -1,12 +1,10 @@
 # 阅读指南
 
-这个页面只回答一件事：怎么读这套教程。
-
-教程默认沿 CPU 路径学习；GPU 内容作为可选扩展，在 CPU 接口和正确性基线之上继续推进。
+默认沿 CPU 路径学习，在稳定接口和正确性基线上继续选择 GPU 或多模态扩展。
 
 ## 入口结构
 
-这套教程不是一组并列页面，而是按依赖关系排列的主线和扩展层：
+教程按依赖关系排列为基础准备、引擎实现、验证优化和服务扩展：
 
 ```text
 开始这里
@@ -22,20 +20,20 @@
   Chapter 09（Chapter05 后可提前阅读）-> reference / guides
 ```
 
-职责边界固定为：
+各部分提供以下学习产物：
 
-- `foundation`：补 C++、CMake、CUDA、调试和测试基础，不实现完整推理引擎
+- `foundation`：补 C++、CMake、CUDA、调试和测试基础
 - `chapter00_quickstart`：用 `llama.cpp` 完成一次真实推理，确认环境和模型链路成立
 - `chapter01` - `chapter06`：逐层构建 Tensor、算子、Decoder、Runtime 和量化能力
 - `chapter07` - `chapter08`：用回归、Benchmark 和 Profiling 形成证据闭环
 - `chapter09`：接收 Chapter05 的服务化扩展，当前包含 C++ Service Core、metrics、真实模型 HTTP/SSE completion 和可选 cpp-httplib loopback
-- `reference` / `guides`：查阅概念和工程方法，不替代主线
+- `reference` / `guides`：查阅概念、实验资产和工程方法
 
 如果你想先理解“训练框架、推理框架和本教程分别负责什么”，再看 [训练框架 vs 推理框架](/reference/framework_comparison)。`foundation` 是按需前置能力区，`chapter00` 是所有学习者共用的真实推理起跑线。
 
 ## 从这里开始
 
-需要按可验证产物控制阅读量时，使用[第一期 CPU 学习计划](/guides/phase1_cpu_learning_plan)中的“首轮与进阶范围”；章节导读保留完整内容地图，不要求第一次全部读完。
+需要按可验证产物控制阅读量时，使用[第一期 CPU 学习计划](/guides/phase1_cpu_learning_plan)中的“首轮与进阶范围”；第一次学习只完成首轮必读和主验证命令。
 
 1. 先看 [教程主入口](/README) 了解总图
 2. 需要 C++、构建工具或 CUDA 背景时，按需进入 `foundation`
@@ -64,7 +62,7 @@
 bash code/chapter01_tensor_loader/run.sh
 ```
 
-CUDA 与多模态属于可选扩展，各自使用独立入口，不改变 CPU 默认回归：
+CUDA 与多模态使用独立入口，CPU 回归仍由主线脚本验证：
 
 ```bash
 bash code/cuda/scripts/run.sh
@@ -73,11 +71,11 @@ bash code/multimodal/scripts/run.sh
 
 ## 硬件与环境
 
-这套教程是 `CPU-first` 设计，默认不要求一开始就有 GPU。学习者可以按下面三档准备环境。
+这套教程以 CPU 为默认环境，并提供本地 GPU 和云端 GPU 两种扩展环境。
 
 ### 1. 本地 CPU 学习环境
 
-适合完整跑通 CPU 主线；`foundation`、Chapter00-09 的默认路径都不要求 CUDA。
+本地 CPU 环境可以完整跑通 `foundation` 和 Chapter00-09 的默认路径。
 
 建议配置：
 
@@ -90,7 +88,7 @@ bash code/multimodal/scripts/run.sh
 
 ### 2. 本地带 GPU 的学习环境
 
-适合运行 `code/cuda` 的设备资源、cuBLAS MatMul、Q4_K/Q6_K Linear、RoPE、连续 KV、GQA 和合成 Decoder。真实 TinyLlama GPU Decoder 仍在建设。
+当前 GPU 路径可以运行 `code/cuda` 的设备资源、cuBLAS MatMul、Q4_K/Q6_K Linear、RoPE、连续 KV、GQA 和合成 Decoder；下一里程碑是真实 TinyLlama GPU Decoder。
 
 建议配置：
 
@@ -136,7 +134,7 @@ CPU 和 GPU 的环境差异，以及它们在章节中的分叉位置：
 - `chapter03_matmul/04_cublas_implement.md`：cuBLAS 接入与 row-major 映射；可构建实现位于 `code/cuda`
 - 软件环境说明：看 [CUDA 安装与配置](/guides/setup_cuda)
 
-代码架构图展示公共契约、章节库、Engine 集成和服务扩展之间的关系；测试流水线图展示结果如何从单章 CTest、章节脚本、全局回归收口到文档检查。
+代码架构图展示公共契约、章节库、Engine 集成和服务扩展之间的关系；测试流水线图串联单章 CTest、章节脚本、全局回归和文档检查。
 
 ![代码架构与测试流水线](./assets/diagrams/code-architecture.svg)
 
@@ -144,7 +142,7 @@ CPU 和 GPU 的环境差异，以及它们在章节中的分叉位置：
 
 ## 按需补充
 
-主线固定从 Chapter 00 走到 Chapter 09。基础薄弱时先补 Foundation；已有推理系统经验时可以在完成 Chapter 05 后提前阅读 Runtime、Benchmark、Profiling 和 Serving，但仍要用对应章节脚本确认实现，而不是只读设计文档。
+主线从 Chapter 00 走到 Chapter 09。基础薄弱时先补 Foundation；已有推理系统经验时可以在完成 Chapter 05 后提前阅读 Runtime、Benchmark、Profiling 和 Serving，并用对应章节脚本确认实现。
 
 | 情况 | 补充内容 | 验证 |
 | --- | --- | --- |
@@ -155,7 +153,7 @@ CPU 和 GPU 的环境差异，以及它们在章节中的分叉位置：
 
 ## 开源项目怎么配合读
 
-这套教程不是要替代开源项目，而是先把引擎原理和最小实现讲清楚，再把真实项目作为对照坐标。
+教程先用最小实现解释引擎原理，再用开源项目定位同一概念的生产实现。
 
 建议按章节配合这些项目阅读：
 
@@ -170,7 +168,7 @@ CPU 和 GPU 的环境差异，以及它们在章节中的分叉位置：
 
 ## 日常检查
 
-不同命令证明的范围不同。默认回归不下载模型、不启动真实 socket，也不运行 GPU：
+不同命令证明的范围不同。默认回归覆盖无需模型下载、真实 socket 和 GPU 的轻量路径：
 
 ```bash
 npm run docs:check-structure
