@@ -1,117 +1,60 @@
 # 08.4 Kernel Launch and CUDA Graph Kernel 启动开销
 
-decode 阶段经常是小步循环：每一步只生成少量 token，但会反复触发多个 kernel。此时固定开销可能比单个 kernel 的计算时间更显眼。
+Decode 会反复提交形状较小的 kernel。当单次计算很短时，host 提交、同步和 kernel 间空隙可能成为主要成本。本节产物是一套 CUDA Graph 决策方法：先证明固定开销存在，再判断计算图是否稳定到可以捕获和复用。
 
 **阅读入口**
 
-- 前置阅读：[`03.4 cuBLAS Backend Design`](../chapter03_matmul/04_cublas_implement.md)、[`07.5 Optimization Tips`](../chapter07_benchmark/05_optimization_tips.md)
-- 源码直达：<a href="../_code/chapter03_matmul/src/matmul_op.cpp"><code>matmul_op.cpp</code></a>、<a href="../_code/chapter07_benchmark/src/benchmark.cpp"><code>benchmark.cpp</code></a>
+- 前置阅读：[`03.4 cuBLAS Backend Design`](../chapter03_matmul/04_cublas_implement.md)、[`08.2 Latency Breakdown`](./02_latency_breakdown.md)
+- 当前证据：<a href="../_code/chapter07_benchmark/src/benchmark.cpp"><code>benchmark.cpp</code></a> 输出阶段、事件和 hotspot；<a href="../_code/cuda/scripts/run.sh"><code>code/cuda/scripts/run.sh</code></a> 验证已有 CUDA kernel
 - 相关阅读：[`foundation/07 CUDA 常用库`](../foundation/07_cuda_common_libraries.md)、[`08.5 A/B Experiment`](./05_ab_experiment.md)
 
-## 判断和示例
+## 先判断瓶颈类型
 
-适合考虑：
+CUDA Graph 优化重复提交稳定计算图的固定开销。若时间主要落在大矩阵或 Attention kernel 内部，应先优化对应 kernel；若时间线中存在大量短 kernel、host 提交和同步空隙，再进入 Graph 或 fusion 实验。
 
-- decode step 形状稳定
-- kernel launch 开销在 profiling 里很明显
-- 同一段计算图会重复执行很多次
+| 观察结果 | 优先动作 |
+| --- | --- |
+| GEMM / Attention kernel 占据大部分时间 | 调整 kernel、layout、dtype 或 backend |
+| 大量短 kernel，中间有明显空隙 | 评估 CUDA Graph 或 kernel fusion |
+| Host-device 同步密集 | 减少同步和数据往返 |
+| Decode shape、地址或控制流频繁变化 | 先稳定 runtime 与 buffer 生命周期 |
+| Decode step 形状稳定且重复次数多 | 建立 Graph capture/replay A/B |
 
-不适合一开始就做：
+## 当前教程能观察什么
 
-- shape 经常变化
-- runtime 边界还不稳定
-- 正确性和 benchmark 还没有固定
+Chapter07 的 synthetic trace 把一次请求拆成阶段、事件和 hotspot。它用于练习归因顺序，不是 GPU kernel trace。学习者先确认最重事件属于 prefill、decode 还是输出，再决定需要哪种底层工具。
 
-CUDA Graph 是优化手段，不是结构替代。先用 profiling 证明 launch overhead 是问题，再决定是否引入它。
+| 证据视图 | 当前可回答的问题 | 进入真实 GPU 后补充什么 |
+| --- | --- | --- |
+| phase summary | prefill、decode、sampling、output 谁占主导 | CPU/GPU 阶段重叠 |
+| trace events | `decode_step` 与 `sample_logits` 是否分开 | kernel launch、stream、memcpy 和同步事件 |
+| hotspot table | 应先调查哪个函数或事件 | kernel self time、调用次数和占用率 |
+| Chrome trace JSON | host/compute 时间线如何排列 | CUDA stream、correlation ID 和 device duration |
 
-### 读真实项目时看什么
+生成当前结构化证据：
 
-vLLM / nano-vLLM 这类项目会把 decode 路径、attention backend 和 kernel 调用组织得更复杂。读的时候先看：
-
-- 哪些路径是 prefill 专用
-- 哪些路径是 decode 专用
-- 哪些形状可以被缓存或复用
-- kernel 选择是否依赖 batch、dtype、cache layout
-
-这样看，CUDA Graph 和 fused kernel 就不会变成孤立技巧，而是 runtime 稳定之后的优化选择。
-
-### 最小判断边界
-
-如果 profiling 显示大部分时间花在大矩阵计算里，优先看 GEMM / attention kernel；如果显示每个 decode step 都有大量很短的 kernel 和同步点，再考虑 CUDA Graph、kernel fusion 或减少 host-device 往返。
-
-换句话说，CUDA Graph 适合解决“重复提交稳定计算图”的固定开销，不适合替代尚未稳定的 runtime 结构。
-
-### 一个最小事件级样例
-
-当前教程代码已经能输出一组最小 trace 事件：
-
-```text
-chapter07 trace events
-input | prepare_tokens | start_ms=0.00 | duration_ms=0.03 | note=token ids and positions
-input | copy_request_state | start_ms=0.03 | duration_ms=0.02 | note=request metadata
-prefill | embed_prompt | start_ms=0.05 | duration_ms=0.08 | note=prompt embedding
-prefill | run_prefill_attention | start_ms=0.13 | duration_ms=0.14 | note=largest prefill slice
-prefill | write_kv_cache | start_ms=0.27 | duration_ms=0.03 | note=initial cache materialization
-decode | decode_step | start_ms=0.30 | duration_ms=0.09 | note=single token decode loop
-decode | sample_logits | start_ms=0.39 | duration_ms=0.06 | note=logits to next token
-sampling | topk_filter | start_ms=0.45 | duration_ms=0.03 | note=sampling filter
-sampling | commit_token | start_ms=0.48 | duration_ms=0.02 | note=append generated token
-output | format_response | start_ms=0.50 | duration_ms=0.03 | note=prepare response payload
-output | flush_stream | start_ms=0.53 | duration_ms=0.05 | note=emit partial output
-output | finalize_request | start_ms=0.58 | duration_ms=0.02 | note=request teardown
+```bash
+bash code/chapter07_benchmark/scripts/run.sh
 ```
 
-这组样例还不是 GPU kernel trace，但它已经提供了比阶段汇总更细的一层证据：
+运行现有 GPU correctness 基线：
 
-- `prefill` 里最大的单点事件是 `run_prefill_attention`
-- `decode` 里已经能把 `decode_step` 和 `sample_logits` 分开
-- `output` 里能看到 `flush_stream` 比 `format_response` 更重
-
-这正是后面读真实 CUDA trace 时的最小判断方法：先按事件类型分类，再判断是否值得引入 CUDA Graph 或 fused kernel。
-
-### 再加一层 hotspot 排序
-
-当前教程代码还会输出一份最小 hotspot 汇总：
-
-```text
-chapter07 hotspot summary
-prefill | run_prefill_attention | self_ms=0.14 | total_ms=0.17 | calls=1 | reason=largest prefill compute slice
-decode | decode_step | self_ms=0.09 | total_ms=0.15 | calls=1 | reason=single token decode loop
-prefill | embed_prompt | self_ms=0.08 | total_ms=0.08 | calls=1 | reason=prompt embedding path
-decode | sample_logits | self_ms=0.06 | total_ms=0.06 | calls=1 | reason=decode tail after model step
-output | flush_stream | self_ms=0.05 | total_ms=0.05 | calls=1 | reason=response emission dominates output
+```bash
+bash code/cuda/scripts/run.sh
 ```
 
-这张表的价值在于，它把“该先看哪个事件”直接排了序：
+## CUDA Graph 实验契约
 
-- 先看 `run_prefill_attention`，因为它是当前最重的单点
-- 再看 `decode_step`，因为它决定 decode 主循环成本
-- `flush_stream` 虽然不是总热点第一，但它解释了为什么 output 没有看起来那么轻
+真实实验需要固定 decode workload，并分别采集普通 launch 与 Graph replay。两组使用相同模型、token 数、batch、stream、buffer 地址和 correctness golden；报告至少记录端到端 decode、device compute、launch/sync 空隙、capture 成本和 replay 次数。
 
-读真实 profiler 时也一样。不要先被工具界面牵着走，先问自己：当前 top hotspot 落在 `prefill`、`decode`，还是服务输出。
+Graph 路径还要验证三类变化：batch 或 sequence shape 改变时选择正确 graph；请求终止后 buffer 仍由正确对象持有；fallback 路径在无法 replay 时保持相同输出。把这些条件写进实验记录后，再实现 capture cache 和 replay dispatch。
 
-### 再往工具视图走一步
+| 判定 | 条件 |
+| --- | --- |
+| `KEEP` | correctness 通过，稳态 decode 改善超过阈值，capture 成本能被 replay 次数摊销 |
+| `REVERT` | 输出变化、资源生命周期不稳定，或稳态收益低于阈值 |
+| `SPLIT` | launch overhead 已确认，但 Graph 与 fusion 同时修改，无法归因 |
 
-当前教程基线还可以导出一份简化的 Chrome trace 风格结果。它不是完整 profiler 导出物，但已经接近真实工具常见的时间轴事件格式：
+## 本节完成标准
 
-```json
-{
-  "traceEvents": [
-    {"name": "thread_name", "ph": "M", "pid": 1, "tid": 0, "args": {"name": "host-thread"}},
-    {"name": "thread_name", "ph": "M", "pid": 1, "tid": 1, "args": {"name": "compute-stream"}},
-    {"name": "run_prefill_attention", "cat": "prefill", "ph": "X", "pid": 1, "tid": 1, "ts": 130.00, "dur": 140.00},
-    {"name": "decode_step", "cat": "decode", "ph": "X", "pid": 1, "tid": 1, "ts": 300.00, "dur": 90.00},
-    {"name": "sync_decode_result", "cat": "sync", "ph": "i", "pid": 1, "tid": 0, "ts": 450.00},
-    {"name": "flush_stream", "cat": "output", "ph": "X", "pid": 1, "tid": 0, "ts": 530.00, "dur": 50.00}
-  ]
-}
-```
-
-这些 profiling 输出的意义不是让读者记字段，而是建立一个判断：文本摘要、hotspot 表、时间轴视图，本质上是在表达同一组证据，只是观察角度不同。
-
-这里多出来的两类信息很关键：
-
-- `tid`：区分 host 侧和 compute 侧事件
-- `sync`：标出算子之间的等待点
-
-这已经足够支撑第 8 章的教程目标，不需要继续实现完整 profiler。
+完成后应能从 timeline 区分 kernel compute、launch gap 和同步等待；能说明当前 synthetic trace 与真实 CUDA trace 的证据差异；能为固定 decode workload 写出单变量 Graph A/B，而不是根据 kernel 数量直接假定 CUDA Graph 有收益。

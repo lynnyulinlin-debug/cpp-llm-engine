@@ -1,8 +1,14 @@
 # 01.5 Model Metadata and GGUF 模型元数据与 GGUF
 
-## 加载链
+真实模型文件同时保存架构配置、tokenizer metadata、tensor index 和权重 payload。本节沿 GGUF Reader、adapter、Tensor Loader 和 Model Builder 追踪这些信息如何进入内部对象。
 
-真实模型文件不只包含 tensor，还包含模型架构、词表、上下文长度、special tokens 和隐藏维度等 metadata。
+**学习入口**
+
+- 前置阅读：[`01.3 ModelLoader and Validation`](./03_model_loader_validation.md)、[`01.4 Input Contract and Tokenizer`](./04_input_contract_and_tokenizer.md)
+- 源码直达：<a href="../_code/chapter01_tensor_loader/src/gguf_reader.cpp"><code>gguf_reader.cpp</code></a>、<a href="../_code/chapter01_tensor_loader/src/model_metadata_adapter.cpp"><code>model_metadata_adapter.cpp</code></a>、<a href="../_code/chapter01_tensor_loader/src/model_builder.cpp"><code>model_builder.cpp</code></a>
+- 验证入口：`bash code/chapter01_tensor_loader/run.sh`；真实模型检查见 <a href="../_code/chapter01_tensor_loader/examples/gguf_inspect.cpp"><code>gguf_inspect.cpp</code></a>
+
+## 加载链
 
 本节先实现 GGUF metadata 到内部配置的最小转换：外部格式解析器读取 metadata，Chapter 01 将其归一化为 `ModelMetadata` 和 `ModelConfig`，后续 runtime 消费内部配置。
 
@@ -54,8 +60,6 @@ TensorRT Engine   -> Engine Metadata Adapter
 - vLLM、llama.cpp 或 TensorRT-LLM 的外部格式差异可以停留在 adapter 层。
 
 ## 内部对象
-
-代码入口：`code/chapter01_tensor_loader/src/model_metadata.h`、`code/chapter01_tensor_loader/src/model_metadata_adapter.h`、`code/chapter01_tensor_loader/src/model_builder.h`
 
 当前统一字段包括：
 
@@ -158,4 +162,4 @@ Chapter 01 现在提供 `gguf_inspect` 示例，可以对 Chapter 00 下载的 T
 - architecture、vocab、hidden size 和 special tokens 不丢失；
 - ModelConfig 可以继续校验 Tokenizer 和关键 Tensor shape。
 
-完整 GGUF 兼容性应增加 golden metadata fixture，不能只靠一个构造函数测试。
+后续扩展 GGUF 兼容性时，应为新增 metadata 类型补充 golden fixture，并继续复用当前真实文件检查。

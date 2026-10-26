@@ -1,7 +1,5 @@
 # 04.4 DecoderLayer 解码器层
-
-
-## 串起单层 Decoder 数据流
+## 学习入口
 
 把 Pre-LN、Attention、Residual 和 FFN 组合成一个完整的 Transformer decoder layer。
 
@@ -11,13 +9,11 @@
 - 理解残差连接在模块组合中的作用
 - 理解模块组合后如何继续保持 shape 一致
 
-![Decoder / Attention 数据流](../assets/diagrams/chapter04-decoder-attention-flow.svg)
-
-## 阅读入口
-
 - 前置阅读：[`04.1 Multi-head Attention`](./01_multihead_attention.md)、[`04.3 Feed Forward Network`](./03_feedforward.md)
 - 源码直达：<a href="../_code/chapter04_attention/src/decoder_layer.cpp"><code>decoder_layer.cpp</code></a>、<a href="../_code/chapter04_attention/src/attention.cpp"><code>attention.cpp</code></a>、<a href="../_code/chapter04_attention/tests/chapter04_attention_test.cpp"><code>chapter04_attention_test.cpp</code></a>
 - 相关阅读：[`04.5 首层权重加载`](./05_load_first_layer.md)、[`04.6 Decoder 成熟框架对照`](./06_gemma_tensorrt_comparison.md)、[`章节导读`](./intro.md)
+
+![Decoder / Attention 数据流](../assets/diagrams/chapter04-decoder-attention-flow.svg)
 
 ## 核心结构
 

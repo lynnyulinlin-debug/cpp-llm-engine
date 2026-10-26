@@ -1,7 +1,5 @@
 # 04.2 LayerNorm and Activation LayerNorm 与激活函数
-
-
-## 组合 LayerNorm 和 Activation
+## 学习入口
 
 实现教学 Decoder 使用的 LayerNorm 和 ReLU，并理解它们与 TinyLlama 的 RMSNorm 和 SwiGLU 的差异。
 
@@ -10,8 +8,6 @@
 - 理解 LayerNorm 的作用
 - 理解激活函数在非线性表达中的意义
 - 区分已实现的 ReLU 与模型变体中的 SiLU、GELU
-
-## 阅读入口
 
 - 前置阅读：[`chapter04 导读`](./intro.md)、[`04.1 Multi-head Attention`](./01_multihead_attention.md)
 - 源码直达：<a href="../_code/chapter04_attention/src/layer_norm.cpp"><code>layer_norm.cpp</code></a>、<a href="../_code/chapter04_attention/tests/chapter04_attention_test.cpp"><code>chapter04_attention_test.cpp</code></a>

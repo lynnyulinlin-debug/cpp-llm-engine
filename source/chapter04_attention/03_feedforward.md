@@ -1,7 +1,5 @@
 # 04.3 Feed Forward Network 前馈网络
-
-
-## 组装 Feed-Forward Network
+## 学习入口
 
 实现 FFN 模块，用两层线性层和一个激活函数构成 Transformer block 的前馈部分。
 
@@ -10,8 +8,6 @@
 - 理解 FFN 为什么是两层线性层
 - 理解中间维度扩展的作用
 - 理解激活函数在 FFN 中的位置
-
-## 阅读入口
 
 - 前置阅读：[`chapter04 导读`](./intro.md)、[`04.2 LayerNorm 与激活`](./02_layernorm_and_activation.md)
 - 源码直达：<a href="../_code/chapter04_attention/src/feed_forward.cpp"><code>feed_forward.cpp</code></a>、<a href="../_code/chapter04_attention/src/linear_layer.cpp"><code>linear_layer.cpp</code></a>、<a href="../_code/chapter04_attention/tests/chapter04_attention_test.cpp"><code>chapter04_attention_test.cpp</code></a>
@@ -25,7 +21,7 @@ FFN 是 Transformer 中与注意力并列的核心计算模块。注意力负责
 - 激活函数
 - 第二层线性映射
 
-FFN 是一个非常适合“先做最小可用版本，再慢慢优化”的模块。最小版本只要把两层线性和一个激活函数串起来，就已经足够支撑后续 DecoderLayer。
+教学实现先串起两层线性和一个激活函数，形成可测试的 DecoderLayer 输入；真实 TinyLlama 路径再用 gate/up/down 三条投影和 SwiGLU 替换它。
 
 如果后面要做门控 FFN、SwiGLU 或其他变体，也可以在这个结构上扩展，而不是重新设计一套新接口。
 

@@ -1,6 +1,6 @@
 # 08.5 A/B Experiment A/B 对比实验
 
-优化结论必须能复查。A/B 实验的作用是把“我觉得快了”变成“在同一条件下，这个改动带来了可解释变化”。
+优化结论需要同时说明条件、收益和代价。A/B 实验固定模型、输入和环境，每次只改变一个变量，再用正确性闸门决定性能数据是否可比较。
 
 **阅读入口**
 
@@ -8,129 +8,94 @@
 - 源码直达：<a href="../_code/chapter07_benchmark/examples/main_benchmark.cpp"><code>main_benchmark.cpp</code></a>、<a href="../_code/chapter07_benchmark/scripts/run.sh"><code>run.sh</code></a>、<a href="../_code/chapter07_benchmark/tests/chapter07_benchmark_test.cpp"><code>chapter07_benchmark_test.cpp</code></a>
 - 相关阅读：[`回归测试`](../reference/regression_testing.md)、[`08.6 Optimization Loop`](./06_optimization_loop.md)
 
-## 实验模板
+## 实验契约
 
-- 只改变一个变量
-- 固定模型、输入、batch、硬件和运行参数
-- 同时记录正确性和性能
-- 记录足够的环境信息
-- 预先写清楚保留或回滚标准
+一次可解释的实验按以下顺序执行：
 
-如果一次实验同时改 scheduler、cache 和 kernel，就算结果变快，也很难判断到底是哪一项生效。
+1. 写明假设和唯一变量，例如只替换 Q4_K Linear backend。
+2. 固定模型、dtype、prompt、output length、batch、硬件和构建类型。
+3. 先运行 correctness、golden 和资源释放检查。
+4. 采用相同 warmup、迭代次数和统计方式采集两组性能。
+5. 根据预先约定的阈值决定保留、回滚或继续拆分。
 
-### 结果模板
+同时修改 scheduler、cache 和 kernel 时，结果只能说明组合发生了变化，无法归因到单个实现。组合实验应放在各单变量实验通过之后。
 
-| 项目 | baseline | experiment | 结论 |
+| 项目 | Baseline | Experiment | 判定问题 |
 | --- | --- | --- | --- |
-| correctness | pass / fail | pass / fail | 是否可继续比较 |
-| prefill latency | 数值 | 数值 | 是否改善 |
-| decode latency | 数值 | 数值 | 是否改善 |
-| throughput | 数值 | 数值 | 是否改善 |
-| memory | 数值 | 数值 | 是否可接受 |
-| complexity | 原实现 | 新实现 | 是否值得维护 |
+| Correctness | pass / fail | pass / fail | 两组结果是否可比较 |
+| Prefill / decode | 延迟与波动 | 延迟与波动 | 改动影响哪个阶段 |
+| Throughput | token/s | token/s | 稳态产出是否提高 |
+| Memory | 峰值与稳定值 | 峰值与稳定值 | 资源代价是否可接受 |
+| Complexity | 原实现 | 新实现 | 收益是否覆盖维护成本 |
 
-这个表的价值不是漂亮，而是逼迫优化结论同时回答收益和代价。
+## 记录模板
 
-### 一个可直接套用的实验记录
+实验开始前创建记录并填写条件与保留阈值，运行后再填写结果。`commit`、编译器、构建类型和 CPU/GPU 型号用于判断两组数据是否来自同一环境。
 
 ```markdown
-## A/B Report
+# A/B Report
 
-### 条件
-- 硬件：
+## 条件
+- 硬件 / 编译器 / 构建类型：
 - 模型 / dtype：
-- prompt length：
-- output length：
-- batch size：
+- prompt / output / batch：
+- warmup / iterations：
 - commit：
 
-### 改动
+## 唯一变量
 - baseline：
 - experiment：
-- 只改变的变量：
 
-### 结果
+## 结果
 | 指标 | baseline | experiment | delta |
-| --- | --- | --- | --- |
-| correctness | pass | pass | - |
+| --- | ---: | ---: | ---: |
+| correctness | pass | pass | 可比较 |
 | prefill latency |  |  |  |
 | decode latency |  |  |  |
 | throughput |  |  |  |
 | peak memory |  |  |  |
 
-### 决策
-- 保留 / 回滚 / 继续拆分：
-- 理由：
+## 决策
+- KEEP / REVERT / SPLIT：
+- 阈值与理由：
 ```
 
-### 用当前基线先写一份 baseline 记录
+## 从 Baseline 开始
 
-第一次补实验记录时，不要等“有优化之后”再写。先把 baseline 写出来：
+尚未修改实现时，先运行 `bash code/chapter07_benchmark/scripts/run.sh`，登记当前输出。下一次实验复用相同字段并补上 experiment，避免优化完成后才回忆环境。
 
-```markdown
-## A/B Report
+下面的数值是 Chapter07 minimal demo 的格式示例，不是跨机器性能承诺：
 
-### 条件
-- 硬件：本地 CPU baseline
-- 模型 / dtype：chapter07 minimal demo
-- prompt length：5 tokens
-- output length：2 tokens
-- batch size：1
-- commit：当前工作树
+| 条件或指标 | Baseline |
+| --- | ---: |
+| workload | prompt 5 tokens、output 2 tokens、batch 1 |
+| correctness | pass |
+| throughput | `4000 items/s` |
+| prefill latency | `0.30 ms` |
+| decode latency | `0.15 ms` |
+| sampling / output | `0.05 / 0.05 ms` |
+| peak memory | 待采集 |
+| 当前决策 | `SPLIT`，等待单变量实验 |
 
-### 改动
-- baseline：chapter07_benchmark_demo
-- experiment：暂空
-- 只改变的变量：暂空
+## 结构化结果
 
-### 结果
-| 指标 | baseline | experiment | delta |
-| --- | --- | --- | --- |
-| correctness | pass | - | - |
-| throughput | 4000 items/s | - | - |
-| prefill latency | 0.30 ms | - | - |
-| decode latency | 0.15 ms | - | - |
-| sampling latency | 0.05 ms | - | - |
-| output latency | 0.05 ms | - | - |
-| peak memory | 未记录 | - | - |
-
-### 决策
-- 保留 / 回滚 / 继续拆分：继续拆分
-- 理由：当前只有 baseline，还没有单变量实验
-```
-
-这份记录先固定后续实验需要的字段。下一步如果你改的是 scheduler 或 cache，就必须看它影响的是 `prefill`、`decode`，还是只是 `output`。
-
-## 结构化记录
-
-如果后续要把 benchmark / profiling 结果长期保存下来，纯文本摘要还不够。当前教程基线已经可以进一步导出结构化 JSON 样例，至少包含三层：
-
-- `phases`：阶段汇总
-- `trace_events`：事件明细
-- `hotspots`：热点排序
-
-统一结构可以生成 A/B 报告、比对版本，并转换为 profiler UI 使用的视图。
-
-下面这类结构，就是当前教程基线已经能导出的最小样例：
+长期保存的结果使用 JSON，而不是从日志文本反向提取数字。最小结构包含 `benchmark.phases`、`trace_events` 和 `hotspots`；比较器据此生成报告，并在 workload 或环境字段不匹配时拒绝计算 delta。
 
 ```json
 {
   "benchmark": {
     "name": "chapter07_demo",
-    "items_per_second": 4000.00,
+    "items_per_second": 4000.0,
     "phases": [
-      {"phase": "input", "tokens": 5, "elapsed_ms": 0.05},
       {"phase": "prefill", "tokens": 5, "elapsed_ms": 0.30},
       {"phase": "decode", "tokens": 2, "elapsed_ms": 0.15}
     ]
   },
   "trace_events": [
-    {"phase": "prefill", "event": "run_prefill_attention", "start_ms": 0.13, "duration_ms": 0.14},
-    {"phase": "decode", "event": "decode_step", "start_ms": 0.30, "duration_ms": 0.09}
+    {"phase": "prefill", "event": "run_prefill_attention", "duration_ms": 0.14}
   ],
   "hotspots": [
-    {"phase": "prefill", "symbol": "run_prefill_attention", "self_ms": 0.14, "total_ms": 0.17},
-    {"phase": "decode", "symbol": "decode_step", "self_ms": 0.09, "total_ms": 0.15}
+    {"phase": "prefill", "symbol": "run_prefill_attention", "self_ms": 0.14}
   ]
 }
 ```

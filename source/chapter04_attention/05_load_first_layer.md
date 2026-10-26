@@ -1,16 +1,14 @@
 # 04.5 First Layer Weight Wiring 首层权重接线
 
-## 用真实 GGUF 权重执行首层前向
+## 学习入口
 
-本节把 Chapter01 建立的 GGUF 索引、模型结构校验和按需加载能力接到首层计算。目标不是再造一个 loader，而是确认文件中的真实权重能够通过 Attention、FFN 和残差连接产生有限输出。
+Chapter01 已经建立 GGUF 索引、模型结构校验和按需加载能力。本节把这些对象接到首层计算，确认真实权重能够通过 Attention、FFN 和残差连接产生有限输出。
 
 读完后应能做到：
 
 - 区分教学 `CIE1 ModelLoader` 与真实 `GGUF` 加载链
 - 说明首层九个权重如何从模型 schema 映射到计算模块
 - 按“索引、结构、载荷、计算”四个检查点定位错误
-
-## 阅读入口
 
 - 前置阅读：[`04.4 DecoderLayer`](./04_decoder_layer.md)、[`Chapter01 模型加载`](../chapter01_tensor_loader/intro.md)
 - 源码直达：<a href="../_code/chapter01_tensor_loader/examples/gguf_first_layer_forward.cpp"><code>gguf_first_layer_forward.cpp</code></a>、<a href="../_code/chapter01_tensor_loader/src/model_schema.cpp"><code>model_schema.cpp</code></a>、<a href="../_code/chapter01_tensor_loader/src/real_layer_weights.cpp"><code>real_layer_weights.cpp</code></a>

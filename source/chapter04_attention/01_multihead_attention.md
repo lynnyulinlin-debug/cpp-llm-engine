@@ -1,7 +1,5 @@
 # 04.1 Multi-head Attention 多头注意力
-
-
-## 组织 Q、K、V 和 Attention
+## 学习入口
 
 实现多头注意力的前向计算，并理解 Q/K/V、score、softmax 和输出合并的完整数据流。
 
@@ -11,8 +9,6 @@
 - 理解 Q/K/V 线性变换的作用
 - 理解每个 head 如何独立计算 score
 - 理解 softmax 和输出合并的过程
-
-## 阅读入口
 
 - 前置阅读：[`chapter04 导读`](./intro.md)、[`MatMulOp 设计`](../chapter03_matmul/02_matmul_design.md)
 - 源码直达：<a href="../_code/chapter04_attention/src/attention.cpp"><code>attention.cpp</code></a>、<a href="../_code/chapter04_attention/src/linear_layer.cpp"><code>linear_layer.cpp</code></a>、<a href="../_code/chapter04_attention/tests/chapter04_attention_test.cpp"><code>chapter04_attention_test.cpp</code></a>
