@@ -1,126 +1,96 @@
-# 04.5 First Layer Weight Wiring 首层权重加载与验证
+# 04.5 First Layer Weight Wiring 首层权重接线
 
+## 用真实 GGUF 权重执行首层前向
 
-## 这一页要解决什么
-
-从 `chapter01` 的模型加载结果中提取第一层权重，并验证前向传播的张量形状是否正确。
+本节把 Chapter01 建立的 GGUF 索引、模型结构校验和按需加载能力接到首层计算。目标不是再造一个 loader，而是确认文件中的真实权重能够通过 Attention、FFN 和残差连接产生有限输出。
 
 读完后应能做到：
 
-- 理解如何把第 1 章的加载结果接入当前模块
-- 理解如何验证第一层权重是否真正可用
-- 理解为什么先只验证一层，而不是直接上完整模型
+- 区分教学 `CIE1 ModelLoader` 与真实 `GGUF` 加载链
+- 说明首层九个权重如何从模型 schema 映射到计算模块
+- 按“索引、结构、载荷、计算”四个检查点定位错误
 
 ## 阅读入口
 
-- 前置阅读：[`04.4 DecoderLayer`](./04_decoder_layer.md)、[`chapter01_tensor_loader`](../chapter01_tensor_loader/intro.md)
-- 源码直达：<a href="../_code/chapter04_attention/src/decoder_layer.cpp"><code>decoder_layer.cpp</code></a>、<a href="../_code/chapter01_tensor_loader/src/model_loader.cpp"><code>model_loader.cpp</code></a>、<a href="../_code/chapter04_attention/tests/chapter04_attention_test.cpp"><code>chapter04_attention_test.cpp</code></a>
-- 相关阅读：[`04.7 vLLM / nano-vLLM 结构阅读桥`](./07_vllm_nano_vllm_structure_bridge.md)、[`04.8 本章小结`](./summary.md)、[`chapter05_generation`](../chapter05_generation/intro.md)
+- 前置阅读：[`04.4 DecoderLayer`](./04_decoder_layer.md)、[`Chapter01 模型加载`](../chapter01_tensor_loader/intro.md)
+- 源码直达：<a href="../_code/chapter01_tensor_loader/examples/gguf_first_layer_forward.cpp"><code>gguf_first_layer_forward.cpp</code></a>、<a href="../_code/chapter01_tensor_loader/src/model_schema.cpp"><code>model_schema.cpp</code></a>、<a href="../_code/chapter01_tensor_loader/src/real_layer_weights.cpp"><code>real_layer_weights.cpp</code></a>
+- 相关阅读：[`04.7 vLLM / nano-vLLM 结构阅读桥`](./07_vllm_nano_vllm_structure_bridge.md)、[`Chapter06 量化`](../chapter06_quantization/intro.md)
 
-## 验证设计
+## 两条加载路径
 
-这一页把“能加载模型”进一步推进到“能用加载出来的权重跑前向”。它是从静态数据到动态推理的关键过渡。
+Chapter01 保留两条用途不同的路径。`ModelLoader` 读取教程自定义的 CIE1 文件，适合学习二进制格式和名称索引；TinyLlama 的真实首层验证读取 GGUF，不能写成 `ModelLoader("model.bin")`。
 
-验证重点：
+| 路径 | 入口 | 产物 | 用途 |
+| --- | --- | --- | --- |
+| 教学格式 | `ModelLoader::load()` | `unordered_map<string, Tensor>` | 理解文件头、tensor 目录和 payload |
+| 真实 GGUF | `GgufReader` + `ModelSchema` + `RealLlamaLayerLoader` | `RealLlamaLayerWeights` | 驱动 TinyLlama 首层和完整 Decoder |
 
-- 权重名称可以对应上
-- shape 和模块定义一致
-- 前向传播输出 shape 正常
+## 四段接线
 
-这一页的重点不是把整个模型一次性接完，而是先把“加载出来的权重能真实驱动一层前向”这个问题解决掉。只要第一层对了，后面的层只是在重复同一个结构。
+真实路径先读取索引，再把 metadata 适配为运行时配置。`ModelSchema::validate_gguf()` 检查 22 层名称和 shape，并生成稳定的 `LlamaTensorLayout`；通过结构校验后，`RealLlamaLayerLoader` 才按需读取指定层的 payload。
 
-数值验证的范围：
+下面的代码摘自仓库真实调用链，省略错误输出，不是另一套示例 API：
 
-这一阶段的“数值验证”目标是有限的：
+```cpp
+chapter01::GgufModelIndex index;
+chapter01::GgufReader::read_index(model_path, &index, &error);
 
-- 确认输出不是 `NaN` 或 `Inf`
-- 确认输出范围合理，没有明显发散
-- 不要求和某个 reference 完全一致
+chapter01::ModelMetadata metadata;
+chapter01::ModelMetadataAdapter::from_gguf(index.metadata, &metadata, &error);
 
-这一页先解决的是“模块能跑通”，不是“数值证明完全正确”。更完整的 reference 对比会放到后续的验证流程里。
+chapter01::LlamaTensorLayout layout;
+chapter01::ModelSchema::validate_gguf(metadata, index, &layout, &error);
 
-实现建议：
+chapter01::RealLlamaLayerWeights layer;
+chapter01::RealLlamaLayerLoader::load(
+    model_path, index, layout, 0, &layer, &error);
+```
 
-- 只加载第一层做验证
-- 先验证 shape，再验证数值
-- 出问题时优先检查加载映射
+四个阶段各自只解决一个问题，因此错误可以在进入计算前被截断。
 
-如果权重名和模块名之间有一层显式映射表，调试通常会比直接硬编码索引更轻松。
+| 阶段 | 输入 | 检查结果 |
+| --- | --- | --- |
+| GGUF 索引 | 模型文件 | metadata、tensor 名称、类型、shape 和偏移 |
+| Metadata 适配 | GGUF metadata | hidden size、层数、head 数、RoPE 与 RMSNorm 参数 |
+| Schema 校验 | metadata + tensor index | Llama 所需 tensor 是否齐全且 shape 一致 |
+| 首层加载 | layout + layer index 0 | 九个拥有 payload 的 `Tensor` |
 
-实际调试时，建议先把这一层拆成两个检查点：先确认权重是否都能按名字找到，再确认每个张量的 shape 是否和模块定义一致。这样可以把“加载失败”和“模块定义不匹配”区分开。
+## 首层权重映射
 
-一开始就尝试整层前向时，出现错误往往很难判断问题来自 loader、张量布局还是 attention 计算本身。
+TinyLlama 使用 GGUF 的 `blk.0.*` 命名。映射由 `ModelSchema` 集中建立，计算代码不应自行拼接文件偏移或依赖 tensor 在文件中的排列顺序。
 
-权重缺失时怎么办：
+| `RealLlamaLayerWeights` 字段 | GGUF tensor | 计算位置 |
+| --- | --- | --- |
+| `attn_norm` | `blk.0.attn_norm.weight` | Attention 前 RMSNorm |
+| `attn_q` / `attn_k` / `attn_v` | `blk.0.attn_q/k/v.weight` | Q、K、V 投影 |
+| `attn_output` | `blk.0.attn_output.weight` | Attention 输出投影 |
+| `ffn_norm` | `blk.0.ffn_norm.weight` | FFN 前 RMSNorm |
+| `ffn_gate` / `ffn_up` | `blk.0.ffn_gate/up.weight` | SwiGLU 两条输入投影 |
+| `ffn_down` | `blk.0.ffn_down.weight` | FFN 输出投影 |
 
-当 `loader.find()` 返回空指针时，教程主线建议先停下来检查映射，而不是直接跳过：
+## 验证顺序
 
-1. 检查名称映射是否正确
-2. 检查模型文件是否完整
-3. 检查当前层的命名约定是否和模型一致
+首层验证按由静到动的顺序执行：先校验名称和 shape，再加载 payload，最后运行单 token 前向。真实 TinyLlama 权重包含 Q4_K、Q6_K 和浮点 norm；量化投影由 Chapter06 的 reference 或 fused 实现消费。
 
-如果真的需要临时继续排查，可以：
+`gguf_first_layer_forward` 固定 token id，执行 RMSNorm、QKV 投影、GQA 单 token attention、输出投影、SwiGLU FFN 和两次残差连接。它最终检查隐藏状态长度、有限值和最大绝对值。这里的单 token attention 只验证接线，不覆盖多 token attention score、RoPE 或 KV Cache；这些能力由后续多 token 和完整 Decoder 验证承担。
 
-- 用随机初始化只做 shape 验证
-- 或者把这一层标记为未验证
+从仓库根目录运行：
 
-但主线教程里更推荐先修复加载映射，因为随机权重很容易让 shape 看起来没问题、数值却完全偏掉，调试成本反而更高。
+```bash
+cmake -S code/chapter01_tensor_loader \
+  -B /tmp/cpp-llm-engine-chapter01-build \
+  -DCHAPTER06_SOURCE_DIR="$PWD/code/chapter06_quantization" \
+  -DCMAKE_BUILD_TYPE=Release
+cmake --build /tmp/cpp-llm-engine-chapter01-build \
+  --target gguf_first_layer_forward -j2
+/tmp/cpp-llm-engine-chapter01-build/gguf_first_layer_forward \
+  llama.cpp/models/tinyllama-1.1b-chat-v1.0.Q4_K_M.gguf
+```
 
-不同模型的命名约定：
-
-权重名称是模型特定的，不能假设所有模型都用同一套命名：
-
-| 模型 | 命名示例 |
+| 检查点 | 失败通常表示什么 |
 | --- | --- |
-| BERT | `bert.encoder.layer.0.attention.self.query` |
-| GPT-2 | `transformer.h.0.attn.c_attn` |
-| LLaMA | `model.layers.0.self_attn.q_proj` |
-| 本教程 | `layer0.attention.wq` |
-
-本教程使用的是简化命名，目的是让“名称映射”和“模块接线”更便于理解。真实项目里通常需要根据具体模型文件调整解析逻辑。
-
-与 Chapter01 的衔接：
-
-`chapter01` 的 `ModelLoader` 负责把权重加载进一个按名称索引的容器里：
-
-```cpp
-class ModelLoader {
-    std::unordered_map<std::string, Tensor> weights_;
-public:
-    const Tensor* find(const std::string& name) const;
-};
-```
-
-`04.5` 就是在这个接口上，去拿第一层权重并接入当前模块：
-
-```cpp
-auto loader = ModelLoader("model.bin");
-auto layer = build_decoder_layer();
-auto wq = loader.find("layer0.attention.wq");
-```
-
-关键点是分工清楚：
-
-- `loader` 负责“从文件加载并建立名称索引”
-- `layer` 负责“使用权重执行计算”
-
-两者通过名称映射解耦，避免把文件格式和模块结构硬绑在一起。
-
-最小验证代码可以先写成：
-
-```cpp
-auto layer = build_decoder_layer();
-auto weights = loader.find("layer0.attention.wq");
-assert(weights != nullptr);
-assert(weights->shape() == std::vector<int64_t>{hidden, hidden});
-```
-
-先检查权重能否找到，再检查 shape，再做前向。
-
-## 验证与排查
-
-常见问题：
-
-- 权重名称映射不一致
-- 第一层 shape 和模块输入不匹配
-- 直接上整模型导致排错成本过高
+| `read_index` | 文件路径、GGUF 版本或索引解析错误 |
+| `from_gguf` | 必需 metadata 缺失或类型不匹配 |
+| `validate_gguf` | 模型架构、层数、名称或 shape 不符合 Llama contract |
+| `RealLlamaLayerLoader::load` | tensor payload 越界、类型不支持或读取失败 |
+| `output_finite: true` | 首层计算已产生有限输出；不等于完整模型数值等价 |

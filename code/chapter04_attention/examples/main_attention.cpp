@@ -1,3 +1,7 @@
+// Chapter 04：DecoderLayer 示例
+// 职责：构造 2x4 输入，运行单层 Decoder 并打印输出 shape 和数值。
+// 运行：bash code/chapter04_attention/scripts/run.sh。
+// 验证：输出 ready=true 和 2x4 结果。
 #include "chapter04_attention/decoder_layer.h"
 
 #include <iostream>

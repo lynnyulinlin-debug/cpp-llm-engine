@@ -1,7 +1,7 @@
 # 04.3 Feed Forward Network 前馈网络
 
 
-## 这一页要解决什么
+## 组装 Feed-Forward Network
 
 实现 FFN 模块，用两层线性层和一个激活函数构成 Transformer block 的前馈部分。
 
@@ -67,9 +67,16 @@ value = Linear_value(x)
 out = Linear_out(SiLU(gate) * value)
 ```
 
-教程路径上，先把标准 FFN 做对，再去看变体。
+Chapter04 的 `FeedForward` 实现标准两层 FFN：`fc1 -> ReLU -> fc2`。真实 TinyLlama 走三组权重：`SiLU(gate(x)) * up(x) -> down`；该路径位于 `RealLlamaCpuContext`，并复用 Chapter06 的 Q4_K/Q6_K Linear backend。
 
-FFN 在 DecoderLayer 中的位置：
+| 对照项 | Chapter04 教学 FFN | TinyLlama 真实 FFN |
+| --- | --- | --- |
+| 投影 | `fc1`、`fc2` | `gate`、`up`、`down` |
+| 激活 | ReLU | SiLU |
+| 门控乘法 | 无 | `SiLU(gate) * up` |
+| 权重 | 教学浮点参数 | GGUF Q4_K/Q6_K |
+
+### FFN 在 DecoderLayer 中的位置
 
 DecoderLayer 的标准顺序是：
 
@@ -98,7 +105,7 @@ Attention 和 FFN 的职责对比：
 验证时重点看：
 
 - 输入输出 shape 正确
-- 激活函数被正确插入
+- ReLU 位于两次 Linear 之间
 - 能和 DecoderLayer 组合
 
 如果 FFN 的输入输出维度和 attention 的残差路径都能对上，说明这层已经可复用了。

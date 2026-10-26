@@ -1,3 +1,7 @@
+// Chapter 04：Decoder Linear 实现
+// 职责：保存教学 float 权重并执行 row-major 输入到输出的矩阵乘法。
+// 契约：输入列数必须匹配 in_features，错误 shape 返回空 Tensor。
+// 验证：chapter04_attention_test.cpp。
 #include "chapter04_attention/linear_layer.h"
 
 #include <stdexcept>

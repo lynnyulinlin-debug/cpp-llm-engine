@@ -1,7 +1,7 @@
 # 04.4 DecoderLayer 解码器层
 
 
-## 这一页要解决什么
+## 串起单层 Decoder 数据流
 
 把 Pre-LN、Attention、Residual 和 FFN 组合成一个完整的 Transformer decoder layer。
 
@@ -11,23 +11,35 @@
 - 理解残差连接在模块组合中的作用
 - 理解模块组合后如何继续保持 shape 一致
 
+![Decoder / Attention 数据流](../assets/diagrams/chapter04-decoder-attention-flow.svg)
+
 ## 阅读入口
 
 - 前置阅读：[`04.1 Multi-head Attention`](./01_multihead_attention.md)、[`04.3 Feed Forward Network`](./03_feedforward.md)
 - 源码直达：<a href="../_code/chapter04_attention/src/decoder_layer.cpp"><code>decoder_layer.cpp</code></a>、<a href="../_code/chapter04_attention/src/attention.cpp"><code>attention.cpp</code></a>、<a href="../_code/chapter04_attention/tests/chapter04_attention_test.cpp"><code>chapter04_attention_test.cpp</code></a>
-- 相关阅读：[`04.5 首层权重加载`](./05_load_first_layer.md)、[`04.7 vLLM / nano-vLLM 结构阅读桥`](./07_vllm_nano_vllm_structure_bridge.md)、[`04.8 本章小结`](./summary.md)
+- 相关阅读：[`04.5 首层权重加载`](./05_load_first_layer.md)、[`04.7 vLLM / nano-vLLM 结构阅读桥`](./07_vllm_nano_vllm_structure_bridge.md)、[`章节导读`](./intro.md)
 
 ## 核心结构
 
 单个模块正确不代表整体正确。DecoderLayer 是各模块真正拼接起来的地方，也是后面多层 Transformer 的最小单元。
 
-它也是 `chapter01` 到 `chapter03` 的第一次结构收口：
+它也是 `chapter01` 到 `chapter03` 的结构对照点：
 
-- `chapter01` 提供的首层权重和 tensor 对象，要能装进这一层
+- `chapter01` 提供真实模型 metadata、权重布局和独立 CPU Decoder，用来对照教学层 contract
 - `chapter02` 提供的 view / shape 语义，要能支撑 attention 和 residual 的数据流
 - `chapter03` 提供的 MatMul / Linear 边界，要能被稳定组合成 attention 和 FFN
 
-到了这里，教程才第一次从“部件正确”进入“结构正确”。
+Chapter04 的教学 `DecoderLayer` 不直接装载 TinyLlama GGUF 权重，因为两者的 Norm、激活、head 结构和量化格式不同；`DecoderLayerContract` 用于显式比较这些差异。
+
+## 结构契约与执行契约
+
+单层结构和一次请求的执行状态需要分开表示。Chapter04 的 `DecoderLayer` 只回答层内部由哪些组件组成；真实模型 Context 还要保存 position、分层 K/V，并提供 token 级 prefill/decode。把两者塞进同一个接口，会迫使教学层伪造 tokenizer、embedding 和 LM Head。
+
+| 契约 | 回答的问题 | 实现位置 | 使用者 |
+| --- | --- | --- | --- |
+| `DecoderLayerContract` | 层的 hidden、head、FFN、Norm、RoPE 和 KV 能力是什么 | Chapter04 教学层、Chapter01 真实 Model | 测试、Engine Factory、架构检查 |
+| `DecoderExecutionContext` | 当前请求如何 reset、prefill、decode，已经消费多少 token | Chapter01 真实 Context | Engine adapter |
+| `RequestModelExecutor` | Runtime 如何按请求取得 logits | Engine adapter | Chapter05 Runtime、Chapter09 ServiceCore |
 
 标准结构：
 
@@ -97,8 +109,9 @@ for i in range(num_layers):
 - 输入输出 shape 一致
 - 残差连接不破坏维度
 - 模块顺序符合预期
+- 教学层报告 LayerNorm、ReLU、MHA 和无 RoPE/KV；真实 TinyLlama 报告 RMSNorm、SwiGLU、GQA、RoPE 和请求级 KV
 
-如果一层 DecoderLayer 的完整数据流图能够和代码一致，这一页就完成了。
+如果一层 `DecoderLayer` 的完整数据流图能够和代码一致，单层结构就完成了。
 
 最小伪代码可以写成：
 

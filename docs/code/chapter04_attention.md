@@ -30,7 +30,7 @@
 ## 对应文档
 
 - [chapter04 导读](../chapter04_attention/intro.md)
-- [chapter04 小结](../chapter04_attention/summary.md)
+- [chapter04 导读](../chapter04_attention/intro.md)
 
 ## 说明
 

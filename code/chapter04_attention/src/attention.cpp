@@ -1,41 +1,13 @@
+// Chapter 04：MultiHeadAttention 实现
+// 职责：执行 Q/K/V projection、Attention backend 调用和 output projection。
+// 契约：输入 layout 为 [tokens, model_dim]，backend 看到连续 row-major buffer。
+// 验证：chapter04_attention_test.cpp。
 #include "chapter04_attention/attention.h"
+#include "chapter04_attention/attention_backend.h"
 
 #include <cmath>
-#include <vector>
 
 namespace chapter04_attention {
-
-namespace {
-
-Tensor softmax_rows(const Tensor& tensor) {
-    if (!tensor.ready()) {
-        return {};
-    }
-
-    Tensor out(tensor.rows, tensor.cols);
-    for (std::size_t row = 0; row < tensor.rows; ++row) {
-        float max_value = tensor.at(row, 0);
-        for (std::size_t col = 1; col < tensor.cols; ++col) {
-            max_value = std::max(max_value, tensor.at(row, col));
-        }
-
-        float sum = 0.0f;
-        for (std::size_t col = 0; col < tensor.cols; ++col) {
-            const float value = std::exp(tensor.at(row, col) - max_value);
-            out.at(row, col) = value;
-            sum += value;
-        }
-        if (sum == 0.0f) {
-            continue;
-        }
-        for (std::size_t col = 0; col < tensor.cols; ++col) {
-            out.at(row, col) /= sum;
-        }
-    }
-    return out;
-}
-
-}  // namespace
 
 MultiHeadAttention::MultiHeadAttention(std::size_t model_dim, std::size_t num_heads)
     : model_dim_(model_dim),
@@ -43,7 +15,20 @@ MultiHeadAttention::MultiHeadAttention(std::size_t model_dim, std::size_t num_he
       q_proj_(model_dim, model_dim),
       k_proj_(model_dim, model_dim),
       v_proj_(model_dim, model_dim),
-      out_proj_(model_dim, model_dim) {}
+      out_proj_(model_dim, model_dim),
+      backend_(&cpu_reference_attention_backend()) {}
+
+MultiHeadAttention::MultiHeadAttention(
+    std::size_t model_dim,
+    std::size_t num_heads,
+    const cpp_llm_engine::core::AttentionBackend& backend)
+    : model_dim_(model_dim),
+      num_heads_(num_heads),
+      q_proj_(model_dim, model_dim),
+      k_proj_(model_dim, model_dim),
+      v_proj_(model_dim, model_dim),
+      out_proj_(model_dim, model_dim),
+      backend_(&backend) {}
 
 Tensor MultiHeadAttention::forward(const Tensor& input) const {
     if (!ready() || !input.ready() || input.cols != model_dim_) {
@@ -55,23 +40,12 @@ Tensor MultiHeadAttention::forward(const Tensor& input) const {
     Tensor k = k_proj_.forward(input);
     Tensor v = v_proj_.forward(input);
 
-    std::vector<Tensor> head_outputs;
-    head_outputs.reserve(num_heads_);
-
-    for (std::size_t head = 0; head < num_heads_; ++head) {
-        const std::size_t offset = head * head_dim;
-        Tensor q_head = slice_columns(q, offset, head_dim);
-        Tensor k_head = slice_columns(k, offset, head_dim);
-        Tensor v_head = slice_columns(v, offset, head_dim);
-
-        Tensor scores = matmul(q_head, transpose(k_head));
-        scale_in_place(scores, 1.0f / std::sqrt(static_cast<float>(head_dim)));
-        Tensor probs = softmax_rows(scores);
-        Tensor context = matmul(probs, v_head);
-        head_outputs.push_back(context);
-    }
-
-    Tensor combined = concatenate_columns(head_outputs);
+    Tensor combined(input.rows, model_dim_);
+    const cpp_llm_engine::core::AttentionRequest request{
+        q.data.data(), k.data.data(), v.data.data(), combined.data.data(),
+        input.rows, input.rows, num_heads_, head_dim, 0, true, 0.0f};
+    const auto status = backend_->compute(request);
+    if (!status.is_ok()) return {};
     return out_proj_.forward(combined);
 }
 
@@ -86,6 +60,10 @@ std::size_t MultiHeadAttention::model_dim() const {
 
 std::size_t MultiHeadAttention::num_heads() const {
     return num_heads_;
+}
+
+cpp_llm_engine::core::BackendKind MultiHeadAttention::backend_kind() const {
+    return backend_->kind();
 }
 
 }  // namespace chapter04_attention

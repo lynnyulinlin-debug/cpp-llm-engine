@@ -1,3 +1,7 @@
+// Chapter 04：LayerNorm 实现
+// 职责：对每个 token 行计算均值、方差并应用 gamma/beta。
+// 契约：epsilon 参与方差稳定化，输出 shape 与输入一致。
+// 验证：chapter04_attention_test.cpp。
 #include "chapter04_attention/layer_norm.h"
 
 #include <cmath>

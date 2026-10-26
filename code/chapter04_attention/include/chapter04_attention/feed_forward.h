@@ -1,3 +1,7 @@
+// Chapter 04：FeedForward 接口
+// 职责：声明 decoder FFN 的升维、激活和降维路径。
+// 契约：输入列数为 model_dim，输出列数恢复为 model_dim。
+// 验证：chapter04_attention_test.cpp。
 #pragma once
 
 #include "chapter04_attention/linear_layer.h"

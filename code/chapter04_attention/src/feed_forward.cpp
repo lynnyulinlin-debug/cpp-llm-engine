@@ -1,3 +1,7 @@
+// Chapter 04：FeedForward 实现
+// 职责：执行 decoder FFN 的两次 Linear 和激活函数。
+// 契约：保持输入 token 数和 model_dim，hidden_dim 只影响中间结果。
+// 验证：chapter04_attention_test.cpp。
 #include "chapter04_attention/feed_forward.h"
 
 namespace chapter04_attention {

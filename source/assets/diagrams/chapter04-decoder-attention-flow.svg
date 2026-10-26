@@ -1,0 +1,63 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1280 590" role="img" aria-labelledby="title desc">
+  <title id="title">Chapter 04 decoder and attention data flow</title>
+  <desc id="desc">A decoder layer combines tensor views, matmul operators, layer normalization, attention, feed-forward network, residual paths, and position or KV boundaries.</desc>
+  <defs>
+    <marker id="arrow" markerWidth="9" markerHeight="9" refX="8" refY="4.5" orient="auto"><path d="M0 0L9 4.5L0 9Z" fill="#64748b"/></marker>
+    <style>
+      .title { font: 700 24px sans-serif; fill: #172033; }
+      .label { font: 700 16px sans-serif; }
+      .text { font: 14px sans-serif; }
+      .arrow { stroke: #64748b; stroke-width: 2.5; fill: none; marker-end: url(#arrow); }
+      .boundary { stroke: #7c3aed; stroke-width: 2; fill: none; stroke-dasharray: 7 6; }
+    </style>
+  </defs>
+  <rect width="1280" height="590" rx="20" fill="#f8fafc"/>
+  <text x="40" y="42" class="title">Chapter 04 · Decoder / Attention 数据流</text>
+
+  <rect x="40" y="70" width="320" height="470" rx="16" fill="#eff6ff" stroke="#bfdbfe"/>
+  <text x="64" y="104" class="label" fill="#1d4ed8">整体位置</text>
+  <g text-anchor="middle" class="text">
+    <rect x="88" y="145" width="220" height="52" rx="10" fill="#fff" stroke="#64748b" stroke-width="2"/>
+    <text x="198" y="176">Chapter 01 · Weights</text>
+    <rect x="88" y="235" width="220" height="52" rx="10" fill="#fff" stroke="#64748b" stroke-width="2"/>
+    <text x="198" y="266">Chapter 02 · Tensor View</text>
+    <rect x="68" y="325" width="260" height="70" rx="10" fill="#2563eb" stroke="#1d4ed8" stroke-width="2"/>
+    <text x="198" y="354" fill="#fff" font-weight="700">Chapter 04</text><text x="198" y="377" fill="#dbeafe">Decoder Structure</text>
+    <rect x="88" y="445" width="220" height="52" rx="10" fill="#fff" stroke="#64748b" stroke-width="2"/>
+    <text x="198" y="476">Chapter 05 · Runtime</text>
+  </g>
+  <path d="M198 197V235M198 287V325M198 395V445" class="arrow"/>
+
+  <rect x="400" y="70" width="840" height="470" rx="16" fill="#fff7ed" stroke="#fed7aa"/>
+  <text x="424" y="104" class="label" fill="#c2410c">单层 Decoder 的闭合数据流</text>
+  <g text-anchor="middle" class="text">
+    <rect x="430" y="160" width="110" height="58" rx="10" fill="#fff" stroke="#64748b" stroke-width="2"/>
+    <text x="485" y="194">hidden state</text>
+    <rect x="575" y="160" width="110" height="58" rx="10" fill="#fed7aa" stroke="#ea580c" stroke-width="2"/>
+    <text x="630" y="194">Pre-LN</text>
+    <rect x="720" y="145" width="160" height="88" rx="10" fill="#f97316" stroke="#c2410c" stroke-width="2"/>
+    <text x="800" y="181" fill="#fff" font-weight="700">Q / K / V</text><text x="800" y="205" fill="#ffedd5">Attention</text>
+    <rect x="915" y="160" width="110" height="58" rx="10" fill="#fed7aa" stroke="#ea580c" stroke-width="2"/>
+    <text x="970" y="194">Residual</text>
+    <rect x="1060" y="160" width="110" height="58" rx="10" fill="#fed7aa" stroke="#ea580c" stroke-width="2"/>
+    <text x="1115" y="194">Pre-LN</text>
+  </g>
+  <path d="M540 189H575M685 189H720M880 189H915M1025 189H1060" class="arrow"/>
+
+  <g text-anchor="middle" class="text">
+    <rect x="520" y="345" width="160" height="72" rx="10" fill="#dbeafe" stroke="#2563eb" stroke-width="2"/>
+    <text x="600" y="375" fill="#1e40af" font-weight="700">Residual branch</text><text x="600" y="398" fill="#1e40af">x + attention(x)</text>
+    <rect x="745" y="345" width="160" height="72" rx="10" fill="#dbeafe" stroke="#2563eb" stroke-width="2"/>
+    <text x="825" y="375" fill="#1e40af" font-weight="700">FFN</text><text x="825" y="398" fill="#1e40af">Linear → Act → Linear</text>
+    <rect x="970" y="345" width="180" height="72" rx="10" fill="#2563eb" stroke="#1d4ed8" stroke-width="2"/>
+    <text x="1060" y="375" fill="#fff" font-weight="700">Decoder output</text><text x="1060" y="398" fill="#dbeafe">x + attention + ffn</text>
+  </g>
+  <path d="M1115 218V280H600V345M600 417H745M905 381H970" class="arrow"/>
+  <path d="M485 218V290H1060V345" class="arrow"/>
+
+  <rect x="430" y="465" width="265" height="48" rx="10" fill="#faf5ff" stroke="#a78bfa"/>
+  <text x="562" y="495" text-anchor="middle" class="text" fill="#6d28d9">Position / causal mask 边界</text>
+  <rect x="745" y="465" width="405" height="48" rx="10" fill="#faf5ff" stroke="#a78bfa"/>
+  <text x="947" y="495" text-anchor="middle" class="text" fill="#6d28d9">KV Cache：运行时复用 K / V，不改变层结构</text>
+  <path d="M800 233V465M970 218V465" class="boundary"/>
+</svg>

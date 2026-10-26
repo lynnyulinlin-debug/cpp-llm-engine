@@ -1,52 +1,80 @@
 # 04.0 Decoder Structure and Attention 组装 decoder block
 
-这一章先回答一个结构问题：单层 decoder 要怎样做成一个可验证、可扩展的最小模块？
+## 1. 本章位置与成功标准
 
-本章实现 Transformer decoder 的核心组件：多头注意力、LayerNorm、激活函数、FFN，并把它们组装成一个完整的 DecoderLayer。
+本章把 Attention、LayerNorm、FFN 和 Residual 组合成一个可验证的单层 `DecoderLayer`。
 
-从学习主线看，这一章是 `chapter01` 到 `chapter03` 的第一次结构汇合点：
+```bash
+bash code/chapter04_attention/scripts/run.sh
+```
 
-- `chapter01` 提供权重怎样进入 runtime
-- `chapter02` 提供 Tensor view 和 shared storage 语义
-- `chapter03` 提供 MatMul 和 Linear 的稳定计算边界
+成功标准：Attention backend 测试通过，Decoder demo 输出正确 shape 和数值；本章教学代码不实现请求调度或 paged KV Cache。可选 CUDA 公共层已经提供 RoPE、连续 device KV Cache 和 causal GQA Attention 数值基线。
 
-这一章第一次把这些能力收束成一个真正的模型结构单元。后面的 `chapter05_generation` 不再先讨论“attention 公式”，而是直接调度这里已经闭合的 decoder 结构。
+![Chapter 04 主图：Decoder 结构与 Attention](../assets/diagrams/chapter04-main.svg)
 
-## 本章和 vLLM / nano-vLLM 的联系
+![Chapter 04 Decoder / Attention 数据流](../assets/diagrams/chapter04-decoder-attention-flow.svg)
 
-在 vLLM 或 nano-vLLM 里，真实代码不会只停在一个孤立的 `DecoderLayer`，而是把它放进 model runner、attention backend 和 KV cache 写入路径里。本章先把 decoder block 的结构、shape、Q/K/V 和 position 边界讲清楚，后面读这些项目时才知道 runtime 调度的到底是哪一个模型结构，而不是把结构问题和调度问题混在一起。
+数据流是 `Pre-LN -> Attention -> Residual -> FFN -> Residual`。position、causal mask 和 `query_position_offset` 会影响执行，但不改变单层 Decoder 的输入输出契约。
 
-## 本章概览
+## 2. 内容地图
 
-| 先看什么 | 这一节讲什么 | 为什么重要 | 对应小节 |
-| --- | --- | --- | --- |
-| Attention 怎么做 | Q/K/V、score、softmax 和输出合并 | 先建立 token 交互路径 | [`04.1 Multi-head Attention`](./01_multihead_attention.md) |
-| LayerNorm 和激活做什么 | 归一化和非线性 | 先补齐 decoder 的基础组件 | [`04.2 LayerNorm and Activation`](./02_layernorm_and_activation.md) |
-| FFN 怎么接入 | 两层线性和激活 | 先补齐逐 token 变换路径 | [`04.3 FeedForward`](./03_feedforward.md) |
-| DecoderLayer 怎么闭合 | Attention、FFN、Residual 组合 | 先形成可验证单层结构 | [`04.4 DecoderLayer`](./04_decoder_layer.md) |
-| 首层权重怎么接入 | 真实权重和 shape 验证 | 先确认结构能接真实模型 | [`04.5 Load First Layer`](./05_load_first_layer.md) |
-| 怎么看真实生态 | Gemma 与 TensorRT-LLM 对照 | 先把结构放回工程坐标 | [`04.6 Gemma / TensorRT-LLM 对照`](./06_gemma_tensorrt_comparison.md) |
-| 怎么衔接 serving runtime | DecoderLayer、Q/K/V、position 和 cache 边界 | 先建立 vLLM / nano-vLLM 阅读坐标 | [`04.7 vLLM / nano-vLLM 结构阅读桥`](./07_vllm_nano_vllm_structure_bridge.md) |
-| 本章怎么收口 | 单层 decoder 和下一章入口 | 进入 runtime 前先固定结构边界 | [`04.8 本章小结`](./summary.md) |
+完成本章后，可以：
 
-## 阅读入口
+- 根据 Q/K/V、causal mask 和 softmax 执行 Attention
+- 把 LayerNorm、激活函数和 FFN 接入 decoder block
+- 用 Residual 组合出可单独测试的 `DecoderLayer`
+- 用公共 `AttentionRequest` / `AttentionBackend` 保留 CPU reference 和后续 GPU backend 的替换位置
+- 用 `DecoderLayerContract` 表达层维度、归一化、激活、位置编码和 KV Cache 能力
+- 用真实模型首层权重检查 shape 和输入布局
 
-- 前置阅读：[`chapter03_matmul`](../chapter03_matmul/intro.md)、[`chapter03 小结`](../chapter03_matmul/summary.md)
-- 源码直达：<a href="../_code/chapter04_attention/src/attention.cpp"><code>attention.cpp</code></a>、<a href="../_code/chapter04_attention/src/decoder_layer.cpp"><code>decoder_layer.cpp</code></a>、<a href="../_code/chapter04_attention/tests/chapter04_attention_test.cpp"><code>chapter04_attention_test.cpp</code></a>
-- 相关阅读：[`04.1 Multi-head Attention`](./01_multihead_attention.md)、[`04.4 DecoderLayer`](./04_decoder_layer.md)、[`04.5 首层权重加载`](./05_load_first_layer.md)、[`04.6 Gemma / TensorRT-LLM 对照`](./06_gemma_tensorrt_comparison.md)、[`04.7 vLLM / nano-vLLM 结构阅读桥`](./07_vllm_nano_vllm_structure_bridge.md)
+本章是前三章第一次汇合：Chapter 01 提供权重对象，Chapter 02 提供 view，Chapter 03 提供 MatMul / Linear。vLLM、SGLang 和 TensorRT-LLM 会把类似的 Decoder 继续接入 model runner、attention backend 和 KV Cache；这里先把单层结构跑稳。
 
-## 这章在解决什么
+当前 Attention 契约如下：
 
-这一章要做的是把前面做好的权重对象、view 语义和算子边界组合成一个单层 decoder，让它可以被单独验证、单独排错，也能继续往上扩展。重点是先把结构站稳，再谈生成 runtime。
+| 组件 | 当前实现 | 后续替换 |
+| --- | --- | --- |
+| `DecoderLayer` | LayerNorm、MHA、ReLU FFN、Residual | 多层权重和真实模型装配 |
+| `AttentionBackend` | CPU row-major、causal mask、stable softmax | FlashAttention、paged KV、CUDA |
+| `query_position_offset` | 对齐 decode token 与历史位置 | KV Cache-aware attention |
+| `DecoderLayerContract` | 描述教学层的结构能力 | 与真实 Model 的结构契约对照 |
+| 可选 CUDA RoPE / KV / GQA | 原地旋转、连续 K/V append、causal prefill/decode | 单层 GPU Decoder 组装 |
 
-## 这章怎么做
+CPU 调用链是：`MultiHeadAttention -> CpuReferenceAttentionBackend -> cpu_reference_attention_kernel`。`KvCache` 是经过独立测试的连续 K/V 容器，支持固定容量和 append/clear；教学 `MultiHeadAttention` 尚未持有该容器，带历史 K/V 的 decode 由测试直接构造 `AttentionRequest` 验证。真实 TinyLlama 的分层 K/V 集成位于 `RealLlamaCpuContext`，分页 block ownership 位于 Chapter05。
 
-Transformer 的核心不是某一个独立算子，而是几个模块按固定顺序组合后的结构。最小设计就是把单层 decoder 做成一个稳定模块：输入 token embeddings，先经过 LayerNorm，再进入 Attention、Residual、FFN，最后回到 Residual。
+成熟框架会把同一 Decoder 结构接入模型 runner、attention backend 和分页 KV Cache。本章用单层 CPU 实现固定结构和数值顺序。
 
-如果从“怎样把基础算子拼成一个可验证的 decoder”倒推，结构就会自然收敛成 `Pre-LN -> Attention -> Residual -> FFN -> Residual`。
+| 对照项 | 内容 |
+| --- | --- |
+| 本章教学对象 | LayerNorm、MHA、ReLU FFN、Residual 和 DecoderLayer |
+| 主对照框架 | vLLM Llama model、TensorRT-LLM attention/kernels |
+| 成熟组件 | FlashAttention、paged KV、融合算子、张量并行和多模型适配 |
+| 重点差异 | 教学层验证单层结构；backend 测试独立验证 mask、position offset 和连续 KV 输入 |
+| 深入入口 | [`04.6 Gemma / TensorRT-LLM 对照`](./06_gemma_tensorrt_comparison.md)、[`04.7 vLLM / nano-vLLM 结构阅读桥`](./07_vllm_nano_vllm_structure_bridge.md) |
 
-## 收口与下一步
+## 3. 阅读与源码顺序
 
-这一章把注意力、FFN、LayerNorm 和残差稳定地收束成单层 decoder。验证时先看 shape，再看前向流程，最后看首层权重是否能接入。
+| 顺序 | 页面 | 读完后应看到什么 |
+| --- | --- | --- |
+| 1 | [`04.1 Multi-head Attention`](./01_multihead_attention.md) | Q/K/V、score、softmax 和输出合并 |
+| 2 | [`04.2 LayerNorm and Activation`](./02_layernorm_and_activation.md)、[`04.3 FeedForward`](./03_feedforward.md) | decoder 的逐 token 组件 |
+| 3 | [`04.4 DecoderLayer`](./04_decoder_layer.md) | Attention、FFN 和 Residual 的完整顺序 |
+| 4 | [`04.5 Load First Layer`](./05_load_first_layer.md) | 真实权重和 shape 校验 |
+| 5 | [`04.6 Gemma / TensorRT-LLM 对照`](./06_gemma_tensorrt_comparison.md)、[`04.7 vLLM / nano-vLLM 结构阅读桥`](./07_vllm_nano_vllm_structure_bridge.md) | 模型结构与真实 backend 的对应关系 |
 
-下一步进入 `chapter05_generation`，把这些 decoder layer 放进一个可重复运行的生成循环里。`chapter03` 提供算子边界，`chapter04` 提供结构边界，`chapter05` 开始提供运行时边界。
+源码先看 <a href="../_code/chapter04_attention/src/attention.cpp"><code>attention.cpp</code></a>、<a href="../_code/chapter04_attention/src/attention_backend.cpp"><code>attention_backend.cpp</code></a>、<a href="../_code/chapter04_attention/src/decoder_layer.cpp"><code>decoder_layer.cpp</code></a>；测试入口是 <a href="../_code/chapter04_attention/tests/chapter04_attention_test.cpp"><code>chapter04_attention_test.cpp</code></a>。可选 GPU 实现从 <a href="../_code/cuda/src/rope_backend.cu"><code>rope_backend.cu</code></a>、<a href="../_code/cuda/src/cuda_kv_cache.cpp"><code>cuda_kv_cache.cpp</code></a>、<a href="../_code/cuda/src/gqa_attention_backend.cu"><code>gqa_attention_backend.cu</code></a> 及对应测试进入。前置阅读是 [`chapter03_matmul`](../chapter03_matmul/intro.md)；Attention、GQA、RoPE、Norm 和 SwiGLU 的统一符号从 [`F-ATTN-01`](../reference/formulas.md#f-attn-01) 开始查阅。
+
+## 4. 验证
+
+本章按以下顺序验证：
+
+1. Q/K/V 的 shape 和 head layout 正确
+2. causal mask 不读取未来 token，decode offset 能读取历史 KV
+3. softmax 数值稳定，输出 shape 正确
+4. 固定容量 KV Cache 能 append、拒绝溢出并 clear 复用
+5. DecoderLayer 的残差和 FFN 顺序正确
+6. 首层真实权重能通过 metadata、shape 和独立真实前向校验
+7. `DecoderLayer::contract()` 能通过维度和结构一致性校验
+
+排查时先看 shape，再看 Attention backend，最后看 Decoder 组合顺序；不要先从服务吞吐判断结构是否正确。
+
+**下一章：**本章把权重、Tensor view 和计算算子组合成单层 Decoder；Chapter 05 将保存多个请求的生成状态并推进 `prefill -> decode`。

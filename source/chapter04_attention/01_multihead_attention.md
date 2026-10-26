@@ -1,7 +1,7 @@
 # 04.1 Multi-head Attention 多头注意力
 
 
-## 这一页要解决什么
+## 组织 Q、K、V 和 Attention
 
 实现多头注意力的前向计算，并理解 Q/K/V、score、softmax 和输出合并的完整数据流。
 
@@ -22,7 +22,7 @@
 
 注意力是 Transformer 的核心。它决定 token 之间如何相互作用，也决定后续 DecoderLayer 的表达能力。
 
-从整条教程主线看，这一页不是单独讲一个公式，而是在把 `chapter03` 的 Linear / MatMul 边界第一次放进真实模型结构里。后面读 vLLM / nano-vLLM 时，attention backend、KV cache 和 prefill / decode 路径之所以复杂，前提也是这里的 Q/K/V 与 shape 关系先被固定住。
+从整条教程主线看，本节把 `chapter03` 的 Linear / MatMul 契约第一次放进真实模型结构里。后面读 vLLM / nano-vLLM 时，attention backend、KV cache 和 prefill / decode 路径的理解，都建立在这里固定的 Q/K/V 与 shape 关系上。
 
 核心步骤：
 
@@ -33,9 +33,20 @@
 - 得到每个 head 的输出
 - 合并所有 head 的结果
 
-实现时最重要的不是把公式背出来，而是把张量 shape 一步一步对应起来。每一步输入和输出的维度需要能明确说清，这样后面调试才不会变成“看值猜错在哪”。
+实现时最重要的是把张量 shape 一步一步对应起来。每一步输入和输出的维度都要能明确说清，这样后面调试才能定位到具体变换。
 
 最小实现通常先从单 batch、单序列长度开始，然后再扩展到更一般的输入。
+
+通用数学采用 `[B,S,D]` shape。仓库教学实现把 batch 固定为 1，因此 `Tensor` 和 `AttentionRequest` 使用 `[tokens, model_dim]` 连续 row-major 布局；Q、K、V head 数相同。TinyLlama 的 GQA、RoPE 和请求级分层 K/V 位于真实 CPU Context，不在该 `MultiHeadAttention` 类中。
+
+| 能力 | 教学 `MultiHeadAttention` | TinyLlama CPU Context |
+| --- | --- | --- |
+| 输入布局 | `[tokens, model_dim]` | token hidden vectors |
+| head 结构 | MHA，Q/K/V head 数相同 | GQA，32 个 Q heads、4 个 KV heads |
+| 位置 | backend 接收 offset，类内固定为 0 | 每层 Q/K 应用 RoPE |
+| K/V 历史 | 类内不持有；backend 测试可直接传历史 K/V | 每请求 22 层 K/V |
+
+### 通用 shape
 
 head 切分前后的维度：
 
@@ -92,6 +103,40 @@ head 合并的逆操作：
 - 先实现单头，再扩展到多头
 - 先保证 shape 正确，再关注性能
 
+## 算法镜像与 C++ 映射
+
+下面的 Python 只表达 CPU reference kernel 的循环顺序，不是第二套可运行实现。Q/K/V projection 和 head 合并由 `MultiHeadAttention::forward()` 处理；镜像从连续 `[token, head, dim]` buffer 开始。
+
+```python
+def attention_reference(query, key, value, heads, head_dim, causal, offset):
+    output = zeros_like(query)
+    scale = 1.0 / sqrt(head_dim)
+
+    for query_token in range(len(query)):
+        query_position = offset + query_token
+        for head in range(heads):
+            scores = []
+            for key_token in range(len(key)):
+                if causal and key_token > query_position:
+                    scores.append(float("-inf"))
+                    continue
+                scores.append(dot(query[query_token][head], key[key_token][head]) * scale)
+
+            probabilities = stable_softmax(scores)
+            for key_token, probability in enumerate(probabilities):
+                output[query_token][head] += probability * value[key_token][head]
+
+    return output
+```
+
+| Python 动作 | C++ 位置 | 验证重点 |
+| --- | --- | --- |
+| `query_position = offset + query_token` | `query_position_offset` | decode 查询可以看到历史 K/V |
+| causal 条件 | `key_token > query_position` | 未来位置写成负无穷 |
+| `dot(...) * scale` | `dim` 内积循环 | head 之间不串数据 |
+| `stable_softmax` | max、exp、denominator 三段循环 | 大分数输入不溢出 |
+| 概率加权 `value` | output 聚合循环 | 输出保持 `[query_tokens, heads * head_dim]` |
+
 ## 验证与排查
 
 验证时重点看：
@@ -99,20 +144,9 @@ head 合并的逆操作：
 - 输出 shape 正确
 - 每个 head 的维度一致
 - softmax 后的权重分布合理
+- causal mask 和 `query_position_offset` 能正确访问历史 K/V
 
 如果小样本输入下，attention 权重会对某些位置明显聚焦，而输出 shape 又保持稳定，通常说明这一步已经能工作。
-
-一个简化的伪代码流程可以是：
-
-```cpp
-Tensor q = linear_q(x);
-Tensor k = linear_k(x);
-Tensor v = linear_v(x);
-Tensor score = softmax((q @ transpose(k)) / sqrt(head_dim));
-Tensor out = score @ v;
-```
-
-真正实现时还要加 head 拆分和合并，但这个最小流程足以表达核心数据流。
 
 常见问题：
 

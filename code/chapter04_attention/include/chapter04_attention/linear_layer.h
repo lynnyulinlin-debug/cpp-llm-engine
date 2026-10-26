@@ -1,3 +1,7 @@
+// Chapter 04：Decoder 内部 Linear 接口
+// 职责：提供 Attention projection 和 FFN 使用的教学 float Linear。
+// 契约：输入列数为 in_features，输出列数为 out_features。
+// 验证：chapter04_attention_test.cpp。
 #pragma once
 
 #include "chapter04_attention/tensor.h"

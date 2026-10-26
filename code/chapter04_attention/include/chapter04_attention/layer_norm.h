@@ -1,3 +1,7 @@
+// Chapter 04：LayerNorm 接口
+// 职责：声明按 token 行执行的 LayerNorm、gamma、beta 和 epsilon 参数。
+// 契约：输入列数必须等于 dim，输出 shape 与输入一致。
+// 验证：chapter04_attention_test.cpp。
 #pragma once
 
 #include "chapter04_attention/tensor.h"

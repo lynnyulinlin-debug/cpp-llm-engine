@@ -1,3 +1,7 @@
+// Chapter 04：DecoderLayer 组合实现
+// 职责：按固定顺序连接 LayerNorm、Attention、Residual 和 FeedForward。
+// 契约：任一组件未 ready 或输入 shape 不匹配时返回空 Tensor。
+// 验证：chapter04_attention_test.cpp。
 #include "chapter04_attention/decoder_layer.h"
 
 namespace chapter04_attention {
@@ -31,6 +35,24 @@ bool DecoderLayer::ready() const {
 
 std::size_t DecoderLayer::layer_index() const {
     return layer_index_;
+}
+
+cpp_llm_engine::core::DecoderLayerContract DecoderLayer::contract() const {
+    const std::size_t model_dim = attention_.model_dim();
+    const std::size_t head_count = attention_.num_heads();
+    return {
+        model_dim,
+        feed_forward_.hidden_dim(),
+        head_count,
+        head_count,
+        head_count == 0 ? 0 : model_dim / head_count,
+        0,
+        cpp_llm_engine::core::DecoderNormalizationKind::LayerNorm,
+        cpp_llm_engine::core::DecoderActivationKind::Relu,
+        cpp_llm_engine::core::DecoderPositionEncodingKind::None,
+        true,
+        false,
+    };
 }
 
 }  // namespace chapter04_attention

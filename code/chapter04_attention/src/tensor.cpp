@@ -1,3 +1,7 @@
+// Chapter 04：Decoder Tensor 和辅助算子实现
+// 职责：实现 add、transpose、matmul、列切片、拼接和缩放。
+// 契约：操作失败返回空 Tensor，所有结果使用独立 row-major storage。
+// 验证：chapter04_attention_test.cpp。
 #include "chapter04_attention/tensor.h"
 
 #include <algorithm>

@@ -1,15 +1,15 @@
 # 04.2 LayerNorm and Activation LayerNorm 与激活函数
 
 
-## 这一页要解决什么
+## 组合 LayerNorm 和 Activation
 
-实现 Transformer 中常用的 LayerNorm 和激活函数，为后续 FFN 和 DecoderLayer 提供基础模块。
+实现教学 Decoder 使用的 LayerNorm 和 ReLU，并理解它们与 TinyLlama 的 RMSNorm 和 SwiGLU 的差异。
 
 读完后应能做到：
 
 - 理解 LayerNorm 的作用
 - 理解激活函数在非线性表达中的意义
-- 理解 SiLU 和 GELU 的使用场景
+- 区分已实现的 ReLU 与模型变体中的 SiLU、GELU
 
 ## 阅读入口
 
@@ -21,13 +21,13 @@
 
 LayerNorm 稳定训练和推理中的数值分布，激活函数引入非线性表达能力。它们虽然不是最“显眼”的模块，但对 Transformer 的稳定性很关键。
 
-这一页的核心内容：
+仓库教学层实现以下内容：
 
 - LayerNorm 的均值和方差归一化
-- 可学习缩放和偏移参数
-- SiLU / GELU 激活函数
+- gamma 和 beta 参数位置；教学构造函数固定初始化为 1 和 0
+- `apply_activation(..., ActivationKind::Relu)`
 
-LayerNorm 的实现重点是归一化维度和数值稳定性，激活函数的重点是公式一致性。两者都很容易写成“看起来对”，但细节不对的版本，所以最好先用小输入验证。
+SiLU 和 GELU 用于模型结构对照，Chapter04 源码没有实现这两种激活。真实 TinyLlama 使用 RMSNorm 与 SwiGLU，其实现位于真实 CPU Decoder，不能用教学 `LayerNorm` 和 ReLU 代替后声称数值等价。
 
 工程上建议把 LayerNorm 的参数、统计量计算和输出变换分开写清楚，这样后续复用更简单。
 
@@ -73,7 +73,7 @@ GELU(x) = 0.5 * x * (1 + erf(x / sqrt(2)))
 - LLaMA 更常见 SiLU
 - GPT 系列也常见 GELU
 
-教程实现时，最好把激活函数做成可配置的纯函数，后面 FFN 直接复用。GELU 如果想先做最小版本，也可以用常见近似式替代精确的 `erf` 计算。
+教学源码把 ReLU 做成独立纯函数供 FFN 复用。若扩展 GELU，应明确近似公式和误差测试；若实现 TinyLlama 路径，则需要 gate/up 两条投影和 SiLU 乘门，而不是只替换一个枚举值。
 
 推理中的一致性：
 
@@ -96,7 +96,7 @@ LayerNorm 在训练和推理里的行为是一致的：
 
 - 输出形状不变
 - 归一化后数值分布合理
-- 激活函数输出符合预期范围
+- ReLU 将负值截断为 0，并保留正值
 
 如果输入整体偏移后，LayerNorm 输出仍能回到稳定范围，这通常说明归一化逻辑没有跑偏。
 

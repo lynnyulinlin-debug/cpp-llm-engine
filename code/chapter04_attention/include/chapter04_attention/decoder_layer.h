@@ -1,8 +1,13 @@
+// Chapter 04：DecoderLayer 接口
+// 职责：按 Pre-LN -> Attention -> Residual -> FFN -> Residual 组合单层结构。
+// 契约：输入输出保持 [tokens, model_dim]，layer_index 只标识层位置。
+// 验证：chapter04_attention_test.cpp 和 main_attention.cpp。
 #pragma once
 
 #include "chapter04_attention/attention.h"
 #include "chapter04_attention/feed_forward.h"
 #include "chapter04_attention/layer_norm.h"
+#include "cpp_llm_engine/core/decoder_contract.h"
 
 #include <cstddef>
 
@@ -16,6 +21,7 @@ public:
     bool ready() const;
 
     std::size_t layer_index() const;
+    cpp_llm_engine::core::DecoderLayerContract contract() const;
 
 private:
     std::size_t layer_index_ = 0;
